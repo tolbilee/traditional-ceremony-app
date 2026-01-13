@@ -156,7 +156,10 @@ export default function ApplicationDataStep({
                 value={weddingData.groom?.birthDate || ''}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  handleWeddingChange('groom', { ...weddingData.groom, birthDate: value });
+                  const updatedGroom = { ...weddingData.groom, birthDate: value };
+                  handleWeddingChange('groom', updatedGroom);
+                  // 신랑 생년월일을 formData.birthDate로도 설정 (로그인용)
+                  updateFormData({ birthDate: value });
                 }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['groom.birthDate'] ? 'border-red-500' : 'border-gray-300'
@@ -219,7 +222,12 @@ export default function ApplicationDataStep({
                 value={weddingData.bride?.birthDate || ''}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  handleWeddingChange('bride', { ...weddingData.bride, birthDate: value });
+                  const updatedBride = { ...weddingData.bride, birthDate: value };
+                  handleWeddingChange('bride', updatedBride);
+                  // 신부 생년월일도 formData.birthDate로 설정 가능 (신랑 생년월일이 없을 경우)
+                  if (!formData.birthDate || !weddingData.groom?.birthDate) {
+                    updateFormData({ birthDate: value });
+                  }
                 }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['bride.birthDate'] ? 'border-red-500' : 'border-gray-300'
@@ -531,7 +539,10 @@ export default function ApplicationDataStep({
               value={doljanchiData.parent?.birthDate || ''}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                handleDoljanchiChange('parent', { ...doljanchiData.parent, birthDate: value });
+                const updatedParent = { ...doljanchiData.parent, birthDate: value };
+                handleDoljanchiChange('parent', updatedParent);
+                // 부모 생년월일을 formData.birthDate로도 설정 (로그인용)
+                updateFormData({ birthDate: value });
               }}
               className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                 errors['parent.birthDate'] ? 'border-red-500' : 'border-gray-300'
