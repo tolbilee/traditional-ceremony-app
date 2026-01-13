@@ -19,9 +19,10 @@ interface Application {
 
 interface AdminDashboardProps {
   applications: Application[];
+  error?: any;
 }
 
-export default function AdminDashboard({ applications }: AdminDashboardProps) {
+export default function AdminDashboard({ applications, error }: AdminDashboardProps) {
   const router = useRouter();
   const [filterType, setFilterType] = useState<'all' | 'wedding' | 'doljanchi'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +76,25 @@ export default function AdminDashboard({ applications }: AdminDashboardProps) {
 
       {/* 필터 및 검색 */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* 에러 표시 */}
+        {error && (
+          <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">데이터 조회 오류</h3>
+            <p className="text-sm text-red-700">
+              {error.message || '신청 데이터를 불러오는 중 오류가 발생했습니다.'}
+            </p>
+            <details className="mt-2">
+              <summary className="text-sm text-red-600 cursor-pointer">상세 정보 보기</summary>
+              <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                {JSON.stringify(error, null, 2)}
+              </pre>
+            </details>
+            <p className="mt-2 text-sm text-red-600">
+              💡 <strong>해결 방법:</strong> Supabase RLS 정책을 확인하거나, Supabase 연결 설정을 확인해주세요.
+            </p>
+          </div>
+        )}
+
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
             <button

@@ -18,9 +18,16 @@ export default async function AdminDashboardPage() {
 
   if (error) {
     console.error('Error fetching applications:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+  }
+
+  // 디버깅: 데이터 확인
+  console.log('Applications fetched:', applications?.length || 0);
+  if (applications && applications.length > 0) {
+    console.log('First application:', JSON.stringify(applications[0], null, 2));
   }
 
   return (
-    <AdminDashboard applications={applications || []} />
+    <AdminDashboard applications={applications || []} error={error} />
   );
 }
