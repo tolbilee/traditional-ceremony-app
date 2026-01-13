@@ -20,15 +20,15 @@ export default function CompletionStep({
   console.log('onSubmit function type:', typeof onSubmit);
   console.log('formData:', formData);
   
-  // 컴포넌트가 마운트될 때 자동으로 제출 (한 번만)
+  // 컴포넌트가 마운트될 때 자동으로 최종 제출 (한 번만)
   React.useEffect(() => {
     console.log('=== CompletionStep useEffect triggered ===');
     console.log('onSubmit exists:', !!onSubmit);
     if (onSubmit && typeof onSubmit === 'function') {
-      console.log('Calling onSubmit...');
+      console.log('Calling final onSubmit...');
       try {
         onSubmit();
-        console.log('onSubmit called successfully');
+        console.log('Final onSubmit called successfully');
       } catch (error) {
         console.error('Error calling onSubmit:', error);
       }

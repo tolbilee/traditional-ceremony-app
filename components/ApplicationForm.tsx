@@ -20,6 +20,9 @@ const TOTAL_STEPS = 6;
 
 export default function ApplicationForm({ type, isEditMode = false, originalApplication }: ApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [savedApplicationId, setSavedApplicationId] = useState<string | null>(
+    isEditMode && originalApplication ? originalApplication.id : null
+  );
   
   // 수정 모드일 때 기존 데이터 로드
   const getInitialFormData = (): Partial<ApplicationFormData> => {
@@ -76,7 +79,79 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
-  const nextStep = () => {
+  // 각 단계마다 자동 저장
+  const saveCurrentProgress = async () => {
+    try {
+      // 최소한의 필수 데이터가 있어야 저장
+      if (!formData.userName || !formData.birthDate || !formData.type) {
+        console.log('Skipping save - insufficient data');
+        return;
+      }
+
+      console.log('=== Auto-saving progress ===');
+      console.log('Current step:', currentStep);
+      console.log('Saved application ID:', savedApplicationId);
+
+      const birthDate6 = formData.birthDate.length === 8 
+        ? formData.birthDate.slice(2, 8) 
+        : formData.birthDate;
+
+      const saveData = {
+        type: formData.type,
+        user_name: formData.userName,
+        birth_date: birthDate6,
+        schedule_1: formData.schedule1 || null,
+        schedule_2: formData.schedule2 || null,
+        support_type: formData.supportType || null,
+        application_data: formData.applicationData || {},
+        consent_status: formData.consentStatus || false,
+        file_urls: formData.fileUrls || [],
+      };
+
+      let response;
+      if (savedApplicationId) {
+        // 기존 데이터 업데이트
+        console.log('Updating existing application:', savedApplicationId);
+        response = await fetch(`/api/applications/${savedApplicationId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData),
+        });
+      } else {
+        // 새 데이터 생성
+        console.log('Creating new application');
+        response = await fetch('/api/applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData),
+        });
+      }
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data?.id) {
+          setSavedApplicationId(result.data.id);
+          console.log('Progress saved successfully. ID:', result.data.id);
+        }
+      } else {
+        const error = await response.json();
+        console.error('Save error:', error);
+        // 저장 실패해도 진행은 계속
+      }
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      // 저장 실패해도 진행은 계속
+    }
+  };
+
+  const nextStep = async () => {
+    // 다음 단계로 넘어가기 전에 현재 진행상황 저장
+    await saveCurrentProgress();
+    
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
@@ -91,7 +166,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   };
 
   const handleSubmit = async () => {
-    console.log('=== handleSubmit called ===');
+    console.log('=== Final submission (handleSubmit) ===');
     console.log('Form data:', {
       userName: formData.userName,
       birthDate: formData.birthDate,
@@ -99,6 +174,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       supportType: formData.supportType,
       hasApplicationData: !!formData.applicationData,
       consentStatus: formData.consentStatus,
+      savedApplicationId,
     });
     
     try {
@@ -115,7 +191,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         return;
       }
       
-      console.log('Validation passed, proceeding with submission...');
+      console.log('Validation passed, proceeding with final save...');
 
       // 파일을 먼저 업로드하고 URL 받기
       let fileUrls: string[] = formData.fileUrls || [];
@@ -174,55 +250,19 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       
       console.log('Prepared submit data:', JSON.stringify(submitData, null, 2));
 
-      if (isEditMode && originalApplication) {
-        // 수정 모드: PUT 요청
-        const response = await fetch(`/api/applications/${originalApplication.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submitData),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || '수정 처리 중 오류가 발생했습니다.');
-        }
-
-        alert('수정신청이 완료되었습니다. 서류검토 후 담당자가 연락을 드리오니 기다려 주시면 감사하겠습니다.');
-      } else {
-        // 신규 신청: POST 요청
-        console.log('Sending POST request to /api/applications...');
-        console.log('Request URL:', '/api/applications');
-        console.log('Request method:', 'POST');
-        console.log('Request body:', JSON.stringify(submitData, null, 2));
-        
-        const response = await fetch('/api/applications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submitData),
-        });
-
-        console.log('Response received:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('=== API ERROR ===');
-          console.error('Error Response:', errorData);
-          console.error('Status:', response.status);
-          throw new Error(errorData.error || '신청 처리 중 오류가 발생했습니다.');
-        }
-
-        const result = await response.json();
-        console.log('=== SUCCESS ===');
-        console.log('Success Response:', result);
+      // 이미 saveCurrentProgress에서 저장했으므로, 여기서는 완료 메시지만 표시
+      if (savedApplicationId) {
+        console.log('Application already saved with ID:', savedApplicationId);
         alert('신청이 완료되었습니다!');
+      } else {
+        // 저장이 안 된 경우에만 다시 시도
+        console.log('No saved ID, attempting final save...');
+        await saveCurrentProgress();
+        alert('신청이 완료되었습니다!');
+      }
+      
+      if (isEditMode) {
+        alert('수정신청이 완료되었습니다. 서류검토 후 담당자가 연락을 드리오니 기다려 주시면 감사하겠습니다.');
       }
       
       // 메인 페이지로 이동
