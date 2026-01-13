@@ -81,28 +81,41 @@ export default function ApplicationDataStep({
       return Object.keys(newErrors).length === 0;
     };
 
-    const handleNext = () => {
-      if (validateWedding()) {
-        // 자동 입력 필드 설정
-        const finalData: WeddingApplicationData = {
-          ...weddingData as WeddingApplicationData,
-          supportType: formData.supportType || '',
-          documentSubmitted: (formData.files?.length || 0) > 0,
-          preferredDateTime: formData.schedule1 
-            ? `${formData.schedule1.date} ${formData.schedule1.time}`
-            : '',
-        };
-        updateFormData({ applicationData: finalData });
-        onNext();
-      } else {
-        const firstErrorField = Object.keys(errors)[0];
-        if (firstErrorField) {
-          const element = document.querySelector(`[name="${firstErrorField}"]`);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          (element as HTMLInputElement)?.focus();
-        }
+  const handleNext = () => {
+    if (validateWedding()) {
+      // 자동 입력 필드 설정
+      const finalData: WeddingApplicationData = {
+        ...weddingData as WeddingApplicationData,
+        supportType: formData.supportType || '',
+        documentSubmitted: (formData.files?.length || 0) > 0,
+        preferredDateTime: formData.schedule1 
+          ? `${formData.schedule1.date} ${formData.schedule1.time}`
+          : '',
+      };
+      
+      // userName과 birthDate를 명시적으로 설정 (로그인용)
+      const userName = weddingData.groom?.name || formData.userName || '';
+      const birthDate = weddingData.groom?.birthDate || formData.birthDate || '';
+      
+      console.log('=== Setting userName and birthDate before next step ===');
+      console.log('userName:', userName);
+      console.log('birthDate:', birthDate);
+      
+      updateFormData({ 
+        applicationData: finalData,
+        userName: userName,
+        birthDate: birthDate,
+      });
+      onNext();
+    } else {
+      const firstErrorField = Object.keys(errors)[0];
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"]`);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (element as HTMLInputElement)?.focus();
       }
-    };
+    }
+  };
 
     const getOriginalValue = (field: string) => {
       if (!isEditMode || !originalData) return '';
@@ -479,7 +492,20 @@ export default function ApplicationDataStep({
           ? `${formData.schedule1.date} ${formData.schedule1.time}`
           : '',
       };
-      updateFormData({ applicationData: finalData });
+      
+      // userName과 birthDate를 명시적으로 설정 (로그인용)
+      const userName = doljanchiData.parent?.name || formData.userName || '';
+      const birthDate = doljanchiData.parent?.birthDate || formData.birthDate || '';
+      
+      console.log('=== Setting userName and birthDate before next step (Doljanchi) ===');
+      console.log('userName:', userName);
+      console.log('birthDate:', birthDate);
+      
+      updateFormData({ 
+        applicationData: finalData,
+        userName: userName,
+        birthDate: birthDate,
+      });
       onNext();
     } else {
       const firstErrorField = Object.keys(errors)[0];

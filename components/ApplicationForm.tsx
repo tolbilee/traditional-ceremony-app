@@ -90,28 +90,51 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         return;
       }
       
-      if (!formData.userName || !formData.birthDate || !formData.type) {
+      // 3단계에서 userName/birthDate가 없으면 applicationData에서 추출 시도
+      let userName = formData.userName;
+      let birthDate = formData.birthDate;
+      
+      if (!userName || !birthDate) {
+        if (formData.applicationData) {
+          if ('groom' in formData.applicationData && formData.applicationData.groom) {
+            userName = userName || formData.applicationData.groom.name || '';
+            birthDate = birthDate || formData.applicationData.groom.birthDate || '';
+          } else if ('parent' in formData.applicationData && formData.applicationData.parent) {
+            userName = userName || formData.applicationData.parent.name || '';
+            birthDate = birthDate || formData.applicationData.parent.birthDate || '';
+          }
+        }
+      }
+      
+      if (!userName || !birthDate || !formData.type) {
         console.log('Skipping save - insufficient data:', {
-          hasUserName: !!formData.userName,
-          hasBirthDate: !!formData.birthDate,
+          hasUserName: !!userName,
+          hasBirthDate: !!birthDate,
           hasType: !!formData.type,
-          userName: formData.userName,
-          birthDate: formData.birthDate,
+          userName: userName,
+          birthDate: birthDate,
+          extractedFromApplicationData: !formData.userName || !formData.birthDate,
         });
         return;
+      }
+      
+      // 추출한 값으로 formData 업데이트
+      if (userName !== formData.userName || birthDate !== formData.birthDate) {
+        setFormData(prev => ({ ...prev, userName, birthDate }));
       }
 
       console.log('=== Auto-saving progress ===');
       console.log('Current step:', currentStep);
       console.log('Saved application ID:', savedApplicationId);
+      console.log('Using userName:', userName, 'birthDate:', birthDate);
 
-      const birthDate6 = formData.birthDate.length === 8 
-        ? formData.birthDate.slice(2, 8) 
-        : formData.birthDate;
+      const birthDate6 = birthDate.length === 8 
+        ? birthDate.slice(2, 8) 
+        : birthDate;
 
       const saveData = {
         type: formData.type,
-        user_name: formData.userName,
+        user_name: userName,
         birth_date: birthDate6,
         schedule_1: formData.schedule1 || null,
         schedule_2: formData.schedule2 || null,
