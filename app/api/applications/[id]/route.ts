@@ -4,12 +4,12 @@ import { ApplicationFormData } from '@/types';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
     const formData: ApplicationFormData = await request.json();
-    const applicationId = params.id;
+    const { id: applicationId } = await params;
 
     // 파일 업로드 처리 (새로 추가된 파일만)
     const fileUrls: string[] = [];
@@ -46,7 +46,7 @@ export async function PUT(
       .single();
 
     const allFileUrls = [
-      ...(existingApp?.file_urls || []),
+      ...((existingApp as { file_urls?: string[] } | null)?.file_urls || []),
       ...fileUrls,
     ];
 
@@ -56,20 +56,22 @@ export async function PUT(
       : formData.birthDate;
 
     // 데이터베이스 업데이트
-    const { data, error } = await supabase
+    const updateData = {
+      type: formData.type,
+      user_name: formData.userName,
+      birth_date: birthDate6,
+      schedule_1: formData.schedule1,
+      schedule_2: formData.schedule2 || null,
+      support_type: formData.supportType!,
+      application_data: formData.applicationData,
+      consent_status: formData.consentStatus,
+      file_urls: allFileUrls,
+      updated_at: new Date().toISOString(),
+    };
+    
+    const { data, error } = await (supabase as any)
       .from('applications')
-      .update({
-        type: formData.type,
-        user_name: formData.userName,
-        birth_date: birthDate6,
-        schedule_1: formData.schedule1,
-        schedule_2: formData.schedule2 || null,
-        support_type: formData.supportType!,
-        application_data: formData.applicationData,
-        consent_status: formData.consentStatus,
-        file_urls: allFileUrls,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', applicationId)
       .select()
       .single();

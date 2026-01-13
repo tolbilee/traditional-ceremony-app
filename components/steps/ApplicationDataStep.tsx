@@ -30,20 +30,20 @@ export default function ApplicationDataStep({
     const weddingData = (formData.applicationData as Partial<WeddingApplicationData>) || {};
     
     const handleWeddingChange = (field: string, value: any) => {
-      const newData: Partial<WeddingApplicationData> = {
+      const newData = {
         ...weddingData,
         [field]: value,
-      };
+      } as Partial<WeddingApplicationData>;
       
       // 대표 정보 업데이트 시 userName, birthDate도 업데이트
       if (field === 'representative') {
         const rep = value as WeddingApplicationData['representative'];
         updateFormData({
           userName: rep?.phone || formData.userName,
-          applicationData: newData,
+          applicationData: newData as any,
         });
       } else {
-        updateFormData({ applicationData: newData });
+        updateFormData({ applicationData: newData as any });
       }
       
       if (errors[field]) {
@@ -406,19 +406,19 @@ export default function ApplicationDataStep({
   const doljanchiData = (formData.applicationData as Partial<DoljanchiApplicationData>) || {};
   
   const handleDoljanchiChange = (field: string, value: any) => {
-    const newData: Partial<DoljanchiApplicationData> = {
+    const newData = {
       ...doljanchiData,
       [field]: value,
-    };
+    } as Partial<DoljanchiApplicationData>;
     
     if (field === 'representative') {
       const rep = value as DoljanchiApplicationData['representative'];
       updateFormData({
         userName: rep?.phone || formData.userName,
-        applicationData: newData,
+        applicationData: newData as any,
       });
     } else {
-      updateFormData({ applicationData: newData });
+      updateFormData({ applicationData: newData as any });
     }
     
     if (errors[field]) {

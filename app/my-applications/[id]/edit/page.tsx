@@ -16,14 +16,15 @@ export default function EditApplicationPage() {
     const fetchApplication = async () => {
       try {
         const supabase = createClient();
+        const id = params.id as string;
         const { data, error } = await supabase
           .from('applications')
           .select('*')
-          .eq('id', params.id)
+          .eq('id', id)
           .single();
 
         if (error) throw error;
-        setApplication(data);
+        setApplication(data as any);
       } catch (err) {
         console.error('Error fetching application:', err);
         alert('신청 내역을 불러오는 중 오류가 발생했습니다.');

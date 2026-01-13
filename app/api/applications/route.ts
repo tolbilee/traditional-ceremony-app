@@ -40,19 +40,21 @@ export async function POST(request: NextRequest) {
       : formData.birthDate;
 
     // 데이터베이스에 저장
-    const { data, error } = await supabase
+    const insertData = {
+      type: formData.type,
+      user_name: formData.userName,
+      birth_date: birthDate6,
+      schedule_1: formData.schedule1,
+      schedule_2: formData.schedule2 || null,
+      support_type: formData.supportType!,
+      application_data: formData.applicationData,
+      consent_status: formData.consentStatus,
+      file_urls: fileUrls,
+    };
+    
+    const { data, error } = await (supabase as any)
       .from('applications')
-      .insert({
-        type: formData.type,
-        user_name: formData.userName,
-        birth_date: birthDate6,
-        schedule_1: formData.schedule1,
-        schedule_2: formData.schedule2 || null,
-        support_type: formData.supportType!,
-        application_data: formData.applicationData,
-        consent_status: formData.consentStatus,
-        file_urls: fileUrls,
-      })
+      .insert(insertData)
       .select()
       .single();
 
