@@ -132,17 +132,20 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         ? birthDate.slice(2, 8) 
         : birthDate;
 
-      const saveData = {
+      // API는 ApplicationFormData 형태를 기대하므로 userName, birthDate 필드명 사용
+      const saveData: Partial<ApplicationFormData> = {
         type: formData.type,
-        user_name: userName,
-        birth_date: birthDate6,
-        schedule_1: formData.schedule1 || null,
-        schedule_2: formData.schedule2 || null,
-        support_type: formData.supportType || null,
-        application_data: formData.applicationData || {},
-        consent_status: formData.consentStatus || false,
-        file_urls: formData.fileUrls || [],
+        userName: userName,  // user_name이 아닌 userName
+        birthDate: birthDate,  // birth_date가 아닌 birthDate (API에서 6자리로 변환)
+        schedule1: formData.schedule1 || undefined,
+        schedule2: formData.schedule2 || undefined,
+        supportType: formData.supportType || undefined,
+        applicationData: formData.applicationData || undefined,
+        consentStatus: formData.consentStatus || false,
+        fileUrls: formData.fileUrls || [],
       };
+
+      console.log('Sending saveData to API:', JSON.stringify(saveData, null, 2));
 
       let response;
       if (savedApplicationId) {
