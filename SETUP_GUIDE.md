@@ -230,7 +230,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/당신의-사용자명/traditional-ceremony-app.git
+git remote add origin https://github.com/tolbilee/traditional-ceremony-app.git
 git push -u origin main
 ```
 
