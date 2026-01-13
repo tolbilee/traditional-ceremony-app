@@ -91,20 +91,46 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   };
 
   const handleSubmit = async () => {
+    console.log('=== handleSubmit called ===');
+    console.log('Form data:', {
+      userName: formData.userName,
+      birthDate: formData.birthDate,
+      schedule1: formData.schedule1,
+      supportType: formData.supportType,
+      hasApplicationData: !!formData.applicationData,
+      consentStatus: formData.consentStatus,
+    });
+    
     try {
       // 필수 필드 검증
       if (!formData.userName || !formData.birthDate || !formData.schedule1 || !formData.supportType || !formData.applicationData) {
+        console.error('Validation failed:', {
+          userName: !!formData.userName,
+          birthDate: !!formData.birthDate,
+          schedule1: !!formData.schedule1,
+          supportType: !!formData.supportType,
+          applicationData: !!formData.applicationData,
+        });
         alert('모든 필수 항목을 입력해주세요.');
         return;
       }
+      
+      console.log('Validation passed, proceeding with submission...');
 
       // 파일을 먼저 업로드하고 URL 받기
       let fileUrls: string[] = formData.fileUrls || [];
+      console.log('Starting file upload process...', {
+        hasFiles: !!formData.files,
+        filesCount: formData.files?.length || 0,
+        existingFileUrls: fileUrls.length,
+      });
       
       if (formData.files && formData.files.length > 0) {
         try {
+          console.log('Uploading files...');
           // 파일 업로드 API 호출
           const uploadPromises = formData.files.map(async (file) => {
+            console.log('Uploading file:', file.name);
             const formDataToUpload = new FormData();
             formDataToUpload.append('file', file);
             formDataToUpload.append('type', formData.type!);
@@ -116,13 +142,17 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             
             if (uploadResponse.ok) {
               const { url } = await uploadResponse.json();
+              console.log('File uploaded successfully:', url);
               return url;
+            } else {
+              console.error('File upload failed:', uploadResponse.status);
+              return null;
             }
-            return null;
           });
           
           const uploadedUrls = await Promise.all(uploadPromises);
           fileUrls = [...fileUrls, ...uploadedUrls.filter((url): url is string => url !== null)];
+          console.log('All files uploaded. Total URLs:', fileUrls.length);
         } catch (error) {
           console.error('File upload error:', error);
           // 파일 업로드 실패해도 신청은 진행
@@ -141,6 +171,8 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         consentStatus: formData.consentStatus,
         fileUrls: fileUrls,
       };
+      
+      console.log('Prepared submit data:', JSON.stringify(submitData, null, 2));
 
       if (isEditMode && originalApplication) {
         // 수정 모드: PUT 요청
@@ -160,6 +192,11 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         alert('수정신청이 완료되었습니다. 서류검토 후 담당자가 연락을 드리오니 기다려 주시면 감사하겠습니다.');
       } else {
         // 신규 신청: POST 요청
+        console.log('Sending POST request to /api/applications...');
+        console.log('Request URL:', '/api/applications');
+        console.log('Request method:', 'POST');
+        console.log('Request body:', JSON.stringify(submitData, null, 2));
+        
         const response = await fetch('/api/applications', {
           method: 'POST',
           headers: {
@@ -168,21 +205,34 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
           body: JSON.stringify(submitData),
         });
 
+        console.log('Response received:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+        });
+
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('API Error Response:', errorData);
+          console.error('=== API ERROR ===');
+          console.error('Error Response:', errorData);
+          console.error('Status:', response.status);
           throw new Error(errorData.error || '신청 처리 중 오류가 발생했습니다.');
         }
 
         const result = await response.json();
+        console.log('=== SUCCESS ===');
         console.log('Success Response:', result);
         alert('신청이 완료되었습니다!');
       }
       
       // 메인 페이지로 이동
+      console.log('Redirecting to home page...');
       window.location.href = '/';
     } catch (error) {
-      console.error('Submit error:', error);
+      console.error('=== SUBMIT ERROR ===');
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Full error:', error);
       alert(error instanceof Error ? error.message : '처리 중 오류가 발생했습니다.');
     }
   };

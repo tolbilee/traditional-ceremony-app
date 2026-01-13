@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { ApplicationFormData } from '@/types';
 import BackButton from '../BackButton';
@@ -15,6 +16,27 @@ export default function CompletionStep({
   onSubmit,
   onPrev,
 }: CompletionStepProps) {
+  console.log('=== CompletionStep rendered ===');
+  console.log('onSubmit function type:', typeof onSubmit);
+  console.log('formData:', formData);
+  
+  // 컴포넌트가 마운트될 때 자동으로 제출 (한 번만)
+  React.useEffect(() => {
+    console.log('=== CompletionStep useEffect triggered ===');
+    console.log('onSubmit exists:', !!onSubmit);
+    if (onSubmit && typeof onSubmit === 'function') {
+      console.log('Calling onSubmit...');
+      try {
+        onSubmit();
+        console.log('onSubmit called successfully');
+      } catch (error) {
+        console.error('Error calling onSubmit:', error);
+      }
+    } else {
+      console.error('onSubmit is not a valid function!', onSubmit);
+    }
+  }, []); // 빈 배열로 한 번만 실행
+  
   return (
     <div className="space-y-6">
       <div className="rounded-lg border-2 border-green-200 bg-green-50 p-8 text-center">
