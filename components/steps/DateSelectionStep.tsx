@@ -105,17 +105,25 @@ export default function DateSelectionStep({
 
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentMonth, 1);
-    if (prevMonth >= minDate) {
+    // 2026년 1월 이상이면 이동 가능
+    if (prevMonth.getFullYear() >= currentYear && prevMonth.getMonth() >= 0) {
       setCurrentMonth(prevMonth);
     }
   };
 
   const goToNextMonth = () => {
     const nextMonth = addMonths(currentMonth, 1);
-    if (nextMonth <= maxDate) {
+    // 2026년 12월 이하이면 이동 가능
+    if (nextMonth.getFullYear() <= currentYear && nextMonth.getMonth() <= 11) {
       setCurrentMonth(nextMonth);
     }
   };
+
+  // 이전 달 버튼 비활성화 여부
+  const isPrevDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 0;
+  
+  // 다음 달 버튼 비활성화 여부
+  const isNextDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 11;
 
   const isDateSelected = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -147,7 +155,7 @@ export default function DateSelectionStep({
       <div className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4">
         <button
           onClick={goToPreviousMonth}
-          disabled={!isSameMonth(subMonths(currentMonth, 1), minDate) && currentMonth > minDate}
+          disabled={isPrevDisabled}
           className="rounded-lg px-4 py-2 text-2xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           ←
@@ -157,7 +165,7 @@ export default function DateSelectionStep({
         </h3>
         <button
           onClick={goToNextMonth}
-          disabled={!isSameMonth(addMonths(currentMonth, 1), maxDate) && currentMonth < maxDate}
+          disabled={isNextDisabled}
           className="rounded-lg px-4 py-2 text-2xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           →

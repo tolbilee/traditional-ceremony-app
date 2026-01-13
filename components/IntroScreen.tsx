@@ -28,12 +28,12 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
       {/* 배경 이미지/영상 영역 - 실제 이미지로 교체 필요 */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-yellow-100 opacity-50" />
       
-      <div className="relative z-10 flex flex-col items-center justify-center space-y-8 px-6 text-center">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center space-y-4 px-6 text-center">
         <motion.h1
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-4xl font-bold text-gray-800 md:text-5xl"
+          className="text-3xl font-bold text-gray-800 md:text-4xl"
         >
           2026 한국의 집
         </motion.h1>
@@ -41,7 +41,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-xl text-gray-700 md:text-2xl"
+          className="text-lg text-gray-700 md:text-xl"
         >
           전통혼례 및 돌잔치
           <br />
@@ -54,7 +54,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
         onClick={handleEnter}
-        className="relative z-10 mt-auto mb-16 rounded-full bg-blue-600 px-12 py-4 text-xl font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95"
+        className="relative z-10 mb-8 rounded-full bg-blue-600 px-10 py-3 text-lg font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95"
       >
         환영합니다 (입장하기)
       </motion.button>
