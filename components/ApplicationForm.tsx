@@ -169,10 +169,13 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         });
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || '신청 처리 중 오류가 발생했습니다.');
+          const errorData = await response.json();
+          console.error('API Error Response:', errorData);
+          throw new Error(errorData.error || '신청 처리 중 오류가 발생했습니다.');
         }
 
+        const result = await response.json();
+        console.log('Success Response:', result);
         alert('신청이 완료되었습니다!');
       }
       
