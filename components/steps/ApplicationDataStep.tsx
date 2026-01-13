@@ -35,11 +35,9 @@ export default function ApplicationDataStep({
         [field]: value,
       } as Partial<WeddingApplicationData>;
       
-      // 대표 정보 업데이트 시 userName, birthDate도 업데이트
+      // 대표 정보 업데이트 시 applicationData만 업데이트 (userName은 신랑 이름 사용)
       if (field === 'representative') {
-        const rep = value as WeddingApplicationData['representative'];
         updateFormData({
-          userName: rep?.phone || formData.userName,
           applicationData: newData as any,
         });
       } else {
@@ -136,7 +134,12 @@ export default function ApplicationDataStep({
                 type="text"
                 name="groom.name"
                 value={weddingData.groom?.name || ''}
-                onChange={(e) => handleWeddingChange('groom', { ...weddingData.groom, name: e.target.value })}
+                onChange={(e) => {
+                  const updatedGroom = { ...weddingData.groom, name: e.target.value };
+                  handleWeddingChange('groom', updatedGroom);
+                  // 신랑 이름을 formData.userName으로도 설정 (로그인용)
+                  updateFormData({ userName: e.target.value });
+                }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['groom.name'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('groom.name') ? 'text-red-600' : ''}`}
@@ -202,7 +205,14 @@ export default function ApplicationDataStep({
                 type="text"
                 name="bride.name"
                 value={weddingData.bride?.name || ''}
-                onChange={(e) => handleWeddingChange('bride', { ...weddingData.bride, name: e.target.value })}
+                onChange={(e) => {
+                  const updatedBride = { ...weddingData.bride, name: e.target.value };
+                  handleWeddingChange('bride', updatedBride);
+                  // 신부 이름도 formData.userName으로 설정 가능 (신랑 이름이 없을 경우)
+                  if (!formData.userName || !weddingData.groom?.name) {
+                    updateFormData({ userName: e.target.value });
+                  }
+                }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['bride.name'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('bride.name') ? 'text-red-600' : ''}`}
@@ -290,8 +300,7 @@ export default function ApplicationDataStep({
                 value={weddingData.representative?.phone || ''}
                 onChange={(e) => {
                   handleWeddingChange('representative', { ...weddingData.representative, phone: e.target.value });
-                  // 전화번호를 userName으로도 저장 (로그인용)
-                  updateFormData({ userName: e.target.value });
+                  // 전화번호는 userName이 아님 (userName은 신랑 이름 사용)
                 }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['representative.phone'] ? 'border-red-500' : 'border-gray-300'
@@ -419,15 +428,8 @@ export default function ApplicationDataStep({
       [field]: value,
     } as Partial<DoljanchiApplicationData>;
     
-    if (field === 'representative') {
-      const rep = value as DoljanchiApplicationData['representative'];
-      updateFormData({
-        userName: rep?.phone || formData.userName,
-        applicationData: newData as any,
-      });
-    } else {
-      updateFormData({ applicationData: newData as any });
-    }
+    // applicationData 업데이트 (userName은 부/모 이름 사용)
+    updateFormData({ applicationData: newData as any });
     
     if (errors[field]) {
       setErrors((prev) => {
@@ -670,10 +672,10 @@ export default function ApplicationDataStep({
               type="tel"
               name="representative.phone"
               value={doljanchiData.representative?.phone || ''}
-              onChange={(e) => {
-                handleDoljanchiChange('representative', { ...doljanchiData.representative, phone: e.target.value });
-                updateFormData({ userName: e.target.value });
-              }}
+                onChange={(e) => {
+                  handleDoljanchiChange('representative', { ...doljanchiData.representative, phone: e.target.value });
+                  // 전화번호는 userName이 아님 (userName은 부/모 이름 사용)
+                }}
               className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                 errors['representative.phone'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('representative.phone') ? 'text-red-600' : ''}`}

@@ -83,8 +83,21 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   const saveCurrentProgress = async () => {
     try {
       // 최소한의 필수 데이터가 있어야 저장
+      // userName과 birthDate는 ApplicationDataStep에서 자동 설정되므로, 
+      // 3단계 이전에는 저장하지 않음
+      if (currentStep < 3) {
+        console.log('Skipping save - step too early');
+        return;
+      }
+      
       if (!formData.userName || !formData.birthDate || !formData.type) {
-        console.log('Skipping save - insufficient data');
+        console.log('Skipping save - insufficient data:', {
+          hasUserName: !!formData.userName,
+          hasBirthDate: !!formData.birthDate,
+          hasType: !!formData.type,
+          userName: formData.userName,
+          birthDate: formData.birthDate,
+        });
         return;
       }
 
