@@ -51,10 +51,11 @@ export default function DocumentUploadStep({
   };
 
   const handleNext = () => {
-    if (uploadedFiles.length === 0) {
-      alert('증빙서류를 최소 1개 이상 첨부해주세요.');
-      return;
-    }
+    // 파일 첨부는 선택사항으로 변경 (필수 아님)
+    // if (uploadedFiles.length === 0) {
+    //   alert('증빙서류를 최소 1개 이상 첨부해주세요.');
+    //   return;
+    // }
     onNext();
   };
 

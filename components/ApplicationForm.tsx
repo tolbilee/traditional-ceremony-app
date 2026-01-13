@@ -98,8 +98,48 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         return;
       }
 
-      const submitData: ApplicationFormData = {
-        ...formData as ApplicationFormData,
+      // 파일을 먼저 업로드하고 URL 받기
+      let fileUrls: string[] = formData.fileUrls || [];
+      
+      if (formData.files && formData.files.length > 0) {
+        try {
+          // 파일 업로드 API 호출
+          const uploadPromises = formData.files.map(async (file) => {
+            const formDataToUpload = new FormData();
+            formDataToUpload.append('file', file);
+            formDataToUpload.append('type', formData.type!);
+            
+            const uploadResponse = await fetch('/api/upload', {
+              method: 'POST',
+              body: formDataToUpload,
+            });
+            
+            if (uploadResponse.ok) {
+              const { url } = await uploadResponse.json();
+              return url;
+            }
+            return null;
+          });
+          
+          const uploadedUrls = await Promise.all(uploadPromises);
+          fileUrls = [...fileUrls, ...uploadedUrls.filter((url): url is string => url !== null)];
+        } catch (error) {
+          console.error('File upload error:', error);
+          // 파일 업로드 실패해도 신청은 진행
+        }
+      }
+
+      // 파일은 제외하고 데이터만 전송
+      const submitData: Partial<ApplicationFormData> = {
+        type: formData.type,
+        userName: formData.userName,
+        birthDate: formData.birthDate,
+        schedule1: formData.schedule1,
+        schedule2: formData.schedule2,
+        supportType: formData.supportType,
+        applicationData: formData.applicationData,
+        consentStatus: formData.consentStatus,
+        fileUrls: fileUrls,
       };
 
       if (isEditMode && originalApplication) {

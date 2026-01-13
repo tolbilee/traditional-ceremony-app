@@ -97,7 +97,8 @@ export interface ApplicationFormData {
   supportType: SupportType;
   applicationData: ApplicationData;
   consentStatus: boolean;
-  files: File[];
+  files?: File[];
+  fileUrls?: string[]; // 업로드된 파일 URL들
 }
 
 // 증빙서류 타입 (지원 유형별로 다른 서류 필요)
