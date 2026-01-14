@@ -31,3 +31,4 @@ export default async function AdminDashboardPage() {
     <AdminDashboard applications={applications || []} error={error} />
   );
 }
+

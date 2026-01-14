@@ -316,3 +316,4 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
     </div>
   );
 }
+

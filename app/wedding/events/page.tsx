@@ -10,3 +10,4 @@ export default function WeddingEventsPage() {
     </div>
   );
 }
+

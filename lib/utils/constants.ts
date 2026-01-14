@@ -43,3 +43,4 @@ export const TIME_SLOTS = ['12:00', '15:00', '18:00'] as const;
 
 // 전화 문의 번호
 export const INQUIRY_PHONE = '02-1234-5678'; // 실제 번호로 변경 필요
+

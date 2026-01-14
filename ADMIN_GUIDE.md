@@ -374,3 +374,4 @@ ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
 - 특정 기능 우선 구현
 
 어떤 방식으로 진행할까요?
+

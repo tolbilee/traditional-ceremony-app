@@ -28,3 +28,4 @@ export default async function ApplicationDetailPage({
 
   return <ApplicationDetail application={application} />;
 }
+

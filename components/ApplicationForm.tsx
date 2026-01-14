@@ -374,3 +374,4 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
     </div>
   );
 }
+

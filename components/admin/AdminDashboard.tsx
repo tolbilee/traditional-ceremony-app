@@ -252,3 +252,4 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
     </div>
   );
 }
+

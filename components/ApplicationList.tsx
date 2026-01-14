@@ -112,3 +112,4 @@ export default function ApplicationList({ userName, birthDate }: ApplicationList
     </div>
   );
 }
+

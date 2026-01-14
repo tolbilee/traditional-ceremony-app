@@ -35,7 +35,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-3xl font-bold text-gray-800 md:text-4xl"
         >
-          2026 한국의 집
+          2026 한국의집
         </motion.h1>
         <motion.p
           initial={{ y: 20, opacity: 0 }}
@@ -45,7 +45,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         >
           전통혼례 및 돌잔치
           <br />
-          온라인 신청 시스템
+          온라인 신청
         </motion.p>
       </div>
 
@@ -56,8 +56,9 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         onClick={handleEnter}
         className="relative z-10 mb-8 rounded-full bg-blue-600 px-10 py-3 text-lg font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95"
       >
-        환영합니다 (입장하기)
+        환영합니다
       </motion.button>
     </motion.div>
   );
 }
+

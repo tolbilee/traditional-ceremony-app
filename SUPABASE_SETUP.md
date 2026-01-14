@@ -95,3 +95,4 @@ NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=documents
 ```bash
 npm run dev
 ```
+
