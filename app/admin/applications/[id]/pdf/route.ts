@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/admin/auth';
 import { createClient } from '@/lib/supabase/server';
-import jsPDF from 'jspdf';
+import PDFDocument from 'pdfkit';
 
 export async function GET(
   request: NextRequest,
@@ -29,156 +29,172 @@ export async function GET(
     const app = application as any;
 
     // PDF 생성
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    let yPos = margin;
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+    });
+
+    // PDF를 버퍼로 수집
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    
+    // PDF 생성 완료를 Promise로 처리
+    const pdfPromise = new Promise<Buffer>((resolve, reject) => {
+      doc.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+      doc.on('error', reject);
+    });
 
     // 제목
-    doc.setFontSize(18);
-    doc.text(
-      '2026 한국의 집 전통혼례 및 돌잔치 신청서',
-      pageWidth / 2,
-      yPos,
-      { align: 'center' }
-    );
-    yPos += 15;
+    doc.fontSize(18).font('Helvetica-Bold');
+    doc.text('2026 한국의 집 전통혼례 및 돌잔치 신청서', {
+      align: 'center',
+    });
+    doc.moveDown(1);
 
     // 기본 정보
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('기본 정보', margin, yPos);
-    yPos += 8;
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text('기본 정보');
+    doc.moveDown(0.5);
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(`신청 ID: ${app.id}`, margin, yPos);
-    yPos += 6;
-    doc.text(
-      `신청 유형: ${app.type === 'wedding' ? '전통혼례' : '돌잔치'}`,
-      margin,
-      yPos
-    );
-    yPos += 6;
-    doc.text(
-      `신청일시: ${new Date(app.created_at).toLocaleString('ko-KR')}`,
-      margin,
-      yPos
-    );
-    yPos += 10;
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`신청 ID: ${app.id}`);
+    doc.text(`신청 유형: ${app.type === 'wedding' ? '전통혼례' : '돌잔치'}`);
+    if (app.created_at) {
+      const createdDate = new Date(app.created_at);
+      doc.text(`신청일시: ${createdDate.toLocaleString('ko-KR')}`);
+    }
+    doc.moveDown(1);
 
     // 신청자 정보
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('신청자 정보', margin, yPos);
-    yPos += 8;
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text('신청자 정보');
+    doc.moveDown(0.5);
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(`이름: ${app.user_name}`, margin, yPos);
-    yPos += 6;
-    doc.text(`생년월일: ${app.birth_date}`, margin, yPos);
-    yPos += 6;
-    doc.text(`지원 유형: ${app.support_type}`, margin, yPos);
-    yPos += 6;
-    doc.text(
-      `동의 여부: ${app.consent_status ? '동의함' : '미동의'}`,
-      margin,
-      yPos
-    );
-    yPos += 10;
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`이름: ${app.user_name || '-'}`);
+    doc.text(`생년월일: ${app.birth_date || '-'}`);
+    
+    // 지원 유형 한글 변환
+    const supportTypeLabels: Record<string, string> = {
+      basic_livelihood: '기초수급자',
+      multicultural: '다문화가정',
+      disabled: '장애인',
+      north_korean_defector: '북한이탈주민',
+      national_merit: '국가유공자',
+    };
+    doc.text(`지원 유형: ${supportTypeLabels[app.support_type] || app.support_type || '-'}`);
+    doc.text(`동의 여부: ${app.consent_status ? '동의함' : '미동의'}`);
+    doc.moveDown(1);
 
     // 일정 정보
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('일정 정보', margin, yPos);
-    yPos += 8;
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text('일정 정보');
+    doc.moveDown(0.5);
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.fontSize(10).font('Helvetica');
     if (app.schedule_1) {
       const schedule1 = typeof app.schedule_1 === 'object' ? app.schedule_1 : {};
       const date1 = schedule1.date || '';
       const time1 = schedule1.time || '';
-      doc.text(
-        `1순위: ${date1} ${time1}`,
-        margin,
-        yPos
-      );
-      yPos += 6;
+      doc.text(`1순위: ${date1} ${time1}`);
     }
     if (app.schedule_2) {
       const schedule2 = typeof app.schedule_2 === 'object' ? app.schedule_2 : {};
       const date2 = schedule2.date || '';
       const time2 = schedule2.time || '';
-      doc.text(
-        `2순위: ${date2} ${time2}`,
-        margin,
-        yPos
-      );
-      yPos += 6;
+      doc.text(`2순위: ${date2} ${time2}`);
     }
-    yPos += 10;
+    doc.moveDown(1);
 
     // 신청서 상세 내용
     const appData = app.application_data || {};
-    if (Object.keys(appData).length > 0) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text('신청서 상세 내용', margin, yPos);
-      yPos += 8;
+    if (appData && Object.keys(appData).length > 0) {
+      doc.fontSize(12).font('Helvetica-Bold');
+      doc.text('신청서 상세 내용');
+      doc.moveDown(0.5);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
+      doc.fontSize(10).font('Helvetica');
 
       if (app.type === 'wedding') {
         if (appData.groom) {
-          doc.text(`신랑: ${appData.groom.name || '-'}`, margin, yPos);
-          yPos += 6;
+          doc.text(`신랑: ${appData.groom.name || '-'}`);
+          if (appData.groom.birthDate) {
+            doc.text(`  생년월일: ${appData.groom.birthDate}`);
+          }
+          if (appData.groom.nationality) {
+            doc.text(`  국적: ${appData.groom.nationality}`);
+          }
         }
         if (appData.bride) {
-          doc.text(`신부: ${appData.bride.name || '-'}`, margin, yPos);
-          yPos += 6;
+          doc.text(`신부: ${appData.bride.name || '-'}`);
+          if (appData.bride.birthDate) {
+            doc.text(`  생년월일: ${appData.bride.birthDate}`);
+          }
+          if (appData.bride.nationality) {
+            doc.text(`  국적: ${appData.bride.nationality}`);
+          }
         }
       } else {
         if (appData.parent) {
-          doc.text(
-            `부모: ${appData.parent.fatherName || '-'} / ${appData.parent.motherName || '-'}`,
-            margin,
-            yPos
-          );
-          yPos += 6;
+          doc.text(`부모: ${appData.parent.name || '-'}`);
+          if (appData.parent.birthDate) {
+            doc.text(`  생년월일: ${appData.parent.birthDate}`);
+          }
+          if (appData.parent.gender) {
+            doc.text(`  성별: ${appData.parent.gender === 'male' ? '남' : '여'}`);
+          }
         }
         if (appData.child) {
-          doc.text(`아이: ${appData.child.name || '-'}`, margin, yPos);
-          yPos += 6;
+          doc.text(`아이: ${appData.child.name || '-'}`);
+          if (appData.child.birthDate) {
+            doc.text(`  생년월일: ${appData.child.birthDate}`);
+          }
+          if (appData.child.gender) {
+            doc.text(`  성별: ${appData.child.gender === 'male' ? '남' : '여'}`);
+          }
         }
       }
 
-      if (appData.representative?.phone) {
-        doc.text(`대표 연락처: ${appData.representative.phone}`, margin, yPos);
-        yPos += 6;
+      if (appData.representative) {
+        doc.moveDown(0.5);
+        doc.text('대표 정보:');
+        if (appData.representative.address) {
+          doc.text(`  주소: ${appData.representative.address}`);
+        }
+        if (appData.representative.phone) {
+          doc.text(`  전화번호: ${appData.representative.phone}`);
+        }
+        if (appData.representative.email) {
+          doc.text(`  이메일: ${appData.representative.email}`);
+        }
       }
 
       if (appData.applicationReason) {
-        const reasonLines = doc.splitTextToSize(
-          `신청 동기: ${appData.applicationReason}`,
-          pageWidth - 2 * margin
-        );
-        doc.text(reasonLines, margin, yPos);
-        yPos += reasonLines.length * 6;
+        doc.moveDown(0.5);
+        doc.text('신청 동기:');
+        // 긴 텍스트는 자동 줄바꿈
+        doc.text(appData.applicationReason, {
+          width: 500,
+          align: 'left',
+        });
       }
     }
 
-    // PDF를 ArrayBuffer로 변환 (서버 사이드에서는 blob 대신 arraybuffer 사용)
-    const pdfArrayBuffer = doc.output('arraybuffer');
+    // PDF 완료
+    doc.end();
+
+    // PDF 버퍼 대기
+    const pdfBuffer = await pdfPromise;
 
     // Response 반환
-    return new NextResponse(pdfArrayBuffer, {
+    const fileName = `신청서_${app.user_name || 'unknown'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="신청서_${app.user_name}_${new Date().toISOString().split('T')[0]}.pdf"`,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
       },
     });
   } catch (error) {
@@ -194,4 +210,3 @@ export async function GET(
     );
   }
 }
-
