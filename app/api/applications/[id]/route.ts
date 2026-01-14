@@ -11,44 +11,32 @@ export async function PUT(
     const formData: ApplicationFormData = await request.json();
     const { id: applicationId } = await params;
 
-    // 파일 업로드 처리 (새로 추가된 파일만)
-    const fileUrls: string[] = [];
-    if (formData.files && formData.files.length > 0) {
-      for (const file of formData.files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${formData.type}/${fileName}`;
+    // formData.fileUrls에 이미 업로드된 URL이 포함되어 있음
+    // (DocumentUploadStep에서 파일 선택 시 즉시 업로드됨)
+    const newFileUrls: string[] = formData.fileUrls || [];
+    
+    console.log('=== UPDATE APPLICATION ===');
+    console.log('Application ID:', applicationId);
+    console.log('New file URLs from formData:', newFileUrls);
+    console.log('New file URLs count:', newFileUrls.length);
 
-        const { error: uploadError } = await supabase.storage
-          .from(process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('File upload error:', uploadError);
-          continue;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from(process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents')
-          .getPublicUrl(filePath);
-
-        if (urlData?.publicUrl) {
-          fileUrls.push(urlData.publicUrl);
-        }
-      }
-    }
-
-    // 기존 파일 URL 가져오기
+    // 기존 파일 URL 가져오기 (삭제된 파일을 제외하기 위해)
     const { data: existingApp } = await supabase
       .from('applications')
       .select('file_urls')
       .eq('id', applicationId)
       .single();
 
-    const allFileUrls = [
-      ...((existingApp as { file_urls?: string[] } | null)?.file_urls || []),
-      ...fileUrls,
-    ];
+    const existingFileUrls = (existingApp as { file_urls?: string[] } | null)?.file_urls || [];
+    console.log('Existing file URLs:', existingFileUrls);
+    console.log('Existing file URLs count:', existingFileUrls.length);
+
+    // formData.fileUrls에 포함된 URL만 사용 (사용자가 삭제한 파일은 제외됨)
+    // 중복 제거를 위해 Set 사용
+    const allFileUrls = Array.from(new Set(newFileUrls));
+    
+    console.log('Final file URLs to save:', allFileUrls);
+    console.log('Final file URLs count:', allFileUrls.length);
 
     // 생년월일 6자리 추출
     const birthDate6 = formData.birthDate.length === 8 

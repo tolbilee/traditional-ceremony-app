@@ -232,54 +232,11 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       
       console.log('Validation passed, proceeding with final save...');
 
-      // 파일을 먼저 업로드하고 URL 받기
-      let fileUrls: string[] = formData.fileUrls || [];
-      console.log('Starting file upload process...', {
-        hasFiles: !!formData.files,
-        filesCount: formData.files?.length || 0,
-        existingFileUrls: fileUrls.length,
-      });
-      
-      if (formData.files && formData.files.length > 0) {
-        try {
-          console.log('Uploading files...');
-          // 파일 업로드 API 호출
-          const uploadPromises = formData.files.map(async (file) => {
-            console.log('Uploading file:', file.name);
-            const formDataToUpload = new FormData();
-            formDataToUpload.append('file', file);
-            formDataToUpload.append('type', formData.type!);
-            
-            const uploadResponse = await fetch('/api/upload', {
-              method: 'POST',
-              body: formDataToUpload,
-            });
-            
-            if (uploadResponse.ok) {
-              const result = await uploadResponse.json();
-              console.log('File uploaded successfully:', result.url);
-              return result.url;
-            } else {
-              const errorData = await uploadResponse.json().catch(() => ({}));
-              console.error('File upload failed:', {
-                status: uploadResponse.status,
-                statusText: uploadResponse.statusText,
-                error: errorData.error,
-                details: errorData.details,
-              });
-              alert(`파일 업로드 실패: ${errorData.error || '알 수 없는 오류'}\n${errorData.hint || ''}`);
-              return null;
-            }
-          });
-          
-          const uploadedUrls = await Promise.all(uploadPromises);
-          fileUrls = [...fileUrls, ...uploadedUrls.filter((url): url is string => url !== null)];
-          console.log('All files uploaded. Total URLs:', fileUrls.length);
-        } catch (error) {
-          console.error('File upload error:', error);
-          // 파일 업로드 실패해도 신청은 진행
-        }
-      }
+      // 파일은 DocumentUploadStep에서 이미 업로드되어 fileUrls에 포함됨
+      const fileUrls: string[] = formData.fileUrls || [];
+      console.log('=== SUBMIT APPLICATION ===');
+      console.log('File URLs from formData:', fileUrls);
+      console.log('File URLs count:', fileUrls.length);
 
       // 파일은 제외하고 데이터만 전송
       const submitData: Partial<ApplicationFormData> = {
