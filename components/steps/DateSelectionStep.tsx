@@ -5,7 +5,7 @@ import { ApplicationFormData, Schedule, TimeSlot } from '@/types';
 import { TIME_SLOTS } from '@/lib/utils/constants';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
-import BackButton from '../BackButton';
+import BottomNavigationBar from '../BottomNavigationBar';
 
 interface DateSelectionStepProps {
   formData: Partial<ApplicationFormData>;
@@ -280,7 +280,7 @@ export default function DateSelectionStep({
       )}
 
       {/* 다음 버튼 */}
-      <div className="flex justify-end pt-6">
+      <div className="flex justify-end pt-6 pb-32">
         <button
           onClick={handleNext}
           className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
@@ -289,7 +289,7 @@ export default function DateSelectionStep({
         </button>
       </div>
 
-      <BackButton />
+      <BottomNavigationBar />
     </div>
   );
 }

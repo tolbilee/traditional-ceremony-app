@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ApplicationFormData } from '@/types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
-import BackButton from '../BackButton';
+import BottomNavigationBar from '../BottomNavigationBar';
 
 interface PrivacyConsentStepProps {
   formData: Partial<ApplicationFormData>;
@@ -188,7 +188,7 @@ export default function PrivacyConsentStep({
         </div>
       </div>
 
-      <div className="flex justify-between pt-6 pb-24">
+      <div className="flex justify-between pt-6 pb-32">
         <button
           onClick={onPrev}
           className="rounded-full bg-gray-200 px-8 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-300 active:scale-95"
@@ -203,7 +203,7 @@ export default function PrivacyConsentStep({
         </button>
       </div>
       
-      <BackButton onClick={onPrev} />
+      <BottomNavigationBar />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ApplicationFormData } from '@/types';
-import BackButton from '../BackButton';
+import BottomNavigationBar from '../BottomNavigationBar';
 
 interface CompletionStepProps {
   formData: Partial<ApplicationFormData>;
@@ -70,7 +70,7 @@ export default function CompletionStep({
         </div>
       </div>
 
-      <div className="flex justify-between pt-6 pb-24">
+      <div className="flex justify-between pt-6 pb-32">
         <button
           onClick={onPrev}
           className="rounded-full bg-gray-200 px-8 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-300 active:scale-95"
@@ -85,7 +85,7 @@ export default function CompletionStep({
         </Link>
       </div>
       
-      <BackButton onClick={onPrev} />
+      <BottomNavigationBar />
     </div>
   );
 }
