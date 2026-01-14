@@ -188,10 +188,11 @@ export async function GET(
     // PDF 버퍼 대기
     const pdfBuffer = await pdfPromise;
 
-    // Response 반환
+    // Response 반환 (Buffer를 Uint8Array로 변환하여 Web API 호환)
     const fileName = `신청서_${app.user_name || 'unknown'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const pdfBody = new Uint8Array(pdfBuffer);
     
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBody, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
