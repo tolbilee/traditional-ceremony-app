@@ -256,11 +256,18 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             });
             
             if (uploadResponse.ok) {
-              const { url } = await uploadResponse.json();
-              console.log('File uploaded successfully:', url);
-              return url;
+              const result = await uploadResponse.json();
+              console.log('File uploaded successfully:', result.url);
+              return result.url;
             } else {
-              console.error('File upload failed:', uploadResponse.status);
+              const errorData = await uploadResponse.json().catch(() => ({}));
+              console.error('File upload failed:', {
+                status: uploadResponse.status,
+                statusText: uploadResponse.statusText,
+                error: errorData.error,
+                details: errorData.details,
+              });
+              alert(`파일 업로드 실패: ${errorData.error || '알 수 없는 오류'}\n${errorData.hint || ''}`);
               return null;
             }
           });

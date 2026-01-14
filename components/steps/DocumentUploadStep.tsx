@@ -24,10 +24,50 @@ export default function DocumentUploadStep({
   const supportType = formData.supportType;
   const requiredDoc = supportType ? REQUIRED_DOCUMENTS[supportType] : null;
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // 파일을 즉시 업로드하고 URL 받기
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      try {
+        const formDataToUpload = new FormData();
+        formDataToUpload.append('file', file);
+        formDataToUpload.append('type', formData.type || 'wedding');
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataToUpload,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          uploadedUrls.push(result.url);
+          console.log('File uploaded:', result.url);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Upload failed:', errorData);
+          alert(`파일 업로드 실패: ${errorData.error || '알 수 없는 오류'}`);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('파일 업로드 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 업로드된 URL을 fileUrls에 추가
+    const existingUrls = formData.fileUrls || [];
+    const newFileUrls = [...existingUrls, ...uploadedUrls];
+    updateFormData({ fileUrls: newFileUrls });
+
+    // 로컬 파일 목록도 업데이트 (UI 표시용)
     setUploadedFiles((prev) => [...prev, ...files]);
-    updateFormData({ files: [...uploadedFiles, ...files] });
+    
+    // input 초기화
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const handleCameraClick = () => {
@@ -48,6 +88,11 @@ export default function DocumentUploadStep({
     const newFiles = uploadedFiles.filter((_, i) => i !== index);
     setUploadedFiles(newFiles);
     updateFormData({ files: newFiles });
+  };
+
+  const handleRemoveExistingFile = (index: number) => {
+    const newFileUrls = formData.fileUrls?.filter((_, i) => i !== index) || [];
+    updateFormData({ fileUrls: newFileUrls });
   };
 
   const handleNext = () => {
@@ -118,10 +163,7 @@ export default function DocumentUploadStep({
                     <span className="text-xs text-gray-500">(기존 파일)</span>
                   </div>
                   <button
-                    onClick={() => {
-                      const newFileUrls = formData.fileUrls?.filter((_, i) => i !== index) || [];
-                      updateFormData({ fileUrls: newFileUrls });
-                    }}
+                    onClick={() => handleRemoveExistingFile(index)}
                     className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
                   >
                     삭제
