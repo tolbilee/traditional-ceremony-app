@@ -26,7 +26,25 @@ export async function POST(request: NextRequest) {
     });
 
     // 서비스 역할 키를 사용하여 RLS 정책 우회
-    const supabase = createAdminClient();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Failed to create admin client:', errorMessage);
+      
+      if (errorMessage.includes('SUPABASE_SERVICE_ROLE_KEY')) {
+        return NextResponse.json(
+          { 
+            error: '파일 업로드 설정이 완료되지 않았습니다.',
+            details: 'SUPABASE_SERVICE_ROLE_KEY 환경 변수가 설정되지 않았습니다.',
+            hint: 'Netlify 대시보드 → Site settings → Environment variables에서 SUPABASE_SERVICE_ROLE_KEY를 추가해주세요. Supabase 대시보드 → Settings → API에서 service_role 키를 복사하세요.'
+          },
+          { status: 500 }
+        );
+      }
+      throw error;
+    }
     
     // Storage 버킷 이름 확인
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents';

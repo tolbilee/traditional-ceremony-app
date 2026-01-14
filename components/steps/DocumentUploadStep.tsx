@@ -48,7 +48,9 @@ export default function DocumentUploadStep({
         } else {
           const errorData = await response.json().catch(() => ({}));
           console.error('Upload failed:', errorData);
-          alert(`파일 업로드 실패: ${errorData.error || '알 수 없는 오류'}`);
+          const errorMessage = errorData.error || '알 수 없는 오류';
+          const hint = errorData.hint || '';
+          alert(`파일 업로드 실패: ${errorMessage}\n\n${hint}`);
         }
       } catch (error) {
         console.error('Upload error:', error);
