@@ -98,16 +98,22 @@ export async function GET(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     if (app.schedule_1) {
+      const schedule1 = typeof app.schedule_1 === 'object' ? app.schedule_1 : {};
+      const date1 = schedule1.date || '';
+      const time1 = schedule1.time || '';
       doc.text(
-        `1순위: ${app.schedule_1.date || ''} ${app.schedule_1.time || ''}`,
+        `1순위: ${date1} ${time1}`,
         margin,
         yPos
       );
       yPos += 6;
     }
     if (app.schedule_2) {
+      const schedule2 = typeof app.schedule_2 === 'object' ? app.schedule_2 : {};
+      const date2 = schedule2.date || '';
+      const time2 = schedule2.time || '';
       doc.text(
-        `2순위: ${app.schedule_2.date || ''} ${app.schedule_2.time || ''}`,
+        `2순위: ${date2} ${time2}`,
         margin,
         yPos
       );
@@ -165,11 +171,11 @@ export async function GET(
       }
     }
 
-    // PDF를 Blob으로 변환
-    const pdfBlob = doc.output('blob');
+    // PDF를 ArrayBuffer로 변환 (서버 사이드에서는 blob 대신 arraybuffer 사용)
+    const pdfArrayBuffer = doc.output('arraybuffer');
 
     // Response 반환
-    return new NextResponse(pdfBlob, {
+    return new NextResponse(pdfArrayBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="신청서_${app.user_name}_${new Date().toISOString().split('T')[0]}.pdf"`,
@@ -177,8 +183,13 @@ export async function GET(
     });
   } catch (error) {
     console.error('PDF generation error:', error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'PDF 생성 중 오류가 발생했습니다.' },
+      { 
+        error: 'PDF 생성 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
