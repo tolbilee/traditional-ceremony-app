@@ -10,7 +10,7 @@ interface DocumentUploadStepProps {
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
   onPrev: () => void;
-  onFileUploaded?: () => void; // 파일 업로드 후 저장을 위한 콜백
+  onFileUploaded?: (fileUrls: string[]) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
 }
 
 export default function DocumentUploadStep({
@@ -69,11 +69,25 @@ export default function DocumentUploadStep({
     console.log('Existing URLs:', existingUrls);
     console.log('New total file URLs:', newFileUrls.length);
     
-    // formData 업데이트 (useEffect가 자동으로 저장을 트리거함)
+    // formData 업데이트
     updateFormData({ fileUrls: newFileUrls });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용)
     setUploadedFiles((prev) => [...prev, ...files]);
+    
+    // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
+    if (uploadedUrls.length > 0 && onFileUploaded) {
+      console.log('Triggering immediate save after file upload...');
+      // 약간의 지연을 두어 formData 업데이트가 완료되도록 함
+      setTimeout(async () => {
+        try {
+          await onFileUploaded(newFileUrls);
+          console.log('File URLs saved successfully');
+        } catch (error) {
+          console.error('Failed to save file URLs:', error);
+        }
+      }, 300);
+    }
     
     // input 초기화
     if (e.target) {

@@ -92,6 +92,98 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   // fileUrls 변경 추적을 위한 ref
   const previousFileUrlsRef = useRef<string[]>([]);
 
+  // 파일 URL을 직접 받아서 저장하는 함수
+  const saveFileUrls = async (fileUrls: string[]) => {
+    try {
+      // 최소한의 필수 데이터가 있어야 저장
+      if (currentStep < 3) {
+        console.log('Skipping file save - step too early');
+        return;
+      }
+      
+      let userName = formData.userName;
+      let birthDate = formData.birthDate;
+      
+      if (!userName || !birthDate) {
+        if (formData.applicationData) {
+          if ('groom' in formData.applicationData && formData.applicationData.groom) {
+            userName = userName || formData.applicationData.groom.name || '';
+            birthDate = birthDate || formData.applicationData.groom.birthDate || '';
+          } else if ('parent' in formData.applicationData && formData.applicationData.parent) {
+            userName = userName || formData.applicationData.parent.name || '';
+            birthDate = birthDate || formData.applicationData.parent.birthDate || '';
+          }
+        }
+      }
+      
+      if (!userName || !birthDate || !formData.type) {
+        console.log('Skipping file save - insufficient data');
+        return;
+      }
+      
+      const birthDate6 = birthDate.length === 8 
+        ? birthDate.slice(2, 8) 
+        : birthDate;
+      
+      const saveData: Partial<ApplicationFormData> = {
+        type: formData.type,
+        userName: userName,
+        birthDate: birthDate,
+        schedule1: formData.schedule1 || undefined,
+        schedule2: formData.schedule2 || undefined,
+        supportType: formData.supportType || undefined,
+        applicationData: formData.applicationData || undefined,
+        consentStatus: formData.consentStatus || false,
+        fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
+      };
+      
+      console.log('=== Saving file URLs directly ===');
+      console.log('File URLs to save:', fileUrls);
+      console.log('File URLs count:', fileUrls.length);
+      console.log('Saved application ID:', savedApplicationId);
+      
+      let response;
+      if (savedApplicationId) {
+        console.log('Updating existing application with file URLs:', savedApplicationId);
+        response = await fetch(`/api/applications/${savedApplicationId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData),
+        });
+      } else {
+        console.log('Creating new application with file URLs');
+        response = await fetch('/api/applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData),
+        });
+      }
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('=== File URLs save response ===');
+        console.log('Response data:', JSON.stringify(result, null, 2));
+        if (result.data?.id) {
+          setSavedApplicationId(result.data.id);
+          console.log('File URLs saved successfully. ID:', result.data.id);
+          console.log('Saved file_urls:', result.data?.file_urls);
+          console.log('Saved file_urls count:', result.data?.file_urls?.length || 0);
+        }
+      } else {
+        const error = await response.json();
+        console.error('=== File URLs save error ===');
+        console.error('Error response:', JSON.stringify(error, null, 2));
+        console.error('Status:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('File URLs save error:', error);
+    }
+  };
+
   // 각 단계마다 자동 저장
   const saveCurrentProgress = async () => {
     try {
@@ -140,8 +232,6 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       console.log('Current step:', currentStep);
       console.log('Saved application ID:', savedApplicationId);
       console.log('Using userName:', userName, 'birthDate:', birthDate);
-      console.log('File URLs to save:', formData.fileUrls);
-      console.log('File URLs count:', formData.fileUrls?.length || 0);
       console.log('File URLs to save:', formData.fileUrls);
       console.log('File URLs count:', formData.fileUrls?.length || 0);
 
@@ -373,6 +463,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            onFileUploaded={saveFileUrls}
           />
         )}
         {currentStep === 6 && (
