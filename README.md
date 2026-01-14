@@ -68,7 +68,12 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=documents
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
+
+**서비스 역할 키 확인 방법:**
+- Supabase 대시보드 → Settings → API → "service_role" 키
+- ⚠️ 이 키는 절대 클라이언트에 노출되면 안 됩니다!
 
 ### 3. Supabase 데이터베이스 설정
 

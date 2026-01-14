@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
       ceremonyType: type,
     });
 
-    const supabase = await createClient();
+    // 서비스 역할 키를 사용하여 RLS 정책 우회
+    const supabase = createAdminClient();
     
     // Storage 버킷 이름 확인
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents';

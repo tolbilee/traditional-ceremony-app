@@ -73,9 +73,25 @@ Storage 버킷도 RLS 정책이 필요합니다!
      ```
    - **"Review"** → **"Save policy"**
 
-### 3. 빠른 해결 (개발 환경)
+### 3. 서비스 역할 키 사용 (권장 - RLS 우회)
 
-개발 환경에서 빠르게 테스트하려면:
+서버 사이드에서 서비스 역할 키를 사용하면 Storage RLS 정책을 우회할 수 있습니다.
+
+**이 방법이 가장 간단하고 안전합니다!**
+
+1. Supabase 대시보드 → **Settings** → **API**
+2. **"service_role"** 키 복사 (⚠️ 절대 공개하지 마세요!)
+3. `.env.local` 파일에 추가:
+   ```env
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+   ```
+4. Netlify 환경 변수에도 추가 (배포 환경)
+
+이제 파일 업로드가 RLS 정책 없이도 작동합니다!
+
+### 4. 빠른 해결 (개발 환경 - Storage RLS 정책 설정)
+
+서비스 역할 키를 사용하지 않으려면 Storage RLS 정책을 설정해야 합니다:
 
 1. Storage 메뉴 → `documents` 버킷
 2. **"Settings"** 탭
@@ -90,7 +106,15 @@ Storage 버킷도 RLS 정책이 필요합니다!
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=documents
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
+
+**중요**: `SUPABASE_SERVICE_ROLE_KEY`는 서버 사이드에서만 사용되며, RLS 정책을 우회하여 파일 업로드를 가능하게 합니다.
+
+**서비스 역할 키 확인 방법:**
+1. Supabase 대시보드 → Settings → API
+2. "service_role" 키 복사 (⚠️ 절대 공개하지 마세요!)
+3. `.env.local` 파일에 추가
 
 ### 5. 테스트 방법
 

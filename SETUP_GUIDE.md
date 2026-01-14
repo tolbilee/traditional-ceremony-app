@@ -139,7 +139,13 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 NEXT_PUBLIC_SUPABASE_URL=https://여기에-프로젝트-URL-붙여넣기
 NEXT_PUBLIC_SUPABASE_ANON_KEY=여기에-anon-키-붙여넣기
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=documents
+SUPABASE_SERVICE_ROLE_KEY=여기에-service-role-키-붙여넣기
 ```
+
+**서비스 역할 키 확인 방법:**
+1. Supabase 대시보드 → **Settings** → **API**
+2. **"service_role"** 키 복사 (⚠️ 절대 공개하지 마세요!)
+3. 위의 환경 변수에 추가
 
 **예시:**
 ```
