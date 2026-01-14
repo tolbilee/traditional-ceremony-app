@@ -10,6 +10,7 @@ interface DocumentUploadStepProps {
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
   onPrev: () => void;
+  onFileUploaded?: () => void; // 파일 업로드 후 저장을 위한 콜백
 }
 
 export default function DocumentUploadStep({
@@ -17,6 +18,7 @@ export default function DocumentUploadStep({
   updateFormData,
   onNext,
   onPrev,
+  onFileUploaded,
 }: DocumentUploadStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
@@ -62,9 +64,22 @@ export default function DocumentUploadStep({
     const existingUrls = formData.fileUrls || [];
     const newFileUrls = [...existingUrls, ...uploadedUrls];
     updateFormData({ fileUrls: newFileUrls });
+    
+    console.log('=== File upload completed ===');
+    console.log('Uploaded URLs:', uploadedUrls);
+    console.log('Total file URLs:', newFileUrls.length);
 
     // 로컬 파일 목록도 업데이트 (UI 표시용)
     setUploadedFiles((prev) => [...prev, ...files]);
+    
+    // 파일 업로드 후 자동 저장 트리거
+    if (uploadedUrls.length > 0 && onFileUploaded) {
+      console.log('Triggering auto-save after file upload...');
+      // 약간의 지연을 두어 formData 업데이트가 완료되도록 함
+      setTimeout(() => {
+        onFileUploaded();
+      }, 100);
+    }
     
     // input 초기화
     if (e.target) {

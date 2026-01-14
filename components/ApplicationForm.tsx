@@ -27,6 +27,15 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   // 수정 모드일 때 기존 데이터 로드
   const getInitialFormData = (): Partial<ApplicationFormData> => {
     if (isEditMode && originalApplication) {
+      // file_urls를 fileUrls로 변환 (DB 컬럼명 -> FormData 필드명)
+      const fileUrls = originalApplication.file_urls && Array.isArray(originalApplication.file_urls)
+        ? originalApplication.file_urls
+        : [];
+      
+      console.log('=== Loading edit mode data ===');
+      console.log('Original file_urls:', originalApplication.file_urls);
+      console.log('Converted fileUrls:', fileUrls);
+      
       return {
         type: originalApplication.type,
         userName: originalApplication.user_name,
@@ -36,6 +45,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         supportType: originalApplication.support_type as SupportType,
         applicationData: originalApplication.application_data as ApplicationData,
         consentStatus: originalApplication.consent_status,
+        fileUrls: fileUrls, // 기존 파일 URL 로드
         files: [],
       };
     }
@@ -320,6 +330,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            onFileUploaded={saveCurrentProgress}
           />
         )}
         {currentStep === 6 && (
