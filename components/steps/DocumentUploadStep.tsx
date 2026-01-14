@@ -63,23 +63,17 @@ export default function DocumentUploadStep({
     // 업로드된 URL을 fileUrls에 추가
     const existingUrls = formData.fileUrls || [];
     const newFileUrls = [...existingUrls, ...uploadedUrls];
-    updateFormData({ fileUrls: newFileUrls });
     
     console.log('=== File upload completed ===');
     console.log('Uploaded URLs:', uploadedUrls);
-    console.log('Total file URLs:', newFileUrls.length);
+    console.log('Existing URLs:', existingUrls);
+    console.log('New total file URLs:', newFileUrls.length);
+    
+    // formData 업데이트 (useEffect가 자동으로 저장을 트리거함)
+    updateFormData({ fileUrls: newFileUrls });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용)
     setUploadedFiles((prev) => [...prev, ...files]);
-    
-    // 파일 업로드 후 자동 저장 트리거
-    if (uploadedUrls.length > 0 && onFileUploaded) {
-      console.log('Triggering auto-save after file upload...');
-      // 약간의 지연을 두어 formData 업데이트가 완료되도록 함
-      setTimeout(() => {
-        onFileUploaded();
-      }, 100);
-    }
     
     // input 초기화
     if (e.target) {

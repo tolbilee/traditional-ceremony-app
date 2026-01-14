@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CeremonyType, ApplicationFormData, Schedule, TimeSlot, SupportType, ApplicationData } from '@/types';
 import ProgressBar from './ProgressBar';
 import DateSelectionStep from './steps/DateSelectionStep';
@@ -89,6 +89,9 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
+  // fileUrls 변경 추적을 위한 ref
+  const previousFileUrlsRef = useRef<string[]>([]);
+
   // 각 단계마다 자동 저장
   const saveCurrentProgress = async () => {
     try {
@@ -137,6 +140,10 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       console.log('Current step:', currentStep);
       console.log('Saved application ID:', savedApplicationId);
       console.log('Using userName:', userName, 'birthDate:', birthDate);
+      console.log('File URLs to save:', formData.fileUrls);
+      console.log('File URLs count:', formData.fileUrls?.length || 0);
+      console.log('File URLs to save:', formData.fileUrls);
+      console.log('File URLs count:', formData.fileUrls?.length || 0);
 
       const birthDate6 = birthDate.length === 8 
         ? birthDate.slice(2, 8) 
@@ -182,13 +189,19 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
 
       if (response.ok) {
         const result = await response.json();
+        console.log('=== Save response received ===');
+        console.log('Response data:', JSON.stringify(result, null, 2));
         if (result.data?.id) {
           setSavedApplicationId(result.data.id);
           console.log('Progress saved successfully. ID:', result.data.id);
+          console.log('Saved file_urls:', result.data?.file_urls);
+          console.log('Saved file_urls count:', result.data?.file_urls?.length || 0);
         }
       } else {
         const error = await response.json();
-        console.error('Save error:', error);
+        console.error('=== Save error ===');
+        console.error('Error response:', JSON.stringify(error, null, 2));
+        console.error('Status:', response.status, response.statusText);
         // 저장 실패해도 진행은 계속
       }
     } catch (error) {
@@ -196,6 +209,36 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       // 저장 실패해도 진행은 계속
     }
   };
+
+  // fileUrls가 변경될 때마다 자동 저장 (5단계에서만)
+  useEffect(() => {
+    const currentFileUrls = formData.fileUrls || [];
+    const previousFileUrls = previousFileUrlsRef.current;
+    
+    // fileUrls가 변경되었고, 5단계(DocumentUploadStep)이고, 파일이 추가된 경우에만 저장
+    if (
+      currentStep === 5 &&
+      currentFileUrls.length > previousFileUrls.length &&
+      currentFileUrls.length > 0 &&
+      savedApplicationId // 이미 저장된 신청서가 있어야 함
+    ) {
+      console.log('=== File URLs changed, auto-saving ===');
+      console.log('Previous file URLs:', previousFileUrls);
+      console.log('Current file URLs:', currentFileUrls);
+      console.log('Saved application ID:', savedApplicationId);
+      
+      // 약간의 지연을 두어 상태 업데이트가 완료되도록 함
+      const timer = setTimeout(() => {
+        saveCurrentProgress();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // 이전 fileUrls 업데이트
+    previousFileUrlsRef.current = currentFileUrls;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.fileUrls, currentStep, savedApplicationId]);
 
   const nextStep = async () => {
     // 다음 단계로 넘어가기 전에 현재 진행상황 저장
@@ -330,7 +373,6 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
-            onFileUploaded={saveCurrentProgress}
           />
         )}
         {currentStep === 6 && (
