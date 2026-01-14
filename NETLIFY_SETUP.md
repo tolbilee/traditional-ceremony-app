@@ -33,6 +33,16 @@ Netlify 대시보드 > Site settings > Environment variables에서 다음 변수
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anon Key
 - `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET`: Storage 버킷 이름 (기본값: `documents`)
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase Service Role Key (⚠️ 필수 - 파일 업로드용)
+
+**서비스 역할 키 확인 방법:**
+1. Supabase 대시보드 → **Settings** → **API**
+2. **"service_role"** 키 복사
+3. Netlify 환경 변수에 추가
+
+**⚠️ 중요:**
+- 서비스 역할 키는 절대 클라이언트에 노출되면 안 됩니다
+- `NEXT_PUBLIC_` 접두사 없이 추가해야 합니다 (서버 사이드 전용)
 
 ## 4. Next.js 플러그인 설치 (권장)
 

@@ -268,7 +268,7 @@ git push -u origin main
 
 1. 배포가 시작되면 **"Site settings"** 클릭
 2. 왼쪽 메뉴에서 **"Environment variables"** 클릭
-3. **"Add a variable"** 클릭하여 다음 3개 추가:
+3. **"Add a variable"** 클릭하여 다음 4개 추가:
 
    **변수 1:**
    - Key: `NEXT_PUBLIC_SUPABASE_URL`
@@ -281,6 +281,11 @@ git push -u origin main
    **변수 3:**
    - Key: `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET`
    - Value: `documents`
+
+   **변수 4 (⚠️ 필수 - 파일 업로드용):**
+   - Key: `SUPABASE_SERVICE_ROLE_KEY`
+   - Value: (Supabase 대시보드 → Settings → API → "service_role" 키)
+   - ⚠️ 주의: 이 키는 절대 공개하지 마세요!
 
 4. 각 변수 입력 후 **"Save"** 클릭
 
