@@ -54,14 +54,17 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('=== Upload Error ===');
-      console.error('Error code:', uploadError.statusCode);
+      // StorageError 타입에 statusCode가 없을 수 있으므로 any로 캐스팅
+      const anyError = uploadError as any;
+      const errorCode = anyError.statusCode ?? anyError.status ?? anyError.code;
+      console.error('Error code:', errorCode);
       console.error('Error message:', uploadError.message);
-      console.error('Error name:', uploadError.name);
+      console.error('Error name:', anyError.name);
       
       // RLS 오류인지 확인
       if (uploadError.message?.includes('new row violates row-level security') || 
           uploadError.message?.includes('RLS') ||
-          uploadError.statusCode === '403') {
+          errorCode === '403' || errorCode === 403) {
         return NextResponse.json(
           { 
             error: '파일 업로드 권한이 없습니다. Supabase Storage RLS 정책을 확인해주세요.',
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 버킷이 없는 경우
-      if (uploadError.message?.includes('Bucket not found') || uploadError.statusCode === '404') {
+      if (uploadError.message?.includes('Bucket not found') || errorCode === '404' || errorCode === 404) {
         return NextResponse.json(
           { 
             error: `Storage 버킷 '${bucketName}'을 찾을 수 없습니다.`,
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
         { 
           error: uploadError.message || '파일 업로드 중 오류가 발생했습니다.',
           details: uploadError.message,
-          code: uploadError.statusCode
+          code: errorCode
         },
         { status: 500 }
       );
