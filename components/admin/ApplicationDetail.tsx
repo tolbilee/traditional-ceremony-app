@@ -173,6 +173,63 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             </div>
           </div>
 
+          {/* 증빙서류 */}
+          {application.file_urls && application.file_urls.length > 0 && (
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h2 className="mb-4 text-xl font-bold text-gray-900">증빙서류</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {application.file_urls.map((url: string, index: number) => {
+                  const fileName = url.split('/').pop() || `증빙서류_${index + 1}`;
+                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
+                    >
+                      <div className="mb-3">
+                        {isImage ? (
+                          <img
+                            src={url}
+                            alt={fileName}
+                            className="h-48 w-full rounded-lg object-contain bg-white"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-48 w-full items-center justify-center rounded-lg bg-gray-200">
+                            <span className="text-gray-500">📄 파일</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="mb-3 truncate text-sm font-medium text-gray-700">
+                        {fileName}
+                      </p>
+                      <div className="flex gap-2">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-blue-700"
+                        >
+                          보기
+                        </a>
+                        <a
+                          href={url}
+                          download={fileName}
+                          className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-green-700"
+                        >
+                          다운로드
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 신청서 상세 내용 */}
           <div className="rounded-lg bg-white p-6 shadow">
             <h2 className="mb-4 text-xl font-bold text-gray-900">신청서 상세 내용</h2>
@@ -288,29 +345,6 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             </div>
           </div>
 
-          {/* 증빙서류 */}
-          {application.file_urls && application.file_urls.length > 0 && (
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-4 text-xl font-bold text-gray-900">증빙서류</h2>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                {application.file_urls.map((url: string, index: number) => (
-                  <a
-                    key={index}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-lg border border-gray-200 hover:border-blue-500"
-                  >
-                    <img
-                      src={url}
-                      alt={`증빙서류 ${index + 1}`}
-                      className="h-32 w-full object-cover"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

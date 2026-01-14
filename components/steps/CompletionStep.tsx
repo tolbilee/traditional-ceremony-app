@@ -20,22 +20,12 @@ export default function CompletionStep({
   console.log('onSubmit function type:', typeof onSubmit);
   console.log('formData:', formData);
   
-  // 컴포넌트가 마운트될 때 자동으로 최종 제출 (한 번만)
-  React.useEffect(() => {
-    console.log('=== CompletionStep useEffect triggered ===');
-    console.log('onSubmit exists:', !!onSubmit);
+  // 자동 제출 제거 - 사용자가 명시적으로 제출 버튼을 눌러야 함
+  const handleSubmit = () => {
     if (onSubmit && typeof onSubmit === 'function') {
-      console.log('Calling final onSubmit...');
-      try {
-        onSubmit();
-        console.log('Final onSubmit called successfully');
-      } catch (error) {
-        console.error('Error calling onSubmit:', error);
-      }
-    } else {
-      console.error('onSubmit is not a valid function!', onSubmit);
+      onSubmit();
     }
-  }, []); // 빈 배열로 한 번만 실행
+  };
   
   return (
     <div className="space-y-6">
@@ -77,12 +67,20 @@ export default function CompletionStep({
         >
           이전
         </button>
-        <Link
-          href="/"
-          className="rounded-full bg-green-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-green-700 active:scale-95"
-        >
-          홈화면으로 돌아가기
-        </Link>
+        <div className="flex gap-3">
+          <button
+            onClick={handleSubmit}
+            className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+          >
+            신청 완료하기
+          </button>
+          <Link
+            href="/"
+            className="rounded-full bg-green-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-green-700 active:scale-95"
+          >
+            홈화면으로 돌아가기
+          </Link>
+        </div>
       </div>
       
       <BottomNavigationBar />

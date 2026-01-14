@@ -289,24 +289,19 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       
       console.log('Prepared submit data:', JSON.stringify(submitData, null, 2));
 
-      // 이미 saveCurrentProgress에서 저장했으므로, 여기서는 완료 메시지만 표시
+      // 이미 saveCurrentProgress에서 저장했으므로, 여기서는 최종 저장만 수행
       if (savedApplicationId) {
         console.log('Application already saved with ID:', savedApplicationId);
-        alert('신청이 완료되었습니다!');
+        // 최종 저장 (파일 URL 포함)
+        await saveCurrentProgress();
       } else {
         // 저장이 안 된 경우에만 다시 시도
         console.log('No saved ID, attempting final save...');
         await saveCurrentProgress();
-        alert('신청이 완료되었습니다!');
       }
       
-      if (isEditMode) {
-        alert('수정신청이 완료되었습니다. 서류검토 후 담당자가 연락을 드리오니 기다려 주시면 감사하겠습니다.');
-      }
-      
-      // 메인 페이지로 이동
-      console.log('Redirecting to home page...');
-      window.location.href = '/';
+      // 자동 이동하지 않음 - 사용자가 홈화면으로 돌아가기 버튼을 눌러야 함
+      console.log('Application saved successfully. User can navigate manually.');
     } catch (error) {
       console.error('=== SUBMIT ERROR ===');
       console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);

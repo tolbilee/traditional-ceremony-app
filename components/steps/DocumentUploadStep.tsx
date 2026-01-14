@@ -95,12 +95,50 @@ export default function DocumentUploadStep({
           className="hidden"
         />
 
+        {/* 기존에 업로드된 파일 URL 표시 (수정 모드) */}
+        {formData.fileUrls && formData.fileUrls.length > 0 && (
+          <div className="space-y-2">
+            <p className="font-semibold text-gray-700">기존 업로드된 파일 ({formData.fileUrls.length}개)</p>
+            {formData.fileUrls.map((url, index) => {
+              const fileName = url.split('/').pop() || `파일 ${index + 1}`;
+              return (
+                <div
+                  key={`existing-${index}`}
+                  className="flex items-center justify-between rounded-lg border-2 border-blue-200 bg-blue-50 p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {fileName}
+                    </a>
+                    <span className="text-xs text-gray-500">(기존 파일)</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newFileUrls = formData.fileUrls?.filter((_, i) => i !== index) || [];
+                      updateFormData({ fileUrls: newFileUrls });
+                    }}
+                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
+                  >
+                    삭제
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 새로 추가된 파일 표시 */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-gray-700">첨부된 파일 ({uploadedFiles.length}개)</p>
+            <p className="font-semibold text-gray-700">새로 추가된 파일 ({uploadedFiles.length}개)</p>
             {uploadedFiles.map((file, index) => (
               <div
-                key={index}
+                key={`new-${index}`}
                 className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4"
               >
                 <span className="text-gray-700">{file.name}</span>
