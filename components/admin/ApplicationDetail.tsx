@@ -56,6 +56,10 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
   const appData = application.application_data || {};
 
+  // 디버깅: file_urls 확인
+  console.log('Application file_urls:', application.file_urls);
+  console.log('Application data:', application);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -174,13 +178,14 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           </div>
 
           {/* 증빙서류 */}
-          {application.file_urls && application.file_urls.length > 0 && (
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-4 text-xl font-bold text-gray-900">증빙서류</h2>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-xl font-bold text-gray-900">증빙서류</h2>
+            {application.file_urls && Array.isArray(application.file_urls) && application.file_urls.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {application.file_urls.map((url: string, index: number) => {
-                  const fileName = url.split('/').pop() || `증빙서류_${index + 1}`;
-                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+                  if (!url) return null;
+                  const fileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
+                  const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName) || url.includes('image') || url.includes('photo');
                   
                   return (
                     <div
@@ -194,7 +199,15 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                             alt={fileName}
                             className="h-48 w-full rounded-lg object-contain bg-white"
                             onError={(e) => {
+                              console.error('Image load error:', url);
                               (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.innerHTML = '<div class="flex h-48 w-full items-center justify-center rounded-lg bg-gray-200"><span class="text-gray-500">이미지 로드 실패</span></div>';
+                              }
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully:', url);
                             }}
                           />
                         ) : (
@@ -203,7 +216,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                           </div>
                         )}
                       </div>
-                      <p className="mb-3 truncate text-sm font-medium text-gray-700">
+                      <p className="mb-3 truncate text-sm font-medium text-gray-700" title={fileName}>
                         {fileName}
                       </p>
                       <div className="flex gap-2">
@@ -227,8 +240,17 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   );
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                <p className="text-gray-500">증빙서류가 업로드되지 않았습니다.</p>
+                {application.file_urls && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    Debug: file_urls = {JSON.stringify(application.file_urls)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* 신청서 상세 내용 */}
           <div className="rounded-lg bg-white p-6 shadow">
