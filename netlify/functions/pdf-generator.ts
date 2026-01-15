@@ -444,13 +444,22 @@ export const handler: Handler = async (event, context) => {
     `;
 
     // Puppeteer 설정 (Netlify 환경 최적화)
-    chromium.setGraphicsMode(false);
-    
+    const isNetlify = !!process.env.NETLIFY;
     const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      args: isNetlify 
+        ? [
+            ...chromium.args,
+            '--hide-scrollbars',
+            '--disable-web-security',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+          ]
+        : ['--no-sandbox', '--disable-setuid-sandbox'],
+      defaultViewport: { width: 1920, height: 1080 },
+      executablePath: isNetlify 
+        ? await chromium.executablePath()
+        : undefined,
+      headless: true,
     });
 
     try {
@@ -463,7 +472,7 @@ export const handler: Handler = async (event, context) => {
       });
 
       // 추가 대기 시간 (폰트 로딩 보장)
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // PDF 생성
       const pdfBuffer = await page.pdf({
