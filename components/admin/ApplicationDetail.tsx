@@ -38,7 +38,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           
           // PDF 생성 옵션
           const opt = {
-            margin: [15, 15, 15, 15],
+            margin: [15, 15, 15, 15] as [number, number, number, number],
             filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
@@ -101,7 +101,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             
             const html2pdf = (await import('html2pdf.js')).default;
             const opt = {
-              margin: [15, 15, 15, 15],
+              margin: [15, 15, 15, 15] as [number, number, number, number],
               filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: { scale: 2, useCORS: true, letterRendering: true },
