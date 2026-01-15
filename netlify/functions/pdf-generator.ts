@@ -446,6 +446,8 @@ export const handler: Handler = async (event, context) => {
     // Puppeteer 설정 (Netlify 환경 최적화)
     const isNetlify = !!process.env.NETLIFY;
     
+    console.log('Environment check:', { isNetlify, nodeEnv: process.env.NODE_ENV });
+    
     const launchOptions: any = {
       args: [
         '--hide-scrollbars',
@@ -464,16 +466,33 @@ export const handler: Handler = async (event, context) => {
     // Netlify 환경에서만 chromium executablePath 사용
     if (isNetlify) {
       try {
+        console.log('Attempting to get chromium executable path...');
         const executablePath = await chromium.executablePath();
+        console.log('Chromium executable path:', executablePath);
         if (executablePath) {
           launchOptions.executablePath = executablePath;
         }
       } catch (error) {
-        console.warn('Failed to get chromium executable path:', error);
+        console.error('Failed to get chromium executable path:', error);
+        console.error('Error details:', error instanceof Error ? error.message : String(error));
+        // executablePath가 없어도 계속 진행 (로컬 환경에서 테스트 가능)
       }
     }
     
-    const browser = await puppeteer.launch(launchOptions);
+    console.log('Launching browser with options:', {
+      ...launchOptions,
+      executablePath: launchOptions.executablePath ? '[SET]' : '[NOT SET]'
+    });
+    
+    let browser;
+    try {
+      browser = await puppeteer.launch(launchOptions);
+      console.log('Browser launched successfully');
+    } catch (launchError) {
+      console.error('Browser launch failed:', launchError);
+      console.error('Launch error details:', launchError instanceof Error ? launchError.message : String(launchError));
+      throw launchError;
+    }
 
     try {
       const page = await browser.newPage();
@@ -506,6 +525,29 @@ export const handler: Handler = async (event, context) => {
       const bucketName = 'application-pdfs';
       const filePath = `${dateStr}/${fileName}`;
 
+      console.log('Uploading PDF to storage:', { bucketName, filePath, bufferSize: pdfBuffer.length });
+
+      // 버킷 존재 여부 확인 및 생성 (없는 경우)
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      if (listError) {
+        console.error('Failed to list buckets:', listError);
+      } else {
+        const bucketExists = buckets?.some(b => b.name === bucketName);
+        if (!bucketExists) {
+          console.log(`Bucket ${bucketName} does not exist. Please create it in Supabase dashboard.`);
+          // 버킷이 없으면 에러 반환
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+              error: 'Storage bucket not found',
+              details: `Bucket '${bucketName}' does not exist. Please create it in Supabase Storage.`,
+              hint: 'Go to Supabase Dashboard → Storage → New bucket → Name: application-pdfs → Public: true'
+            }),
+          };
+        }
+      }
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, pdfBuffer, {
@@ -515,20 +557,26 @@ export const handler: Handler = async (event, context) => {
 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
+        console.error('Upload error details:', JSON.stringify(uploadError, null, 2));
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({ 
             error: 'Failed to upload PDF to storage',
-            details: uploadError.message 
+            details: uploadError.message,
+            code: (uploadError as any).statusCode || (uploadError as any).code
           }),
         };
       }
+
+      console.log('PDF uploaded successfully:', uploadData);
 
       // 공개 URL 생성
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+
+      console.log('Public URL generated:', urlData.publicUrl);
 
       return {
         statusCode: 200,
@@ -541,25 +589,37 @@ export const handler: Handler = async (event, context) => {
         }),
       };
     } catch (pdfError) {
-      await browser.close();
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          console.error('Browser close error:', closeError);
+        }
+      }
       console.error('PDF generation error:', pdfError);
+      console.error('PDF error stack:', pdfError instanceof Error ? pdfError.stack : 'No stack');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           error: 'PDF generation failed',
-          details: pdfError instanceof Error ? pdfError.message : String(pdfError)
+          details: pdfError instanceof Error ? pdfError.message : String(pdfError),
+          stack: pdfError instanceof Error ? pdfError.stack : undefined
         }),
       };
     }
   } catch (error) {
     console.error('Function error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        type: error instanceof Error ? error.constructor.name : typeof error
       }),
     };
   }
