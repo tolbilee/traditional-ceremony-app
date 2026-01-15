@@ -556,9 +556,9 @@ export default function ApplicationDataStep({
       <div className="space-y-6 rounded-lg border-2 border-gray-200 bg-white p-6">
         <h3 className="text-xl font-semibold text-gray-800">참가자 정보</h3>
         
-        {/* 부/모 정보 */}
+        {/* 신청자 정보 */}
         <div className="space-y-4 border-b border-gray-200 pb-4">
-          <h4 className="font-semibold text-gray-700">부/모</h4>
+          <h4 className="font-semibold text-gray-700">신청자</h4>
           <div>
             <label className="block text-sm font-semibold text-gray-700">
               이름 <span className="text-red-500">*</span>
@@ -567,7 +567,11 @@ export default function ApplicationDataStep({
               type="text"
               name="parent.name"
               value={doljanchiData.parent?.name || ''}
-              onChange={(e) => handleDoljanchiChange('parent', { ...doljanchiData.parent, name: e.target.value })}
+              onChange={(e) => {
+                handleDoljanchiChange('parent', { ...doljanchiData.parent, name: e.target.value });
+                // 신청자 이름을 formData.userName으로도 설정 (로그인용)
+                updateFormData({ userName: e.target.value });
+              }}
               className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                 errors['parent.name'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('parent.name') ? 'text-red-600' : ''}`}

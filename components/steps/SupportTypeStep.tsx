@@ -1,7 +1,7 @@
 'use client';
 
-import { ApplicationFormData, SupportType } from '@/types';
-import { SUPPORT_TYPE_LABELS } from '@/lib/utils/constants';
+import { ApplicationFormData, SupportType, CeremonyType } from '@/types';
+import { SUPPORT_TYPE_LABELS, DOLJANCHI_SUPPORT_TYPE_LABELS } from '@/lib/utils/constants';
 import BottomNavigationBar from '../BottomNavigationBar';
 
 interface SupportTypeStepProps {
@@ -11,7 +11,8 @@ interface SupportTypeStepProps {
   onPrev: () => void;
 }
 
-const SUPPORT_TYPES: SupportType[] = [
+// 전통혼례 지원 유형
+const WEDDING_SUPPORT_TYPES: SupportType[] = [
   'basic_livelihood',
   'multicultural',
   'disabled',
@@ -19,14 +20,25 @@ const SUPPORT_TYPES: SupportType[] = [
   'national_merit',
 ];
 
+// 돌잔치 지원 유형
+const DOLJANCHI_SUPPORT_TYPES = [
+  'doljanchi',
+  'doljanchi_welfare_facility',
+  'doljanchi_orphanage',
+] as const;
+
+export type DoljanchiSupportType = typeof DOLJANCHI_SUPPORT_TYPES[number];
+
 export default function SupportTypeStep({
   formData,
   updateFormData,
   onNext,
   onPrev,
 }: SupportTypeStepProps) {
-  const handleSelect = (type: SupportType) => {
-    updateFormData({ supportType: type });
+  const ceremonyType: CeremonyType = formData.type || 'wedding';
+  
+  const handleSelect = (type: SupportType | DoljanchiSupportType) => {
+    updateFormData({ supportType: type as any });
   };
 
   const handleNext = () => {
@@ -43,21 +55,41 @@ export default function SupportTypeStep({
       <p className="text-gray-600">해당하는 지원 유형을 선택해주세요.</p>
 
       <div className="space-y-4">
-        {SUPPORT_TYPES.map((type) => (
-          <button
-            key={type}
-            onClick={() => handleSelect(type)}
-            className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
-              formData.supportType === type
-                ? 'border-blue-600 bg-blue-50'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <div className="text-xl font-semibold text-gray-800">
-              {SUPPORT_TYPE_LABELS[type]}
-            </div>
-          </button>
-        ))}
+        {ceremonyType === 'wedding' ? (
+          // 전통혼례 지원 유형
+          WEDDING_SUPPORT_TYPES.map((type) => (
+            <button
+              key={type}
+              onClick={() => handleSelect(type)}
+              className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
+                formData.supportType === type
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="text-xl font-semibold text-gray-800">
+                {SUPPORT_TYPE_LABELS[type]}
+              </div>
+            </button>
+          ))
+        ) : (
+          // 돌잔치 지원 유형
+          DOLJANCHI_SUPPORT_TYPES.map((type) => (
+            <button
+              key={type}
+              onClick={() => handleSelect(type)}
+              className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
+                formData.supportType === type
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="text-xl font-semibold text-gray-800">
+                {DOLJANCHI_SUPPORT_TYPE_LABELS[type]}
+              </div>
+            </button>
+          ))
+        )}
       </div>
 
       <div className="flex justify-between pt-6 pb-32">

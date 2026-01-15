@@ -67,20 +67,16 @@ export default function CompletionStep({
         >
           이전
         </button>
-        <div className="flex gap-3">
-          <button
-            onClick={handleSubmit}
-            className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
-          >
-            신청 완료하기
-          </button>
-          <Link
-            href="/"
-            className="rounded-full bg-green-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-green-700 active:scale-95"
-          >
-            홈화면으로 돌아가기
-          </Link>
-        </div>
+        <button
+          onClick={async () => {
+            await handleSubmit();
+            // 신청 완료 후 홈으로 이동
+            window.location.href = '/';
+          }}
+          className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+        >
+          신청 완료하기
+        </button>
       </div>
       
       <BottomNavigationBar />

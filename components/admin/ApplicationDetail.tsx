@@ -245,13 +245,28 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                         >
                           보기
                         </a>
-                        <a
-                          href={url}
-                          download={fileName}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(url);
+                              const blob = await response.blob();
+                              const blobUrl = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = blobUrl;
+                              a.download = fileName;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              window.URL.revokeObjectURL(blobUrl);
+                            } catch (error) {
+                              console.error('Download error:', error);
+                              alert('다운로드 중 오류가 발생했습니다.');
+                            }
+                          }}
                           className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-green-700"
                         >
                           다운로드
-                        </a>
+                        </button>
                       </div>
                     </div>
                   );
@@ -327,19 +342,38 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   {appData.parent && (
                     <div>
                       <h3 className="font-semibold text-gray-700">부모 정보</h3>
-                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
                         <div>
-                          <span className="text-sm text-gray-500">부 이름:</span>{' '}
-                          <span className="text-gray-900">{appData.parent.fatherName || '-'}</span>
+                          <span className="text-sm text-gray-500">이름:</span>{' '}
+                          <span className="text-gray-900">{appData.parent.name || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-sm text-gray-500">모 이름:</span>{' '}
-                          <span className="text-gray-900">{appData.parent.motherName || '-'}</span>
+                          <span className="text-sm text-gray-500">생년월일:</span>{' '}
+                          <span className="text-gray-900">{appData.parent.birthDate || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-sm text-gray-500">혼인여부:</span>{' '}
+                          <span className="text-sm text-gray-500">성별:</span>{' '}
                           <span className="text-gray-900">
-                            {appData.parent.married ? '기혼' : '미혼'}
+                            {appData.parent.gender === 'male' ? '남' : appData.parent.gender === 'female' ? '여' : '-'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {appData.parentMarried !== undefined && (
+                    <div>
+                      <h3 className="font-semibold text-gray-700">대상 확인</h3>
+                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                        <div>
+                          <span className="text-sm text-gray-500">부/모(신청자 본인)의 혼인 여부:</span>{' '}
+                          <span className="text-gray-900">
+                            {appData.parentMarried === 'yes' ? '예' : appData.parentMarried === 'no' ? '아니오' : '-'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500">부/모(신청자 본인)의 자녀 양육여부:</span>{' '}
+                          <span className="text-gray-900">
+                            {appData.parentRaisingChild === 'yes' ? '예' : appData.parentRaisingChild === 'no' ? '아니오' : '-'}
                           </span>
                         </div>
                       </div>

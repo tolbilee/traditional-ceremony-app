@@ -90,10 +90,12 @@ export default function PrivacyConsentStep({
             ※ 위의 개인정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
           </p>
 
-          <div className="flex items-center justify-between rounded-lg border-2 border-gray-300 bg-white p-4">
-            <span className="font-semibold text-gray-800">
-              개인정보의 수집 및 이용에 동의하십니까?
-            </span>
+          <div className="rounded-lg border-2 border-gray-300 bg-white p-4">
+            <div className="mb-3">
+              <span className="font-semibold text-gray-800">
+                개인정보의 수집 및 이용에 동의하십니까?
+              </span>
+            </div>
             <div className="flex gap-4">
               <label className="flex items-center">
                 <input
@@ -146,10 +148,12 @@ export default function PrivacyConsentStep({
             ※ 위의 민감정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
           </p>
 
-          <div className="mt-4 flex items-center justify-between rounded-lg border-2 border-gray-300 bg-white p-4">
-            <span className="font-semibold text-gray-800">
-              민감정보의 수집 및 이용에 동의하십니까?
-            </span>
+          <div className="mt-4 rounded-lg border-2 border-gray-300 bg-white p-4">
+            <div className="mb-3">
+              <span className="font-semibold text-gray-800">
+                민감정보의 수집 및 이용에 동의하십니까?
+              </span>
+            </div>
             <div className="flex gap-4">
               <label className="flex items-center">
                 <input

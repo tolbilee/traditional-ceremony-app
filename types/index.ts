@@ -7,7 +7,10 @@ export type SupportType =
   | 'multicultural' // 다문화가정
   | 'disabled' // 장애인
   | 'north_korean_defector' // 북한이탈주민
-  | 'national_merit'; // 국가유공자
+  | 'national_merit' // 국가유공자
+  | 'doljanchi' // 돌잔치
+  | 'doljanchi_welfare_facility' // 찾아가는 돌잔치(복지시설)
+  | 'doljanchi_orphanage'; // 찾아가는 돌잔치(영아원)
 
 export type TimeSlot = '12:00' | '15:00' | '18:00';
 

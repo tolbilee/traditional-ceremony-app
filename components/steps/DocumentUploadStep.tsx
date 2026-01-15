@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ApplicationFormData } from '@/types';
 import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
 import BottomNavigationBar from '../BottomNavigationBar';
@@ -22,6 +22,22 @@ export default function DocumentUploadStep({
 }: DocumentUploadStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
+  
+  // 기존에 DB에 저장된 파일 URL 목록 (수정 모드에서만 사용)
+  // 초기 로드 시 formData.fileUrls를 originalFileUrls로 설정
+  const [originalFileUrls, setOriginalFileUrls] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // 초기 로드 시 originalFileUrls 설정 (한 번만)
+  useEffect(() => {
+    if (!isInitialized && formData.fileUrls && formData.fileUrls.length > 0) {
+      setOriginalFileUrls([...formData.fileUrls]);
+      setIsInitialized(true);
+    }
+  }, [formData.fileUrls, isInitialized]);
+  
+  // 새로 업로드한 파일의 URL 목록 (originalFileUrls에 없는 것들)
+  const newlyUploadedUrls = formData.fileUrls?.filter(url => !originalFileUrls.includes(url)) || [];
 
   const supportType = formData.supportType;
   const requiredDoc = supportType ? REQUIRED_DOCUMENTS[supportType] : null;
@@ -60,19 +76,20 @@ export default function DocumentUploadStep({
       }
     }
 
-    // 업로드된 URL을 fileUrls에 추가
-    const existingUrls = formData.fileUrls || [];
-    const newFileUrls = [...existingUrls, ...uploadedUrls];
+    // 새로 업로드된 URL만 추가 (기존 URL은 유지)
+    // originalFileUrls는 수정 모드에서 DB에 저장된 원본 파일들
+    // uploadedUrls는 방금 업로드한 새 파일들
+    const newFileUrls = [...originalFileUrls, ...uploadedUrls];
     
     console.log('=== File upload completed ===');
-    console.log('Uploaded URLs:', uploadedUrls);
-    console.log('Existing URLs:', existingUrls);
-    console.log('New total file URLs:', newFileUrls.length);
+    console.log('Original file URLs (from DB):', originalFileUrls);
+    console.log('Newly uploaded URLs:', uploadedUrls);
+    console.log('Total file URLs:', newFileUrls.length);
     
     // formData 업데이트
     updateFormData({ fileUrls: newFileUrls });
 
-    // 로컬 파일 목록도 업데이트 (UI 표시용)
+    // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)
     setUploadedFiles((prev) => [...prev, ...files]);
     
     // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
@@ -113,11 +130,17 @@ export default function DocumentUploadStep({
     const newFiles = uploadedFiles.filter((_, i) => i !== index);
     setUploadedFiles(newFiles);
     updateFormData({ files: newFiles });
-  };
-
-  const handleRemoveExistingFile = (index: number) => {
-    const newFileUrls = formData.fileUrls?.filter((_, i) => i !== index) || [];
+    
+    // 새로 업로드한 파일을 제거할 때는 fileUrls에서도 제거
+    // 새로 업로드한 파일의 URL은 formData.fileUrls의 마지막 부분에 있음
+    const currentUrls = formData.fileUrls || [];
+    const newFileUrls = currentUrls.slice(0, currentUrls.length - (uploadedFiles.length - newFiles.length));
     updateFormData({ fileUrls: newFileUrls });
+    
+    // DB에도 저장
+    if (onFileUploaded) {
+      onFileUploaded(newFileUrls);
+    }
   };
 
   const handleNext = () => {
@@ -165,11 +188,11 @@ export default function DocumentUploadStep({
           className="hidden"
         />
 
-        {/* 기존에 업로드된 파일 URL 표시 (수정 모드) */}
-        {formData.fileUrls && formData.fileUrls.length > 0 && (
+        {/* 기존에 업로드된 파일 URL 표시 (수정 모드 - DB에 저장된 원본 파일만) */}
+        {originalFileUrls && originalFileUrls.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-gray-700">기존 업로드된 파일 ({formData.fileUrls.length}개)</p>
-            {formData.fileUrls.map((url, index) => {
+            <p className="font-semibold text-gray-700">기존 업로드된 파일 ({originalFileUrls.length}개)</p>
+            {originalFileUrls.map((url, index) => {
               const fileName = url.split('/').pop() || `파일 ${index + 1}`;
               return (
                 <div
@@ -188,7 +211,20 @@ export default function DocumentUploadStep({
                     <span className="text-xs text-gray-500">(기존 파일)</span>
                   </div>
                   <button
-                    onClick={() => handleRemoveExistingFile(index)}
+                    onClick={() => {
+                      // originalFileUrls에서 제거
+                      const newOriginalUrls = originalFileUrls.filter((_, i) => i !== index);
+                      setOriginalFileUrls(newOriginalUrls);
+                      // formData의 fileUrls도 업데이트 (전체 목록에서 해당 URL 제거)
+                      const currentUrls = formData.fileUrls || [];
+                      const urlToRemove = originalFileUrls[index];
+                      const updatedUrls = currentUrls.filter(u => u !== urlToRemove);
+                      updateFormData({ fileUrls: updatedUrls });
+                      // DB에도 저장
+                      if (onFileUploaded) {
+                        onFileUploaded(updatedUrls);
+                      }
+                    }}
                     className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
                   >
                     삭제
@@ -199,24 +235,37 @@ export default function DocumentUploadStep({
           </div>
         )}
 
-        {/* 새로 추가된 파일 표시 */}
-        {uploadedFiles.length > 0 && (
+        {/* 새로 추가된 파일 표시 (방금 업로드한 파일들) */}
+        {newlyUploadedUrls.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-gray-700">새로 추가된 파일 ({uploadedFiles.length}개)</p>
-            {uploadedFiles.map((file, index) => (
-              <div
-                key={`new-${index}`}
-                className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4"
-              >
-                <span className="text-gray-700">{file.name}</span>
-                <button
-                  onClick={() => handleRemoveFile(index)}
-                  className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
+            <p className="font-semibold text-gray-700">새로 추가된 파일 ({newlyUploadedUrls.length}개)</p>
+            {newlyUploadedUrls.map((url, index) => {
+              const fileName = url.split('/').pop() || `파일 ${index + 1}`;
+              return (
+                <div
+                  key={`new-${index}`}
+                  className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4"
                 >
-                  삭제
-                </button>
-              </div>
-            ))}
+                  <span className="text-gray-700">{fileName}</span>
+                  <button
+                    onClick={() => {
+                      // newlyUploadedUrls에서 제거
+                      const updatedNewUrls = newlyUploadedUrls.filter((_, i) => i !== index);
+                      // 전체 fileUrls 업데이트 (originalFileUrls + updatedNewUrls)
+                      const updatedAllUrls = [...originalFileUrls, ...updatedNewUrls];
+                      updateFormData({ fileUrls: updatedAllUrls });
+                      // DB에도 저장
+                      if (onFileUploaded) {
+                        onFileUploaded(updatedAllUrls);
+                      }
+                    }}
+                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
+                  >
+                    삭제
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
