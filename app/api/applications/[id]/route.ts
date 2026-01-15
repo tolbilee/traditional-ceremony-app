@@ -43,15 +43,47 @@ export async function PUT(
       ? formData.birthDate.slice(2, 8) 
       : formData.birthDate;
 
+    // 한글 데이터 정규화 함수
+    const normalizeString = (str: any): string => {
+      if (typeof str !== 'string') return String(str || '');
+      // UTF-8 인코딩 보장
+      try {
+        return decodeURIComponent(encodeURIComponent(str));
+      } catch {
+        return str;
+      }
+    };
+
+    // application_data 정규화
+    const normalizeApplicationData = (data: any): any => {
+      if (!data || typeof data !== 'object') return data;
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          normalized[key] = normalizeString(value);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          normalized[key] = normalizeApplicationData(value);
+        } else if (Array.isArray(value)) {
+          normalized[key] = value.map((item: any) => 
+            typeof item === 'string' ? normalizeString(item) : 
+            typeof item === 'object' ? normalizeApplicationData(item) : item
+          );
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    };
+
     // 데이터베이스 업데이트
     const updateData = {
       type: formData.type,
-      user_name: formData.userName,
+      user_name: normalizeString(formData.userName),
       birth_date: birthDate6,
       schedule_1: formData.schedule1,
       schedule_2: formData.schedule2 || null,
       support_type: formData.supportType!,
-      application_data: formData.applicationData,
+      application_data: normalizeApplicationData(formData.applicationData),
       consent_status: formData.consentStatus,
       file_urls: allFileUrls,
       updated_at: new Date().toISOString(),
@@ -66,15 +98,72 @@ export async function PUT(
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
+      );
     }
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    // 한글 데이터 정규화 및 인코딩 보장
+    const normalizeString = (str: any): string => {
+      if (typeof str !== 'string') return String(str || '');
+      try {
+        return decodeURIComponent(encodeURIComponent(str));
+      } catch {
+        return str;
+      }
+    };
+
+    const normalizeApplicationData = (data: any): any => {
+      if (!data || typeof data !== 'object') return data || {};
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          normalized[key] = normalizeString(value);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          normalized[key] = normalizeApplicationData(value);
+        } else if (Array.isArray(value)) {
+          normalized[key] = value.map((item: any) => 
+            typeof item === 'string' ? normalizeString(item) : 
+            typeof item === 'object' ? normalizeApplicationData(item) : item
+          );
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    };
+
+    const normalizedData = {
+      ...data,
+      user_name: normalizeString(data.user_name || ''),
+      application_data: normalizeApplicationData(data.application_data || {}),
+    };
+
+    return NextResponse.json(
+      { success: true, data: normalizedData },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
       { error: '수정 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
     );
   }
 }

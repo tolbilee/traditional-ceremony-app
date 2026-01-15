@@ -17,7 +17,12 @@ export async function POST(request: NextRequest) {
       console.error('Failed to parse request body:', parseError);
       return NextResponse.json(
         { error: '요청 데이터를 파싱할 수 없습니다.' },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
       );
     }
 
@@ -61,15 +66,47 @@ export async function POST(request: NextRequest) {
       : formData.birthDate;
     console.log('Birth date converted:', formData.birthDate, '->', birthDate6);
 
+    // 한글 데이터 정규화 함수
+    const normalizeString = (str: any): string => {
+      if (typeof str !== 'string') return String(str || '');
+      // UTF-8 인코딩 보장
+      try {
+        return decodeURIComponent(encodeURIComponent(str));
+      } catch {
+        return str;
+      }
+    };
+
+    // application_data 정규화
+    const normalizeApplicationData = (data: any): any => {
+      if (!data || typeof data !== 'object') return data || {};
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          normalized[key] = normalizeString(value);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          normalized[key] = normalizeApplicationData(value);
+        } else if (Array.isArray(value)) {
+          normalized[key] = value.map((item: any) => 
+            typeof item === 'string' ? normalizeString(item) : 
+            typeof item === 'object' ? normalizeApplicationData(item) : item
+          );
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    };
+
     // 데이터베이스에 저장
     const insertData = {
       type: formData.type,
-      user_name: formData.userName,
+      user_name: normalizeString(formData.userName),
       birth_date: birthDate6,
       schedule_1: formData.schedule1 || null,
       schedule_2: formData.schedule2 || null,
       support_type: formData.supportType || null,
-      application_data: formData.applicationData || {},
+      application_data: normalizeApplicationData(formData.applicationData || {}),
       consent_status: formData.consentStatus || false,
       file_urls: fileUrls,
     };
@@ -120,12 +157,62 @@ export async function POST(request: NextRequest) {
     console.log('=== SUCCESS ===');
     console.log('Successfully inserted application:', data?.id);
     console.log('Inserted data:', JSON.stringify(data, null, 2));
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    
+    // 한글 데이터 정규화 및 인코딩 보장
+    const normalizeString = (str: any): string => {
+      if (typeof str !== 'string') return String(str || '');
+      try {
+        return decodeURIComponent(encodeURIComponent(str));
+      } catch {
+        return str;
+      }
+    };
+
+    const normalizeApplicationData = (data: any): any => {
+      if (!data || typeof data !== 'object') return data || {};
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          normalized[key] = normalizeString(value);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          normalized[key] = normalizeApplicationData(value);
+        } else if (Array.isArray(value)) {
+          normalized[key] = value.map((item: any) => 
+            typeof item === 'string' ? normalizeString(item) : 
+            typeof item === 'object' ? normalizeApplicationData(item) : item
+          );
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    };
+
+    const normalizedData = {
+      ...data,
+      user_name: normalizeString(data.user_name || ''),
+      application_data: normalizeApplicationData(data.application_data || {}),
+    };
+    
+    return NextResponse.json(
+      { success: true, data: normalizedData },
+      {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
       { error: '신청 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
     );
   }
 }
@@ -153,15 +240,72 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
+      );
     }
 
-    return NextResponse.json({ data }, { status: 200 });
+    // 한글 데이터 정규화
+    const normalizeString = (str: any): string => {
+      if (typeof str !== 'string') return String(str || '');
+      try {
+        return decodeURIComponent(encodeURIComponent(str));
+      } catch {
+        return str;
+      }
+    };
+
+    const normalizeApplicationData = (data: any): any => {
+      if (!data || typeof data !== 'object') return data || {};
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          normalized[key] = normalizeString(value);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          normalized[key] = normalizeApplicationData(value);
+        } else if (Array.isArray(value)) {
+          normalized[key] = value.map((item: any) => 
+            typeof item === 'string' ? normalizeString(item) : 
+            typeof item === 'object' ? normalizeApplicationData(item) : item
+          );
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    };
+
+    const normalizedData = (data || []).map((item: any) => ({
+      ...item,
+      user_name: normalizeString(item.user_name || ''),
+      application_data: normalizeApplicationData(item.application_data || {}),
+    }));
+
+    return NextResponse.json(
+      { data: normalizedData },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
       { error: '조회 중 오류가 발생했습니다.' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
     );
   }
 }

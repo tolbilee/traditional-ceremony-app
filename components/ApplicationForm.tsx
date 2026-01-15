@@ -114,12 +114,12 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         const response = await fetch(`/api/applications/${savedApplicationId}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
           body: JSON.stringify({
             ...formData,
             fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
-          }),
+          }, null, 0), // JSON.stringify에 공백 없이 인코딩
         });
         
         if (response.ok) {
@@ -179,9 +179,9 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         const response = await fetch('/api/applications', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
-          body: JSON.stringify(saveData),
+          body: JSON.stringify(saveData, null, 0), // JSON.stringify에 공백 없이 인코딩
         });
         
         if (response.ok) {
@@ -283,9 +283,9 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         response = await fetch(`/api/applications/${savedApplicationId}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
-          body: JSON.stringify(saveData),
+          body: JSON.stringify(saveData, null, 0),
         });
       } else {
         // 새 데이터 생성
@@ -293,9 +293,9 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         response = await fetch('/api/applications', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
-          body: JSON.stringify(saveData),
+          body: JSON.stringify(saveData, null, 0),
         });
       }
 
