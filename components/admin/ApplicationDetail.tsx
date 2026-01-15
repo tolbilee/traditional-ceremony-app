@@ -19,17 +19,72 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
     try {
       const response = await fetch(`/admin/applications/${application.id}/pdf`);
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        const contentType = response.headers.get('content-type');
+        
+        // HTML이 반환된 경우 (Puppeteer 실패)
+        if (contentType?.includes('text/html')) {
+          const htmlText = await response.text();
+          // 새 창에서 HTML 열기 (브라우저 인쇄 기능 사용)
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(htmlText);
+            printWindow.document.close();
+            // 자동 인쇄 대화상자 열기
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+            alert('PDF 생성이 실패했습니다. 브라우저 인쇄 기능을 사용하여 PDF로 저장해주세요.');
+          } else {
+            alert('팝업이 차단되었습니다. 팝업을 허용한 후 다시 시도해주세요.');
+          }
+          return;
+        }
+        
+        // PDF가 반환된 경우
+        if (contentType?.includes('application/pdf')) {
+          const blob = await response.blob();
+          
+          // PDF 유효성 검사 (PDF 파일은 %PDF로 시작)
+          const arrayBuffer = await blob.slice(0, 4).arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const isPDF = uint8Array[0] === 0x25 && // %
+                        uint8Array[1] === 0x50 && // P
+                        uint8Array[2] === 0x44 && // D
+                        uint8Array[3] === 0x46;   // F
+          
+          if (!isPDF) {
+            alert('PDF 파일이 손상되었습니다. HTML 버전을 열어드립니다.');
+            const htmlText = await blob.text();
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(htmlText);
+              printWindow.document.close();
+              setTimeout(() => {
+                printWindow.print();
+              }, 500);
+            }
+            return;
+          }
+          
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else {
+          // 알 수 없는 타입
+          const blob = await response.blob();
+          const text = await blob.text();
+          console.error('Unexpected content type:', contentType);
+          console.error('Response preview:', text.substring(0, 200));
+          alert('예상치 못한 응답 형식입니다. 콘솔을 확인해주세요.');
+        }
       } else {
-        alert('PDF 생성 중 오류가 발생했습니다.');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(`PDF 생성 중 오류가 발생했습니다: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('PDF download error:', error);
