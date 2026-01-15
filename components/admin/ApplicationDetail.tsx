@@ -21,35 +21,25 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         
-        // HTML이 반환된 경우 - 클라이언트에서 jsPDF로 PDF 생성
+        // HTML이 반환된 경우 - 브라우저 인쇄 기능 사용 (가장 확실한 방법)
         if (contentType?.includes('text/html')) {
           const htmlText = await response.text();
           
-          // jsPDF를 동적으로 import
-          const { jsPDF } = await import('jspdf');
-          const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-          });
-
-          // HTML을 PDF로 변환 (한글 폰트 자동 지원)
-          await doc.html(htmlText, {
-            callback: (doc) => {
-              const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-              doc.save(fileName);
+          // 새 창에서 HTML 열고 인쇄 대화상자 표시
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(htmlText);
+            printWindow.document.close();
+            
+            // 폰트 로딩 대기 후 인쇄
+            setTimeout(() => {
+              printWindow.print();
               setLoading(false);
-            },
-            x: 0,
-            y: 0,
-            width: 210, // A4 width in mm
-            windowWidth: 1200,
-            html2canvas: {
-              scale: 0.264, // 300 DPI
-              useCORS: true,
-              letterRendering: true,
-            },
-          });
+            }, 1000);
+          } else {
+            alert('팝업이 차단되었습니다. 팝업을 허용한 후 다시 시도해주세요.');
+            setLoading(false);
+          }
           return;
         }
         
@@ -57,39 +47,24 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         if (contentType?.includes('application/pdf')) {
           const blob = await response.blob();
           
-          // PDF 유효성 검사 (PDF 파일은 %PDF로 시작)
+          // PDF 유효성 검사
           const arrayBuffer = await blob.slice(0, 4).arrayBuffer();
           const uint8Array = new Uint8Array(arrayBuffer);
-          const isPDF = uint8Array[0] === 0x25 && // %
-                        uint8Array[1] === 0x50 && // P
-                        uint8Array[2] === 0x44 && // D
-                        uint8Array[3] === 0x46;   // F
+          const isPDF = uint8Array[0] === 0x25 && uint8Array[1] === 0x50 && 
+                        uint8Array[2] === 0x44 && uint8Array[3] === 0x46;
           
           if (!isPDF) {
-            alert('PDF 파일이 손상되었습니다. HTML 버전을 사용합니다.');
+            // PDF가 아니면 HTML로 처리
             const htmlText = await blob.text();
-            const { jsPDF } = await import('jspdf');
-            const doc = new jsPDF({
-              orientation: 'portrait',
-              unit: 'mm',
-              format: 'a4',
-            });
-            await doc.html(htmlText, {
-              callback: (doc) => {
-                const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-                doc.save(fileName);
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(htmlText);
+              printWindow.document.close();
+              setTimeout(() => {
+                printWindow.print();
                 setLoading(false);
-              },
-              x: 0,
-              y: 0,
-              width: 210,
-              windowWidth: 1200,
-              html2canvas: {
-                scale: 0.264,
-                useCORS: true,
-                letterRendering: true,
-              },
-            });
+              }, 1000);
+            }
             return;
           }
           
@@ -101,13 +76,6 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           a.click();
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-        } else {
-          // 알 수 없는 타입
-          const blob = await response.blob();
-          const text = await blob.text();
-          console.error('Unexpected content type:', contentType);
-          console.error('Response preview:', text.substring(0, 200));
-          alert('예상치 못한 응답 형식입니다. 콘솔을 확인해주세요.');
         }
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));

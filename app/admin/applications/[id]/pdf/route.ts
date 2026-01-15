@@ -169,9 +169,22 @@ export async function GET(
     @media print {
       body {
         padding: 20px;
+        margin: 0;
       }
       .section {
         page-break-inside: avoid;
+      }
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+    }
+    
+    /* 인쇄 시 최적화 */
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
     }
   </style>
