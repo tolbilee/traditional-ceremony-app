@@ -445,22 +445,35 @@ export const handler: Handler = async (event, context) => {
 
     // Puppeteer 설정 (Netlify 환경 최적화)
     const isNetlify = !!process.env.NETLIFY;
-    const browser = await puppeteer.launch({
-      args: isNetlify 
-        ? [
-            ...chromium.args,
-            '--hide-scrollbars',
-            '--disable-web-security',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-          ]
-        : ['--no-sandbox', '--disable-setuid-sandbox'],
+    
+    const launchOptions: any = {
+      args: [
+        '--hide-scrollbars',
+        '--disable-web-security',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--disable-accelerated-2d-canvas',
+      ],
       defaultViewport: { width: 1920, height: 1080 },
-      executablePath: isNetlify 
-        ? await chromium.executablePath()
-        : undefined,
       headless: true,
-    });
+    };
+    
+    // Netlify 환경에서만 chromium executablePath 사용
+    if (isNetlify) {
+      try {
+        const executablePath = await chromium.executablePath();
+        if (executablePath) {
+          launchOptions.executablePath = executablePath;
+        }
+      } catch (error) {
+        console.warn('Failed to get chromium executable path:', error);
+      }
+    }
+    
+    const browser = await puppeteer.launch(launchOptions);
 
     try {
       const page = await browser.newPage();
