@@ -459,12 +459,39 @@ export const handler: Handler = async (event, context) => {
       if (isNetlify) {
         console.log('Using Netlify chromium configuration...');
         
-        // @sparticuz/chromium의 올바른 사용법
-        const executablePath = await chromium.executablePath();
-        console.log('Chromium executable path obtained:', executablePath ? 'YES' : 'NO');
+        // @sparticuz/chromium의 올바른 사용법 - 여러 방법 시도
+        let executablePath: string | undefined;
+        let chromiumArgs: string[] = [];
         
-        // chromium.args가 배열인지 확인
-        const chromiumArgs = Array.isArray(chromium.args) ? chromium.args : [];
+        try {
+          // 방법 1: chromium.executablePath() 직접 호출
+          if (typeof chromium.executablePath === 'function') {
+            executablePath = await chromium.executablePath();
+            console.log('Method 1 - executablePath obtained:', !!executablePath);
+          }
+        } catch (e1) {
+          console.log('Method 1 failed, trying method 2...');
+          try {
+            // 방법 2: chromium 객체의 속성으로 접근
+            if ((chromium as any).executablePath) {
+              executablePath = typeof (chromium as any).executablePath === 'function' 
+                ? await (chromium as any).executablePath()
+                : (chromium as any).executablePath;
+              console.log('Method 2 - executablePath obtained:', !!executablePath);
+            }
+          } catch (e2) {
+            console.error('All executablePath methods failed');
+          }
+        }
+        
+        // chromium.args 처리
+        if (chromium.args && Array.isArray(chromium.args)) {
+          chromiumArgs = chromium.args;
+        } else if ((chromium as any).args && Array.isArray((chromium as any).args)) {
+          chromiumArgs = (chromium as any).args;
+        }
+        
+        console.log('Chromium executable path:', executablePath ? 'FOUND' : 'NOT FOUND');
         console.log('Chromium args count:', chromiumArgs.length);
         
         // 기본 args와 chromium args 결합
@@ -479,6 +506,12 @@ export const handler: Handler = async (event, context) => {
           '--disable-features=IsolateOrigins,site-per-process',
         ];
         
+        // executablePath가 없으면 에러
+        if (!executablePath) {
+          throw new Error('Chromium executable path not found. This usually means @sparticuz/chromium is not properly installed or configured.');
+        }
+        
+        console.log('Launching browser with executablePath:', executablePath.substring(0, 50) + '...');
         console.log('Total launch args:', launchArgs.length);
         
         browser = await puppeteer.launch({
@@ -505,8 +538,10 @@ export const handler: Handler = async (event, context) => {
       console.error('Browser launch failed:', launchError);
       console.error('Launch error details:', launchError instanceof Error ? launchError.message : String(launchError));
       console.error('Launch error stack:', launchError instanceof Error ? launchError.stack : 'No stack');
-      console.error('Chromium object:', {
+      console.error('Chromium object inspection:', {
         type: typeof chromium,
+        isObject: typeof chromium === 'object',
+        keys: chromium ? Object.keys(chromium).slice(0, 10) : [],
         hasExecutablePath: chromium && typeof (chromium as any).executablePath === 'function',
         hasArgs: chromium && Array.isArray((chromium as any).args),
       });
@@ -520,7 +555,9 @@ export const handler: Handler = async (event, context) => {
           details: launchError instanceof Error ? launchError.message : String(launchError),
           type: 'BROWSER_LAUNCH_ERROR',
           chromiumAvailable: !!chromium,
-          isNetlify: isNetlify
+          isNetlify: isNetlify,
+          chromiumType: typeof chromium,
+          suggestion: 'Please check Netlify function logs for more details. The chromium executable may not be properly bundled.'
         }),
       };
     }
