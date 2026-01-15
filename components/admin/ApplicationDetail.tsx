@@ -50,7 +50,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             jsPDF: { 
               unit: 'mm', 
               format: 'a4', 
-              orientation: 'portrait' 
+              orientation: 'portrait' as const
             },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
@@ -105,7 +105,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
               image: { type: 'jpeg' as const, quality: 0.98 },
               html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
             };
             
             try {
