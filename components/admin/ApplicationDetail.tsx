@@ -21,24 +21,60 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         
-        // HTML이 반환된 경우 - 브라우저 인쇄 기능 사용 (가장 확실한 방법)
+        // HTML이 반환된 경우 - html2pdf.js로 PDF 생성
         if (contentType?.includes('text/html')) {
           const htmlText = await response.text();
           
-          // 새 창에서 HTML 열고 인쇄 대화상자 표시
-          const printWindow = window.open('', '_blank');
-          if (printWindow) {
-            printWindow.document.write(htmlText);
-            printWindow.document.close();
-            
-            // 폰트 로딩 대기 후 인쇄
-            setTimeout(() => {
-              printWindow.print();
-              setLoading(false);
-            }, 1000);
-          } else {
-            alert('팝업이 차단되었습니다. 팝업을 허용한 후 다시 시도해주세요.');
+          // 임시 div 생성하여 HTML 삽입
+          const tempDiv = document.createElement('div');
+          tempDiv.style.position = 'absolute';
+          tempDiv.style.left = '-9999px';
+          tempDiv.style.width = '210mm'; // A4 width
+          tempDiv.innerHTML = htmlText;
+          document.body.appendChild(tempDiv);
+          
+          // html2pdf.js 동적 import
+          const html2pdf = (await import('html2pdf.js')).default;
+          
+          // PDF 생성 옵션
+          const opt = {
+            margin: [15, 15, 15, 15],
+            filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              logging: false,
+            },
+            jsPDF: { 
+              unit: 'mm', 
+              format: 'a4', 
+              orientation: 'portrait' 
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          
+          try {
+            await html2pdf().set(opt).from(tempDiv).save();
+            document.body.removeChild(tempDiv);
             setLoading(false);
+          } catch (pdfError) {
+            console.error('PDF generation error:', pdfError);
+            document.body.removeChild(tempDiv);
+            // 실패 시 브라우저 인쇄 기능으로 폴백
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(htmlText);
+              printWindow.document.close();
+              setTimeout(() => {
+                printWindow.print();
+                setLoading(false);
+              }, 1000);
+            } else {
+              alert('PDF 생성에 실패했습니다. 팝업을 허용한 후 다시 시도해주세요.');
+              setLoading(false);
+            }
           }
           return;
         }
@@ -56,14 +92,30 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           if (!isPDF) {
             // PDF가 아니면 HTML로 처리
             const htmlText = await blob.text();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(htmlText);
-              printWindow.document.close();
-              setTimeout(() => {
-                printWindow.print();
-                setLoading(false);
-              }, 1000);
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.width = '210mm';
+            tempDiv.innerHTML = htmlText;
+            document.body.appendChild(tempDiv);
+            
+            const html2pdf = (await import('html2pdf.js')).default;
+            const opt = {
+              margin: [15, 15, 15, 15],
+              filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            };
+            
+            try {
+              await html2pdf().set(opt).from(tempDiv).save();
+              document.body.removeChild(tempDiv);
+              setLoading(false);
+            } catch (error) {
+              document.body.removeChild(tempDiv);
+              alert('PDF 생성에 실패했습니다.');
+              setLoading(false);
             }
             return;
           }
