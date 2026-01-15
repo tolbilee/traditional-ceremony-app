@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { ApplicationFormData } from '@/types';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface CompletionStepProps {
   formData: Partial<ApplicationFormData>;
@@ -78,8 +77,6 @@ export default function CompletionStep({
           신청 완료하기
         </button>
       </div>
-      
-      <BottomNavigationBar />
     </div>
   );
 }

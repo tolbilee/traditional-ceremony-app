@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ApplicationFormData } from '@/types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface PrivacyConsentStepProps {
   formData: Partial<ApplicationFormData>;
@@ -206,8 +205,6 @@ export default function PrivacyConsentStep({
           다음 단계
         </button>
       </div>
-      
-      <BottomNavigationBar />
     </div>
   );
 }

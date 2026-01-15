@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ApplicationFormData } from '@/types';
 import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface DocumentUploadStepProps {
   formData: Partial<ApplicationFormData>;
@@ -284,8 +283,6 @@ export default function DocumentUploadStep({
           다음 단계
         </button>
       </div>
-      
-      <BottomNavigationBar />
     </div>
   );
 }

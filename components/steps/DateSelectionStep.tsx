@@ -5,7 +5,6 @@ import { ApplicationFormData, Schedule, TimeSlot } from '@/types';
 import { TIME_SLOTS } from '@/lib/utils/constants';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface DateSelectionStepProps {
   formData: Partial<ApplicationFormData>;
@@ -288,8 +287,6 @@ export default function DateSelectionStep({
           다음 단계
         </button>
       </div>
-
-      <BottomNavigationBar />
     </div>
   );
 }

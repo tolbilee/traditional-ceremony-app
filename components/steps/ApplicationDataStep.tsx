@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ApplicationFormData, CeremonyType, WeddingApplicationData, DoljanchiApplicationData } from '@/types';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface ApplicationDataStepProps {
   formData: Partial<ApplicationFormData>;
@@ -446,8 +445,6 @@ export default function ApplicationDataStep({
             다음 단계
           </button>
         </div>
-        
-        <BottomNavigationBar />
       </div>
     );
   }
@@ -876,8 +873,6 @@ export default function ApplicationDataStep({
           다음 단계
         </button>
       </div>
-      
-      <BottomNavigationBar />
     </div>
   );
 }

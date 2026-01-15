@@ -2,7 +2,6 @@
 
 import { ApplicationFormData, SupportType, CeremonyType } from '@/types';
 import { SUPPORT_TYPE_LABELS, DOLJANCHI_SUPPORT_TYPE_LABELS } from '@/lib/utils/constants';
-import BottomNavigationBar from '../BottomNavigationBar';
 
 interface SupportTypeStepProps {
   formData: Partial<ApplicationFormData>;
@@ -106,8 +105,6 @@ export default function SupportTypeStep({
           다음 단계
         </button>
       </div>
-      
-      <BottomNavigationBar />
     </div>
   );
 }
