@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ApplicationFormData } from '@/types';
+import { normalizeString, normalizeApplicationData } from './helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,37 +67,7 @@ export async function POST(request: NextRequest) {
       : formData.birthDate;
     console.log('Birth date converted:', formData.birthDate, '->', birthDate6);
 
-    // 한글 데이터 정규화 함수
-    const normalizeString = (str: any): string => {
-      if (typeof str !== 'string') return String(str || '');
-      // UTF-8 인코딩 보장
-      try {
-        return decodeURIComponent(encodeURIComponent(str));
-      } catch {
-        return str;
-      }
-    };
-
-    // application_data 정규화
-    const normalizeApplicationData = (data: any): any => {
-      if (!data || typeof data !== 'object') return data || {};
-      const normalized: any = {};
-      for (const [key, value] of Object.entries(data)) {
-        if (typeof value === 'string') {
-          normalized[key] = normalizeString(value);
-        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-          normalized[key] = normalizeApplicationData(value);
-        } else if (Array.isArray(value)) {
-          normalized[key] = value.map((item: any) => 
-            typeof item === 'string' ? normalizeString(item) : 
-            typeof item === 'object' ? normalizeApplicationData(item) : item
-          );
-        } else {
-          normalized[key] = value;
-        }
-      }
-      return normalized;
-    };
+    // 한글 데이터 정규화는 helpers.ts에서 import한 함수 사용
 
     // 데이터베이스에 저장
     const insertData = {
@@ -158,35 +129,7 @@ export async function POST(request: NextRequest) {
     console.log('Successfully inserted application:', data?.id);
     console.log('Inserted data:', JSON.stringify(data, null, 2));
     
-    // 한글 데이터 정규화 및 인코딩 보장
-    const normalizeString = (str: any): string => {
-      if (typeof str !== 'string') return String(str || '');
-      try {
-        return decodeURIComponent(encodeURIComponent(str));
-      } catch {
-        return str;
-      }
-    };
-
-    const normalizeApplicationData = (data: any): any => {
-      if (!data || typeof data !== 'object') return data || {};
-      const normalized: any = {};
-      for (const [key, value] of Object.entries(data)) {
-        if (typeof value === 'string') {
-          normalized[key] = normalizeString(value);
-        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-          normalized[key] = normalizeApplicationData(value);
-        } else if (Array.isArray(value)) {
-          normalized[key] = value.map((item: any) => 
-            typeof item === 'string' ? normalizeString(item) : 
-            typeof item === 'object' ? normalizeApplicationData(item) : item
-          );
-        } else {
-          normalized[key] = value;
-        }
-      }
-      return normalized;
-    };
+    // 한글 데이터 정규화는 helpers.ts에서 import한 함수 사용
 
     const normalizedData = {
       ...data,
@@ -251,35 +194,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 한글 데이터 정규화
-    const normalizeString = (str: any): string => {
-      if (typeof str !== 'string') return String(str || '');
-      try {
-        return decodeURIComponent(encodeURIComponent(str));
-      } catch {
-        return str;
-      }
-    };
-
-    const normalizeApplicationData = (data: any): any => {
-      if (!data || typeof data !== 'object') return data || {};
-      const normalized: any = {};
-      for (const [key, value] of Object.entries(data)) {
-        if (typeof value === 'string') {
-          normalized[key] = normalizeString(value);
-        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-          normalized[key] = normalizeApplicationData(value);
-        } else if (Array.isArray(value)) {
-          normalized[key] = value.map((item: any) => 
-            typeof item === 'string' ? normalizeString(item) : 
-            typeof item === 'object' ? normalizeApplicationData(item) : item
-          );
-        } else {
-          normalized[key] = value;
-        }
-      }
-      return normalized;
-    };
+    // 한글 데이터 정규화는 helpers.ts에서 import한 함수 사용
 
     const normalizedData = (data || []).map((item: any) => ({
       ...item,
