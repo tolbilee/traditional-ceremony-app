@@ -95,89 +95,111 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   // 파일 URL을 직접 받아서 저장하는 함수
   const saveFileUrls = async (fileUrls: string[]) => {
     try {
-      // 최소한의 필수 데이터가 있어야 저장
-      if (currentStep < 3) {
-        console.log('Skipping file save - step too early');
-        return;
-      }
-      
-      let userName = formData.userName;
-      let birthDate = formData.birthDate;
-      
-      if (!userName || !birthDate) {
-        if (formData.applicationData) {
-          if ('groom' in formData.applicationData && formData.applicationData.groom) {
-            userName = userName || formData.applicationData.groom.name || '';
-            birthDate = birthDate || formData.applicationData.groom.birthDate || '';
-          } else if ('parent' in formData.applicationData && formData.applicationData.parent) {
-            userName = userName || formData.applicationData.parent.name || '';
-            birthDate = birthDate || formData.applicationData.parent.birthDate || '';
-          }
-        }
-      }
-      
-      if (!userName || !birthDate || !formData.type) {
-        console.log('Skipping file save - insufficient data');
-        return;
-      }
-      
-      const birthDate6 = birthDate.length === 8 
-        ? birthDate.slice(2, 8) 
-        : birthDate;
-      
-      const saveData: Partial<ApplicationFormData> = {
-        type: formData.type,
-        userName: userName,
-        birthDate: birthDate,
-        schedule1: formData.schedule1 || undefined,
-        schedule2: formData.schedule2 || undefined,
-        supportType: formData.supportType || undefined,
-        applicationData: formData.applicationData || undefined,
-        consentStatus: formData.consentStatus || false,
-        fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
-      };
-      
       console.log('=== Saving file URLs directly ===');
       console.log('File URLs to save:', fileUrls);
       console.log('File URLs count:', fileUrls.length);
+      console.log('Current step:', currentStep);
       console.log('Saved application ID:', savedApplicationId);
+      console.log('Form data:', {
+        type: formData.type,
+        userName: formData.userName,
+        birthDate: formData.birthDate,
+        hasApplicationData: !!formData.applicationData,
+      });
       
-      let response;
+      // 파일 URL만 업데이트하는 API 엔드포인트 사용
       if (savedApplicationId) {
+        // 기존 신청서가 있으면 파일 URL만 업데이트
         console.log('Updating existing application with file URLs:', savedApplicationId);
-        response = await fetch(`/api/applications/${savedApplicationId}`, {
+        const response = await fetch(`/api/applications/${savedApplicationId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(saveData),
+          body: JSON.stringify({
+            ...formData,
+            fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
+          }),
         });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('=== File URLs update response ===');
+          console.log('Response data:', JSON.stringify(result, null, 2));
+          if (result.data?.id) {
+            console.log('File URLs updated successfully. ID:', result.data.id);
+            console.log('Updated file_urls:', result.data?.file_urls);
+            console.log('Updated file_urls count:', result.data?.file_urls?.length || 0);
+          }
+        } else {
+          const error = await response.json();
+          console.error('=== File URLs update error ===');
+          console.error('Error response:', JSON.stringify(error, null, 2));
+          console.error('Status:', response.status, response.statusText);
+        }
       } else {
+        // 신청서가 없으면 최소한의 데이터로 생성 시도
+        let userName = formData.userName;
+        let birthDate = formData.birthDate;
+        
+        // applicationData에서 추출 시도
+        if (!userName || !birthDate) {
+          if (formData.applicationData) {
+            if ('groom' in formData.applicationData && formData.applicationData.groom) {
+              userName = userName || formData.applicationData.groom.name || '';
+              birthDate = birthDate || formData.applicationData.groom.birthDate || '';
+            } else if ('parent' in formData.applicationData && formData.applicationData.parent) {
+              userName = userName || formData.applicationData.parent.name || '';
+              birthDate = birthDate || formData.applicationData.parent.birthDate || '';
+            }
+          }
+        }
+        
+        // 최소한의 필수 데이터가 있어야 저장
+        if (!userName || !birthDate || !formData.type) {
+          console.log('Skipping file save - insufficient data. Will save later.');
+          // 나중에 저장하기 위해 fileUrls를 formData에만 저장
+          updateFormData({ fileUrls: fileUrls });
+          return;
+        }
+        
         console.log('Creating new application with file URLs');
-        response = await fetch('/api/applications', {
+        const saveData: Partial<ApplicationFormData> = {
+          type: formData.type,
+          userName: userName,
+          birthDate: birthDate,
+          schedule1: formData.schedule1 || undefined,
+          schedule2: formData.schedule2 || undefined,
+          supportType: formData.supportType || undefined,
+          applicationData: formData.applicationData || undefined,
+          consentStatus: formData.consentStatus || false,
+          fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
+        };
+        
+        const response = await fetch('/api/applications', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(saveData),
         });
-      }
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('=== File URLs save response ===');
-        console.log('Response data:', JSON.stringify(result, null, 2));
-        if (result.data?.id) {
-          setSavedApplicationId(result.data.id);
-          console.log('File URLs saved successfully. ID:', result.data.id);
-          console.log('Saved file_urls:', result.data?.file_urls);
-          console.log('Saved file_urls count:', result.data?.file_urls?.length || 0);
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('=== File URLs save response ===');
+          console.log('Response data:', JSON.stringify(result, null, 2));
+          if (result.data?.id) {
+            setSavedApplicationId(result.data.id);
+            console.log('File URLs saved successfully. ID:', result.data.id);
+            console.log('Saved file_urls:', result.data?.file_urls);
+            console.log('Saved file_urls count:', result.data?.file_urls?.length || 0);
+          }
+        } else {
+          const error = await response.json();
+          console.error('=== File URLs save error ===');
+          console.error('Error response:', JSON.stringify(error, null, 2));
+          console.error('Status:', response.status, response.statusText);
         }
-      } else {
-        const error = await response.json();
-        console.error('=== File URLs save error ===');
-        console.error('Error response:', JSON.stringify(error, null, 2));
-        console.error('Status:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('File URLs save error:', error);
