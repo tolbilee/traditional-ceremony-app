@@ -446,64 +446,70 @@ export const handler: Handler = async (event, context) => {
     // Puppeteer 설정 (Netlify 환경 최적화)
     const isNetlify = !!process.env.NETLIFY;
     
-    console.log('Environment check:', { isNetlify, nodeEnv: process.env.NODE_ENV });
-    
-    // 기본 launch 옵션
-    const launchOptions: any = {
-      args: [
-        '--hide-scrollbars',
-        '--disable-web-security',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--single-process',
-        '--disable-accelerated-2d-canvas',
-      ],
-      defaultViewport: { width: 1920, height: 1080 },
-      headless: true,
-    };
-    
-    // Netlify 환경에서만 chromium executablePath 사용
-    if (isNetlify) {
-      try {
-        console.log('Attempting to get chromium executable path...');
-        // chromium이 함수인지 객체인지 확인
-        let executablePath: string | undefined;
-        
-        if (typeof chromium === 'function') {
-          executablePath = await chromium.executablePath();
-        } else if (chromium && typeof (chromium as any).executablePath === 'function') {
-          executablePath = await (chromium as any).executablePath();
-        } else if (chromium && typeof (chromium as any).executablePath === 'string') {
-          executablePath = (chromium as any).executablePath;
-        }
-        
-        console.log('Chromium executable path:', executablePath ? '[FOUND]' : '[NOT FOUND]');
-        if (executablePath) {
-          launchOptions.executablePath = executablePath;
-        }
-      } catch (error) {
-        console.error('Failed to get chromium executable path:', error);
-        console.error('Error details:', error instanceof Error ? error.message : String(error));
-        // executablePath가 없어도 계속 진행
-      }
-    }
-    
-    console.log('Launching browser with options:', {
-      args: launchOptions.args.length,
-      executablePath: launchOptions.executablePath ? '[SET]' : '[NOT SET]',
-      headless: launchOptions.headless
+    console.log('Environment check:', { 
+      isNetlify, 
+      nodeEnv: process.env.NODE_ENV,
+      chromiumType: typeof chromium,
+      chromiumKeys: chromium ? Object.keys(chromium).join(', ') : 'null'
     });
     
     let browser;
     try {
-      browser = await puppeteer.launch(launchOptions);
+      // Netlify 환경에서 chromium 사용
+      if (isNetlify) {
+        console.log('Using Netlify chromium configuration...');
+        
+        // @sparticuz/chromium의 올바른 사용법
+        const executablePath = await chromium.executablePath();
+        console.log('Chromium executable path obtained:', executablePath ? 'YES' : 'NO');
+        
+        // chromium.args가 배열인지 확인
+        const chromiumArgs = Array.isArray(chromium.args) ? chromium.args : [];
+        console.log('Chromium args count:', chromiumArgs.length);
+        
+        // 기본 args와 chromium args 결합
+        const launchArgs = [
+          ...chromiumArgs,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--single-process',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+        ];
+        
+        console.log('Total launch args:', launchArgs.length);
+        
+        browser = await puppeteer.launch({
+          args: launchArgs,
+          defaultViewport: { width: 1920, height: 1080 },
+          executablePath: executablePath,
+          headless: true,
+        });
+      } else {
+        // 로컬 환경
+        console.log('Using local puppeteer configuration...');
+        browser = await puppeteer.launch({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+          ],
+          headless: true,
+        });
+      }
+      
       console.log('Browser launched successfully');
     } catch (launchError) {
       console.error('Browser launch failed:', launchError);
       console.error('Launch error details:', launchError instanceof Error ? launchError.message : String(launchError));
       console.error('Launch error stack:', launchError instanceof Error ? launchError.stack : 'No stack');
+      console.error('Chromium object:', {
+        type: typeof chromium,
+        hasExecutablePath: chromium && typeof (chromium as any).executablePath === 'function',
+        hasArgs: chromium && Array.isArray((chromium as any).args),
+      });
       
       // 더 자세한 에러 정보 반환
       return {
@@ -512,7 +518,9 @@ export const handler: Handler = async (event, context) => {
         body: JSON.stringify({ 
           error: 'Browser launch failed',
           details: launchError instanceof Error ? launchError.message : String(launchError),
-          type: 'BROWSER_LAUNCH_ERROR'
+          type: 'BROWSER_LAUNCH_ERROR',
+          chromiumAvailable: !!chromium,
+          isNetlify: isNetlify
         }),
       };
     }
