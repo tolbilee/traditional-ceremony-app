@@ -17,170 +17,32 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
   const handleDownloadPDF = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/admin/applications/${application.id}/pdf`);
+      // Netlify Function을 통해 PDF 생성 및 Supabase Storage에 저장
+      const response = await fetch('/.netlify/functions/pdf-generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicationId: application.id,
+        }),
+      });
+
       if (response.ok) {
-        const contentType = response.headers.get('content-type');
+        const result = await response.json();
         
-        // HTML이 반환된 경우 - jsPDF + html2canvas로 PDF 생성 (한글 폰트 지원)
-        if (contentType?.includes('text/html')) {
-          const htmlText = await response.text();
-          
-          // 임시 div 생성하여 HTML 삽입
-          const tempDiv = document.createElement('div');
-          tempDiv.style.position = 'absolute';
-          tempDiv.style.left = '-9999px';
-          tempDiv.style.width = '210mm'; // A4 width
-          tempDiv.style.padding = '20px';
-          tempDiv.style.backgroundColor = '#fff';
-          tempDiv.innerHTML = htmlText;
-          document.body.appendChild(tempDiv);
-          
-          // 폰트 로딩 대기 (Google Fonts 등)
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // jsPDF와 html2canvas 동적 import
-          const { jsPDF } = await import('jspdf');
-          const html2canvas = (await import('html2canvas')).default;
-          
-          // jsPDF 인스턴스 생성
-          const doc = new jsPDF({
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait',
-          });
-          
-          // 한글 폰트 등록 (폰트가 설정되어 있는 경우)
-          try {
-            const { registerKoreanFont } = await import('@/lib/pdf/fontLoader');
-            registerKoreanFont(doc);
-          } catch (fontError) {
-            console.warn('한글 폰트 등록 실패 (기본 폰트 사용):', fontError);
-          }
-          
-          // html2canvas로 HTML을 이미지로 변환
-          const canvas = await html2canvas(tempDiv, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            width: tempDiv.scrollWidth,
-            height: tempDiv.scrollHeight,
-          } as any);
-          
-          const imgData = canvas.toDataURL('image/png', 1.0);
-          
-          // PDF 크기 계산 (A4: 210mm x 297mm)
-          const pdfWidth = doc.internal.pageSize.getWidth();
-          const pdfHeight = doc.internal.pageSize.getHeight();
-          const imgWidth = pdfWidth - 30; // 여백 15mm씩
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-          
-          // PDF에 이미지 추가
-          let heightLeft = imgHeight;
-          let position = 15; // 시작 위치 (상단 여백)
-          
-          // 첫 페이지에 이미지 추가
-          doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-          heightLeft -= (pdfHeight - 30); // 한 페이지 높이에서 여백 제외
-          
-          // 여러 페이지가 필요한 경우
-          while (heightLeft > 0) {
-            position = heightLeft - imgHeight + 15; // 다음 페이지 시작 위치
-            doc.addPage();
-            doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-            heightLeft -= (pdfHeight - 30);
-          }
-          
-          // PDF 저장
-          const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-          doc.save(fileName);
-          
-          // 임시 div 제거
-          document.body.removeChild(tempDiv);
-          setLoading(false);
-          return;
-        }
-        
-        // PDF가 반환된 경우
-        if (contentType?.includes('application/pdf')) {
-          const blob = await response.blob();
-          
-          // PDF 유효성 검사
-          const arrayBuffer = await blob.slice(0, 4).arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-          const isPDF = uint8Array[0] === 0x25 && uint8Array[1] === 0x50 && 
-                        uint8Array[2] === 0x44 && uint8Array[3] === 0x46;
-          
-          if (!isPDF) {
-            // PDF가 아니면 HTML로 처리
-            const htmlText = await blob.text();
-            const tempDiv = document.createElement('div');
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.width = '210mm';
-            tempDiv.style.padding = '20px';
-            tempDiv.style.backgroundColor = '#fff';
-            tempDiv.innerHTML = htmlText;
-            document.body.appendChild(tempDiv);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const { jsPDF } = await import('jspdf');
-            const html2canvas = (await import('html2canvas')).default;
-            
-            const doc = new jsPDF({
-              unit: 'mm',
-              format: 'a4',
-              orientation: 'portrait',
-            });
-            
-            try {
-              const { registerKoreanFont } = await import('@/lib/pdf/fontLoader');
-              registerKoreanFont(doc);
-            } catch (fontError) {
-              console.warn('한글 폰트 등록 실패:', fontError);
-            }
-            
-            const canvas = await html2canvas(tempDiv, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-            } as any);
-            
-            const imgData = canvas.toDataURL('image/png', 1.0);
-            const pdfWidth = doc.internal.pageSize.getWidth();
-            const pdfHeight = doc.internal.pageSize.getHeight();
-            const imgWidth = pdfWidth - 30;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            let heightLeft = imgHeight;
-            let position = 15;
-            
-            doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-            heightLeft -= (pdfHeight - 30);
-            
-            while (heightLeft > 0) {
-              position = heightLeft - imgHeight + 15;
-              doc.addPage();
-              doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-              heightLeft -= (pdfHeight - 30);
-            }
-            
-            const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-            doc.save(fileName);
-            document.body.removeChild(tempDiv);
-            setLoading(false);
-            return;
-          }
-          
-          const url = window.URL.createObjectURL(blob);
+        if (result.success && result.pdfUrl) {
+          // PDF URL로 다운로드
           const a = document.createElement('a');
-          a.href = url;
-          a.download = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+          a.href = result.pdfUrl;
+          a.download = result.fileName || `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
           document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
+          setLoading(false);
+          return;
+        } else {
+          alert(`PDF 생성 실패: ${result.error || 'Unknown error'}`);
         }
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
