@@ -448,6 +448,7 @@ export const handler: Handler = async (event, context) => {
     
     console.log('Environment check:', { isNetlify, nodeEnv: process.env.NODE_ENV });
     
+    // 기본 launch 옵션
     const launchOptions: any = {
       args: [
         '--hide-scrollbars',
@@ -467,21 +468,32 @@ export const handler: Handler = async (event, context) => {
     if (isNetlify) {
       try {
         console.log('Attempting to get chromium executable path...');
-        const executablePath = await chromium.executablePath();
-        console.log('Chromium executable path:', executablePath);
+        // chromium이 함수인지 객체인지 확인
+        let executablePath: string | undefined;
+        
+        if (typeof chromium === 'function') {
+          executablePath = await chromium.executablePath();
+        } else if (chromium && typeof (chromium as any).executablePath === 'function') {
+          executablePath = await (chromium as any).executablePath();
+        } else if (chromium && typeof (chromium as any).executablePath === 'string') {
+          executablePath = (chromium as any).executablePath;
+        }
+        
+        console.log('Chromium executable path:', executablePath ? '[FOUND]' : '[NOT FOUND]');
         if (executablePath) {
           launchOptions.executablePath = executablePath;
         }
       } catch (error) {
         console.error('Failed to get chromium executable path:', error);
         console.error('Error details:', error instanceof Error ? error.message : String(error));
-        // executablePath가 없어도 계속 진행 (로컬 환경에서 테스트 가능)
+        // executablePath가 없어도 계속 진행
       }
     }
     
     console.log('Launching browser with options:', {
-      ...launchOptions,
-      executablePath: launchOptions.executablePath ? '[SET]' : '[NOT SET]'
+      args: launchOptions.args.length,
+      executablePath: launchOptions.executablePath ? '[SET]' : '[NOT SET]',
+      headless: launchOptions.headless
     });
     
     let browser;
@@ -491,7 +503,18 @@ export const handler: Handler = async (event, context) => {
     } catch (launchError) {
       console.error('Browser launch failed:', launchError);
       console.error('Launch error details:', launchError instanceof Error ? launchError.message : String(launchError));
-      throw launchError;
+      console.error('Launch error stack:', launchError instanceof Error ? launchError.stack : 'No stack');
+      
+      // 더 자세한 에러 정보 반환
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Browser launch failed',
+          details: launchError instanceof Error ? launchError.message : String(launchError),
+          type: 'BROWSER_LAUNCH_ERROR'
+        }),
+      };
     }
 
     try {
@@ -507,19 +530,35 @@ export const handler: Handler = async (event, context) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // PDF 생성
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '15mm',
-          right: '15mm',
-          bottom: '15mm',
-          left: '15mm',
-        },
-        printBackground: true,
-        preferCSSPageSize: false,
-      });
+      console.log('Generating PDF...');
+      let pdfBuffer: Buffer;
+      try {
+        const pdfData = await page.pdf({
+          format: 'A4',
+          margin: {
+            top: '15mm',
+            right: '15mm',
+            bottom: '15mm',
+            left: '15mm',
+          },
+          printBackground: true,
+          preferCSSPageSize: false,
+        });
+        // Uint8Array를 Buffer로 변환
+        pdfBuffer = Buffer.from(pdfData);
+        console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+      } catch (pdfGenError) {
+        console.error('PDF generation failed:', pdfGenError);
+        throw pdfGenError;
+      }
 
-      await browser.close();
+      console.log('Closing browser...');
+      try {
+        await browser.close();
+        console.log('Browser closed successfully');
+      } catch (closeError) {
+        console.error('Browser close error (non-fatal):', closeError);
+      }
 
       // Supabase Storage에 업로드
       const bucketName = 'application-pdfs';
