@@ -21,22 +21,35 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         
-        // HTML이 반환된 경우 (Puppeteer 실패)
+        // HTML이 반환된 경우 - 클라이언트에서 jsPDF로 PDF 생성
         if (contentType?.includes('text/html')) {
           const htmlText = await response.text();
-          // 새 창에서 HTML 열기 (브라우저 인쇄 기능 사용)
-          const printWindow = window.open('', '_blank');
-          if (printWindow) {
-            printWindow.document.write(htmlText);
-            printWindow.document.close();
-            // 자동 인쇄 대화상자 열기
-            setTimeout(() => {
-              printWindow.print();
-            }, 500);
-            alert('PDF 생성이 실패했습니다. 브라우저 인쇄 기능을 사용하여 PDF로 저장해주세요.');
-          } else {
-            alert('팝업이 차단되었습니다. 팝업을 허용한 후 다시 시도해주세요.');
-          }
+          
+          // jsPDF를 동적으로 import
+          const { jsPDF } = await import('jspdf');
+          const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+          });
+
+          // HTML을 PDF로 변환 (한글 폰트 자동 지원)
+          await doc.html(htmlText, {
+            callback: (doc) => {
+              const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+              doc.save(fileName);
+              setLoading(false);
+            },
+            x: 0,
+            y: 0,
+            width: 210, // A4 width in mm
+            windowWidth: 1200,
+            html2canvas: {
+              scale: 0.264, // 300 DPI
+              useCORS: true,
+              letterRendering: true,
+            },
+          });
           return;
         }
         
@@ -53,16 +66,30 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                         uint8Array[3] === 0x46;   // F
           
           if (!isPDF) {
-            alert('PDF 파일이 손상되었습니다. HTML 버전을 열어드립니다.');
+            alert('PDF 파일이 손상되었습니다. HTML 버전을 사용합니다.');
             const htmlText = await blob.text();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(htmlText);
-              printWindow.document.close();
-              setTimeout(() => {
-                printWindow.print();
-              }, 500);
-            }
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4',
+            });
+            await doc.html(htmlText, {
+              callback: (doc) => {
+                const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+                doc.save(fileName);
+                setLoading(false);
+              },
+              x: 0,
+              y: 0,
+              width: 210,
+              windowWidth: 1200,
+              html2canvas: {
+                scale: 0.264,
+                useCORS: true,
+                letterRendering: true,
+              },
+            });
             return;
           }
           
