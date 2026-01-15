@@ -397,9 +397,10 @@ export async function GET(
 </html>
     `;
 
-    // Puppeteer를 사용하여 HTML을 PDF로 변환
+    // Puppeteer를 사용하여 HTML을 PDF로 변환 시도
+    // 서버리스 환경에서는 Puppeteer가 작동하지 않을 수 있으므로 HTML을 반환
     if (!puppeteer) {
-      console.error('Puppeteer is not available');
+      console.log('Puppeteer is not available, returning HTML for browser print');
       // Puppeteer가 없으면 HTML을 반환 (브라우저에서 인쇄 가능)
       return new NextResponse(htmlContent, {
         headers: {
@@ -408,39 +409,66 @@ export async function GET(
       });
     }
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
     try {
-      const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm',
-        },
-        printBackground: true,
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+        ],
       });
 
-      await browser.close();
+      try {
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { 
+          waitUntil: 'networkidle0',
+          timeout: 30000,
+        });
+        
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
+          },
+          printBackground: true,
+        });
 
-      const fileName = `신청서_${app.user_name || 'unknown'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      return new NextResponse(pdfBuffer, {
+        await browser.close();
+
+        const fileName = `신청서_${app.user_name || 'unknown'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        
+        return new NextResponse(pdfBuffer, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+          },
+        });
+      } catch (pdfError) {
+        await browser.close();
+        console.error('Puppeteer PDF generation failed:', pdfError);
+        // Puppeteer 실패 시 HTML 반환
+        return new NextResponse(htmlContent, {
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+          },
+        });
+      }
+    } catch (launchError) {
+      console.error('Puppeteer launch failed:', launchError);
+      // Puppeteer 실행 실패 시 HTML 반환
+      return new NextResponse(htmlContent, {
         headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+          'Content-Type': 'text/html; charset=utf-8',
         },
       });
-    } catch (pdfError) {
-      await browser.close();
-      throw pdfError;
     }
     
   } catch (error) {
