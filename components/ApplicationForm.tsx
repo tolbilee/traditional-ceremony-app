@@ -441,10 +441,10 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-4">
       <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
-      <div className="mt-8">
+      <div className="mt-4">
         {currentStep === 1 && (
           <DateSelectionStep
             formData={formData}

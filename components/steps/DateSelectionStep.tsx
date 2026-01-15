@@ -134,13 +134,13 @@ export default function DateSelectionStep({
   const isInRange = (date: Date) => date >= minDate && date <= maxDate;
 
   return (
-    <div className="space-y-6 pb-24">
-      <h2 className="text-2xl font-bold text-gray-800">날짜 및 시간 선택</h2>
-      <p className="text-gray-600">2026년 일요일만 선택 가능합니다.</p>
+    <div className="space-y-4 pb-24">
+      <h2 className="text-xl font-bold text-gray-800">날짜 및 시간 선택</h2>
+      <p className="text-sm text-gray-600">2026년 일요일만 선택 가능합니다.</p>
 
       {/* 선택된 일정 요약 */}
-      <div className="rounded-lg bg-blue-50 p-4">
-        <div className="space-y-2 text-sm">
+      <div className="rounded-lg bg-blue-50 p-3">
+        <div className="space-y-1 text-sm">
           <div>
             <span className="font-semibold">1순위 지정:</span> {schedule1Display}
           </div>
@@ -151,34 +151,34 @@ export default function DateSelectionStep({
       </div>
 
       {/* 달력 헤더 */}
-      <div className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4">
+      <div className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-3">
         <button
           onClick={goToPreviousMonth}
           disabled={isPrevDisabled}
-          className="rounded-lg px-4 py-2 text-2xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="rounded-lg px-3 py-1.5 text-xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           ←
         </button>
-        <h3 className="text-xl font-bold text-gray-800">
+        <h3 className="text-lg font-bold text-gray-800">
           {format(currentMonth, 'yyyy년 M월', { locale: ko })}
         </h3>
         <button
           onClick={goToNextMonth}
           disabled={isNextDisabled}
-          className="rounded-lg px-4 py-2 text-2xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="rounded-lg px-3 py-1.5 text-xl font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           →
         </button>
       </div>
 
       {/* 달력 */}
-      <div className="rounded-lg border-2 border-gray-200 bg-white p-4">
+      <div className="rounded-lg border-2 border-gray-200 bg-white p-3">
         {/* 요일 헤더 */}
-        <div className="mb-2 grid grid-cols-7 gap-1">
+        <div className="mb-1 grid grid-cols-7 gap-1">
           {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
             <div
               key={index}
-              className="py-2 text-center text-sm font-semibold text-gray-600"
+              className="py-1 text-center text-xs font-semibold text-gray-600"
             >
               {day}
             </div>
@@ -199,7 +199,7 @@ export default function DateSelectionStep({
                 key={index}
                 onClick={() => handleDateClick(date)}
                 disabled={!isValid}
-                className={`aspect-square rounded-lg py-2 text-sm font-semibold transition-all ${
+                className={`aspect-square rounded-lg py-1 text-xs font-semibold transition-all ${
                   !isCurrent
                     ? 'text-gray-300'
                     : isValid
@@ -279,7 +279,7 @@ export default function DateSelectionStep({
       )}
 
       {/* 다음 버튼 */}
-      <div className="flex justify-end pt-6 pb-32">
+      <div className="flex justify-end pt-4 pb-24">
         <button
           onClick={handleNext}
           className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
