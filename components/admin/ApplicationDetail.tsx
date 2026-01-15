@@ -15,6 +15,39 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
   const [loading, setLoading] = useState(false);
 
   const handleDownloadPDF = async () => {
+    // Google Docs 방식 사용 (더 안정적)
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`/api/applications/${application.id}/google-docs-pdf`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PDF 생성 실패');
+      }
+
+      const result = await response.json();
+      
+      // PDF URL로 다운로드
+      const a = document.createElement('a');
+      a.href = result.pdfUrl;
+      a.download = result.fileName || `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('PDF download error:', error);
+      alert('PDF 다운로드 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  };
+
+  // 기존 Netlify Function 방식 (백업용)
+  const handleDownloadPDFLegacy = async () => {
     setLoading(true);
     try {
       // Netlify Function을 통해 PDF 생성 및 Supabase Storage에 저장
