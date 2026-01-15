@@ -21,7 +21,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         
-        // HTML이 반환된 경우 - html2pdf.js로 PDF 생성
+        // HTML이 반환된 경우 - jsPDF + html2canvas로 PDF 생성 (한글 폰트 지원)
         if (contentType?.includes('text/html')) {
           const htmlText = await response.text();
           
@@ -30,52 +30,75 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           tempDiv.style.position = 'absolute';
           tempDiv.style.left = '-9999px';
           tempDiv.style.width = '210mm'; // A4 width
+          tempDiv.style.padding = '20px';
+          tempDiv.style.backgroundColor = '#fff';
           tempDiv.innerHTML = htmlText;
           document.body.appendChild(tempDiv);
           
-          // html2pdf.js 동적 import
-          const html2pdf = (await import('html2pdf.js')).default;
+          // 폰트 로딩 대기 (Google Fonts 등)
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // PDF 생성 옵션
-          const opt = {
-            margin: [15, 15, 15, 15] as [number, number, number, number],
-            filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2,
-              useCORS: true,
-              letterRendering: true,
-              logging: false,
-            },
-            jsPDF: { 
-              unit: 'mm', 
-              format: 'a4', 
-              orientation: 'portrait' as const
-            },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
+          // jsPDF와 html2canvas 동적 import
+          const { jsPDF } = await import('jspdf');
+          const html2canvas = (await import('html2canvas')).default;
           
+          // jsPDF 인스턴스 생성
+          const doc = new jsPDF({
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait',
+          });
+          
+          // 한글 폰트 등록 (폰트가 설정되어 있는 경우)
           try {
-            await html2pdf().set(opt).from(tempDiv).save();
-            document.body.removeChild(tempDiv);
-            setLoading(false);
-          } catch (pdfError) {
-            console.error('PDF generation error:', pdfError);
-            document.body.removeChild(tempDiv);
-            // 실패 시 브라우저 인쇄 기능으로 폴백
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(htmlText);
-              printWindow.document.close();
-              setTimeout(() => {
-                printWindow.print();
-                setLoading(false);
-              }, 1000);
-            } else {
-              alert('PDF 생성에 실패했습니다. 팝업을 허용한 후 다시 시도해주세요.');
-              setLoading(false);
-            }
+            const { registerKoreanFont } = await import('@/lib/pdf/fontLoader');
+            registerKoreanFont(doc);
+          } catch (fontError) {
+            console.warn('한글 폰트 등록 실패 (기본 폰트 사용):', fontError);
           }
+          
+          // html2canvas로 HTML을 이미지로 변환
+          const canvas = await html2canvas(tempDiv, {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            width: tempDiv.scrollWidth,
+            height: tempDiv.scrollHeight,
+          });
+          
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          
+          // PDF 크기 계산 (A4: 210mm x 297mm)
+          const pdfWidth = doc.internal.pageSize.getWidth();
+          const pdfHeight = doc.internal.pageSize.getHeight();
+          const imgWidth = pdfWidth - 30; // 여백 15mm씩
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          // PDF에 이미지 추가
+          let heightLeft = imgHeight;
+          let position = 15; // 시작 위치 (상단 여백)
+          
+          // 첫 페이지에 이미지 추가
+          doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+          heightLeft -= (pdfHeight - 30); // 한 페이지 높이에서 여백 제외
+          
+          // 여러 페이지가 필요한 경우
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight + 15; // 다음 페이지 시작 위치
+            doc.addPage();
+            doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+            heightLeft -= (pdfHeight - 30);
+          }
+          
+          // PDF 저장
+          const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+          doc.save(fileName);
+          
+          // 임시 div 제거
+          document.body.removeChild(tempDiv);
+          setLoading(false);
           return;
         }
         
@@ -96,27 +119,59 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             tempDiv.style.position = 'absolute';
             tempDiv.style.left = '-9999px';
             tempDiv.style.width = '210mm';
+            tempDiv.style.padding = '20px';
+            tempDiv.style.backgroundColor = '#fff';
             tempDiv.innerHTML = htmlText;
             document.body.appendChild(tempDiv);
             
-            const html2pdf = (await import('html2pdf.js')).default;
-            const opt = {
-              margin: [15, 15, 15, 15] as [number, number, number, number],
-              filename: `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`,
-              image: { type: 'jpeg' as const, quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-            };
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const { jsPDF } = await import('jspdf');
+            const html2canvas = (await import('html2canvas')).default;
+            
+            const doc = new jsPDF({
+              unit: 'mm',
+              format: 'a4',
+              orientation: 'portrait',
+            });
             
             try {
-              await html2pdf().set(opt).from(tempDiv).save();
-              document.body.removeChild(tempDiv);
-              setLoading(false);
-            } catch (error) {
-              document.body.removeChild(tempDiv);
-              alert('PDF 생성에 실패했습니다.');
-              setLoading(false);
+              const { registerKoreanFont } = await import('@/lib/pdf/fontLoader');
+              registerKoreanFont(doc);
+            } catch (fontError) {
+              console.warn('한글 폰트 등록 실패:', fontError);
             }
+            
+            const canvas = await html2canvas(tempDiv, {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              backgroundColor: '#ffffff',
+            });
+            
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = doc.internal.pageSize.getHeight();
+            const imgWidth = pdfWidth - 30;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 15;
+            
+            doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+            heightLeft -= (pdfHeight - 30);
+            
+            while (heightLeft > 0) {
+              position = heightLeft - imgHeight + 15;
+              doc.addPage();
+              doc.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+              heightLeft -= (pdfHeight - 30);
+            }
+            
+            const fileName = `신청서_${application.user_name}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+            doc.save(fileName);
+            document.body.removeChild(tempDiv);
+            setLoading(false);
             return;
           }
           
