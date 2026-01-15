@@ -61,12 +61,11 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           const canvas = await html2canvas(tempDiv, {
             scale: 2,
             useCORS: true,
-            letterRendering: true,
             logging: false,
             backgroundColor: '#ffffff',
             width: tempDiv.scrollWidth,
             height: tempDiv.scrollHeight,
-          });
+          } as any);
           
           const imgData = canvas.toDataURL('image/png', 1.0);
           
@@ -145,9 +144,8 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             const canvas = await html2canvas(tempDiv, {
               scale: 2,
               useCORS: true,
-              letterRendering: true,
               backgroundColor: '#ffffff',
-            });
+            } as any);
             
             const imgData = canvas.toDataURL('image/png', 1.0);
             const pdfWidth = doc.internal.pageSize.getWidth();
