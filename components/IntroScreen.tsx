@@ -42,40 +42,13 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         
         {/* 방법 2: 외부 URL 사용 */}
         <Image
-          src="https://cdn.imweb.me/thumbnail/20260116/6e55958774247.jpg"
+          src="https://cdn.imweb.me/thumbnail/20260116/61969e35e06df.jpg"
           alt="인트로 배경"
           fill
           className="object-cover"
           priority
           quality={90}
         />
-        
-        {/* 이미지 파일이 없을 경우를 위한 폴백 그라데이션 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-yellow-100 opacity-50" />
-        
-        {/* 이미지 위 오버레이 (텍스트 가독성을 위해) */}
-        <div className="absolute inset-0 bg-black/20" />
-      </div>
-      
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center space-y-4 px-6 text-center">
-        <motion.h1
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-3xl font-bold text-white drop-shadow-lg md:text-4xl"
-        >
-          2026 한국의집
-        </motion.h1>
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-lg text-white drop-shadow-md md:text-xl"
-        >
-          전통혼례 및 돌잔치
-          <br />
-          온라인 신청
-        </motion.p>
       </div>
 
       <motion.button
