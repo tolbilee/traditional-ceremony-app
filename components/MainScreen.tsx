@@ -35,7 +35,7 @@ export default function MainScreen() {
           {/* 첫 번째 버튼: 전체 너비 */}
           <Link
             href="/wedding/program"
-            className="block w-full rounded-lg bg-white px-4 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+            className="block w-full rounded-lg bg-white px-4 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
           >
             프로그램 상세 소개
           </Link>
@@ -44,19 +44,19 @@ export default function MainScreen() {
           <div className="grid grid-cols-2 gap-2">
             <Link
               href="/apply/wedding"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               온라인 신청
             </Link>
             <Link
               href="/wedding/events"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               공연·이벤트
             </Link>
             <Link
               href="/wedding/menu"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               식사
             </Link>
@@ -83,7 +83,7 @@ export default function MainScreen() {
           {/* 첫 번째 버튼: 전체 너비 */}
           <Link
             href="/doljanchi/program"
-            className="block w-full rounded-lg bg-white px-4 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+            className="block w-full rounded-lg bg-white px-4 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
           >
             프로그램 상세 소개
           </Link>
@@ -92,19 +92,19 @@ export default function MainScreen() {
           <div className="grid grid-cols-2 gap-2">
             <Link
               href="/apply/doljanchi"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               온라인 신청
             </Link>
             <Link
               href="/doljanchi/events"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               이벤트
             </Link>
             <Link
               href="/doljanchi/menu"
-              className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
+              className="block rounded-lg bg-white px-3 py-3 text-center text-lg font-semibold text-gray-900 transition-all hover:bg-gray-100 active:scale-95"
             >
               식사
             </Link>
