@@ -41,16 +41,14 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         */}
         
         {/* 방법 2: 외부 URL 사용 */}
-        {/* 
         <Image
-          src="https://example.com/intro-background.jpg"
+          src="https://cdn.imweb.me/thumbnail/20260116/6e55958774247.jpg"
           alt="인트로 배경"
           fill
           className="object-cover"
           priority
           quality={90}
         />
-        */}
         
         {/* 이미지 파일이 없을 경우를 위한 폴백 그라데이션 */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-yellow-100 opacity-50" />
