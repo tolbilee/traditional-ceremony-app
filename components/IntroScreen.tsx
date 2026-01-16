@@ -24,7 +24,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
       animate={{ opacity: isExiting ? 0 : 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-yellow-50"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-end bg-gradient-to-b from-blue-50 to-yellow-50"
     >
       {/* 배경 이미지 */}
       <div className="absolute inset-0 overflow-hidden">
@@ -42,7 +42,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         
         {/* 방법 2: 외부 URL 사용 */}
         <Image
-          src="https://cdn.imweb.me/thumbnail/20260116/61969e35e06df.jpg"
+          src="https://cdn.imweb.me/thumbnail/20260116/a579b76ec6ca9.jpg"
           alt="인트로 배경"
           fill
           className="object-cover"
@@ -56,7 +56,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
         onClick={handleEnter}
-        className="relative z-10 mb-8 rounded-full bg-blue-600 px-10 py-3 text-lg font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95"
+        className="relative z-10 mb-[82px] rounded-full bg-blue-600 px-10 py-3 text-lg font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95"
       >
         입장하기
       </motion.button>
