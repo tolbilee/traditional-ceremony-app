@@ -45,28 +45,31 @@ export default function DocumentUploadStep({
   
   // 복수 선택된 지원유형 가져오기 (전통혼례의 경우)
   const getSelectedSupportTypes = (): SupportType[] => {
-    if (formData.type === 'wedding' && formData.applicationData && 'supportType' in formData.applicationData) {
-      const supportTypeString = formData.applicationData.supportType as string;
-      // 쉼표로 구분된 문자열을 배열로 변환
-      if (supportTypeString && supportTypeString.includes(',')) {
-        return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
-      } else if (supportTypeString) {
-        return [supportTypeString as SupportType];
+    if (formData.type === 'wedding') {
+      // applicationData에서 복수 선택된 지원유형 확인
+      if (formData.applicationData && 'supportType' in formData.applicationData) {
+        const supportTypeString = formData.applicationData.supportType as string;
+        // 쉼표로 구분된 문자열을 배열로 변환
+        if (supportTypeString && supportTypeString.includes(',')) {
+          return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+        } else if (supportTypeString) {
+          return [supportTypeString as SupportType];
+        }
       }
-    }
-    // 단일 선택인 경우
-    if (supportType) {
-      return [supportType];
+      // applicationData.supportType이 없으면 formData.supportType 사용 (단일 선택)
+      if (supportType) {
+        return [supportType];
+      }
     }
     return [];
   };
   
   const selectedSupportTypes = getSelectedSupportTypes();
   
-  // 돌잔치 복수 선택된 지원유형 가져오기 (찾아가는 돌잔치의 경우)
+  // 돌잔치 복수 선택된 지원유형 가져오기 (돌잔치와 찾아가는 돌잔치 모두)
   const getDoljanchiSelectedSupportTypes = (): SupportType[] => {
-    if (formData.type === 'doljanchi' && doljanchiSubType && doljanchiSubType !== 'doljanchi') {
-      // 찾아가는 돌잔치인 경우에만 복수 선택된 지원유형 확인
+    if (formData.type === 'doljanchi') {
+      // applicationData에서 복수 선택된 지원유형 확인
       if (formData.applicationData && 'supportType' in formData.applicationData) {
         const supportTypeString = formData.applicationData.supportType as string;
         // 쉼표로 구분된 문자열을 배열로 변환
