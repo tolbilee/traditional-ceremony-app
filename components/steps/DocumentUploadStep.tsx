@@ -49,15 +49,23 @@ export default function DocumentUploadStep({
       // applicationData에서 복수 선택된 지원유형 확인
       if (formData.applicationData && 'supportType' in formData.applicationData) {
         const supportTypeString = formData.applicationData.supportType as string;
+        console.log('[DocumentUploadStep] 전통혼례 - applicationData.supportType:', supportTypeString);
         // 쉼표로 구분된 문자열을 배열로 변환
-        if (supportTypeString && supportTypeString.includes(',')) {
-          return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
-        } else if (supportTypeString) {
-          return [supportTypeString as SupportType];
+        if (supportTypeString && supportTypeString.trim()) {
+          if (supportTypeString.includes(',')) {
+            const types = supportTypeString.split(',').map(t => t.trim()).filter(t => t) as SupportType[];
+            console.log('[DocumentUploadStep] 전통혼례 - 파싱된 지원유형:', types);
+            return types;
+          } else {
+            const types = [supportTypeString.trim() as SupportType];
+            console.log('[DocumentUploadStep] 전통혼례 - 단일 지원유형:', types);
+            return types;
+          }
         }
       }
       // applicationData.supportType이 없으면 formData.supportType 사용 (단일 선택)
       if (supportType) {
+        console.log('[DocumentUploadStep] 전통혼례 - formData.supportType 사용:', supportType);
         return [supportType];
       }
     }
@@ -65,6 +73,7 @@ export default function DocumentUploadStep({
   };
   
   const selectedSupportTypes = getSelectedSupportTypes();
+  console.log('[DocumentUploadStep] 최종 전통혼례 지원유형:', selectedSupportTypes);
   
   // 돌잔치 복수 선택된 지원유형 가져오기 (돌잔치와 찾아가는 돌잔치 모두)
   const getDoljanchiSelectedSupportTypes = (): SupportType[] => {
@@ -72,18 +81,27 @@ export default function DocumentUploadStep({
       // applicationData에서 복수 선택된 지원유형 확인
       if (formData.applicationData && 'supportType' in formData.applicationData) {
         const supportTypeString = formData.applicationData.supportType as string;
+        console.log('[DocumentUploadStep] 돌잔치 - applicationData.supportType:', supportTypeString);
         // 쉼표로 구분된 문자열을 배열로 변환
-        if (supportTypeString && supportTypeString.includes(',')) {
-          return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
-        } else if (supportTypeString) {
-          return [supportTypeString as SupportType];
+        if (supportTypeString && supportTypeString.trim()) {
+          if (supportTypeString.includes(',')) {
+            const types = supportTypeString.split(',').map(t => t.trim()).filter(t => t) as SupportType[];
+            console.log('[DocumentUploadStep] 돌잔치 - 파싱된 지원유형:', types);
+            return types;
+          } else {
+            const types = [supportTypeString.trim() as SupportType];
+            console.log('[DocumentUploadStep] 돌잔치 - 단일 지원유형:', types);
+            return types;
+          }
         }
       }
     }
+    console.log('[DocumentUploadStep] 돌잔치 - 지원유형 없음');
     return [];
   };
   
   const doljanchiSelectedSupportTypes = getDoljanchiSelectedSupportTypes();
+  console.log('[DocumentUploadStep] 최종 돌잔치 지원유형:', doljanchiSelectedSupportTypes);
   
   // 선택된 모든 지원유형의 증빙서류 목록 가져오기
   const getAllRequiredDocuments = () => {
@@ -94,15 +112,20 @@ export default function DocumentUploadStep({
         const documents: RequiredDocument[] = [REQUIRED_DOCUMENTS.doljanchi];
         const addedTypes = new Set<SupportType>(['doljanchi']); // 이미 추가된 타입 추적
         
+        console.log('[DocumentUploadStep] 돌잔치 - 선택된 지원유형:', doljanchiSelectedSupportTypes);
+        
         // 추가로 선택된 지원유형의 증빙서류 (중복 방지)
         doljanchiSelectedSupportTypes.forEach(type => {
+          console.log('[DocumentUploadStep] 돌잔치 - 처리 중인 타입:', type, '이미 추가됨:', addedTypes.has(type));
           // 'doljanchi'는 이미 추가되었으므로 제외하고, 중복 방지
           if (type !== 'doljanchi' && !addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
+            console.log('[DocumentUploadStep] 돌잔치 - 증빙서류 추가:', type, REQUIRED_DOCUMENTS[type]);
             documents.push(REQUIRED_DOCUMENTS[type]);
             addedTypes.add(type);
           }
         });
         
+        console.log('[DocumentUploadStep] 돌잔치 - 최종 증빙서류 목록:', documents);
         return documents;
       } else {
         // 4-6-2) 찾아가는 돌잔치: 복수 선택된 지원유형에 따라 증빙서류 목록 모두 표시
@@ -134,13 +157,18 @@ export default function DocumentUploadStep({
       const documents: RequiredDocument[] = [];
       const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
       
+      console.log('[DocumentUploadStep] 전통혼례 - 선택된 지원유형:', selectedSupportTypes);
+      
       selectedSupportTypes.forEach(type => {
+        console.log('[DocumentUploadStep] 전통혼례 - 처리 중인 타입:', type, '이미 추가됨:', addedTypes.has(type), '증빙서류 존재:', !!REQUIRED_DOCUMENTS[type]);
         if (!addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
+          console.log('[DocumentUploadStep] 전통혼례 - 증빙서류 추가:', type, REQUIRED_DOCUMENTS[type]);
           documents.push(REQUIRED_DOCUMENTS[type]);
           addedTypes.add(type);
         }
       });
       
+      console.log('[DocumentUploadStep] 전통혼례 - 최종 증빙서류 목록:', documents);
       return documents;
     }
   };

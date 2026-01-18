@@ -83,9 +83,11 @@ export default function ApplicationDataStep({
   const handleNext = () => {
     if (validateWedding()) {
       // 자동 입력 필드 설정
+      // applicationData.supportType이 이미 있으면 유지 (복수 선택된 경우), 없으면 formData.supportType 사용
+      const existingSupportType = (weddingData as WeddingApplicationData)?.supportType;
       const finalData: WeddingApplicationData = {
         ...weddingData as WeddingApplicationData,
-        supportType: formData.supportType || '',
+        supportType: existingSupportType || formData.supportType || '',
         documentSubmitted: (formData.files?.length || 0) > 0,
         preferredDateTime: formData.schedule1 
           ? `${formData.schedule1.date} ${formData.schedule1.time}`
@@ -501,9 +503,11 @@ export default function ApplicationDataStep({
 
   const handleNext = () => {
     if (validateDoljanchi()) {
+      // applicationData.supportType이 이미 있으면 유지 (복수 선택된 경우), 없으면 formData.supportType 사용
+      const existingSupportType = (doljanchiData as DoljanchiApplicationData)?.supportType;
       const finalData: DoljanchiApplicationData = {
         ...doljanchiData as DoljanchiApplicationData,
-        supportType: formData.supportType || '',
+        supportType: existingSupportType || formData.supportType || '',
         documentSubmitted: (formData.files?.length || 0) > 0,
         preferredDateTime: formData.schedule1 
           ? `${formData.schedule1.date} ${formData.schedule1.time}`
