@@ -14,6 +14,8 @@ interface ApplicationFormProps {
   type: CeremonyType;
   isEditMode?: boolean;
   originalApplication?: any;
+  initialSupportType?: SupportType;
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
 }
 
 const TOTAL_STEPS = 6;
@@ -55,7 +57,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
       userName: '',
       birthDate: '',
       schedule1: { date: '', time: '12:00' },
-      supportType: undefined,
+      supportType: initialSupportType || undefined,
       applicationData: type === 'wedding' 
         ? {
             groom: { name: '', birthDate: '', nationality: '' },
@@ -450,6 +452,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             formData={formData}
             updateFormData={updateFormData}
             onNext={nextStep}
+            doljanchiSubType={doljanchiSubType}
           />
         )}
         {currentStep === 2 && (
@@ -458,6 +461,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            doljanchiSubType={doljanchiSubType}
           />
         )}
         {currentStep === 3 && (
@@ -486,6 +490,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             onNext={nextStep}
             onPrev={prevStep}
             onFileUploaded={saveFileUrls}
+            doljanchiSubType={doljanchiSubType}
           />
         )}
         {currentStep === 6 && (

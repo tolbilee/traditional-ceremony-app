@@ -10,6 +10,7 @@ interface DocumentUploadStepProps {
   onNext: () => void;
   onPrev: () => void;
   onFileUploaded?: (fileUrls: string[]) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
 }
 
 export default function DocumentUploadStep({
@@ -18,6 +19,7 @@ export default function DocumentUploadStep({
   onNext,
   onPrev,
   onFileUploaded,
+  doljanchiSubType,
 }: DocumentUploadStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
@@ -40,6 +42,23 @@ export default function DocumentUploadStep({
 
   const supportType = formData.supportType;
   const requiredDoc = supportType ? REQUIRED_DOCUMENTS[supportType] : null;
+  
+  // 돌잔치인 경우 증빙서류 안내 메시지
+  const getDoljanchiDocumentMessage = () => {
+    if (formData.type === 'doljanchi') {
+      if (doljanchiSubType === 'doljanchi') {
+        // 돌잔치: 한부모가족증명서만
+        return '한부모가족증명서를 촬영하여 첨부해주세요.';
+      } else {
+        // 찾아가는 돌잔치: 선택한 지원유형에 따라 다름
+        // doljanchi_welfare_facility 또는 doljanchi_orphanage의 기본 증빙서류 표시
+        return requiredDoc?.description || '필요한 증빙서류를 촬영하여 첨부해주세요.';
+      }
+    }
+    return null;
+  };
+  
+  const doljanchiMessage = getDoljanchiDocumentMessage();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -155,12 +174,19 @@ export default function DocumentUploadStep({
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">증빙서류 첨부</h2>
 
-      {requiredDoc && (
+      {formData.type === 'doljanchi' && doljanchiMessage ? (
+        <div className="rounded-lg bg-blue-50 p-4">
+          <p className="font-semibold text-gray-800">
+            {doljanchiSubType === 'doljanchi' ? '한부모가족증명서' : requiredDoc?.documentName || '증빙서류'}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">{doljanchiMessage}</p>
+        </div>
+      ) : requiredDoc ? (
         <div className="rounded-lg bg-blue-50 p-4">
           <p className="font-semibold text-gray-800">{requiredDoc.documentName}</p>
           <p className="mt-1 text-sm text-gray-600">{requiredDoc.description}</p>
         </div>
-      )}
+      ) : null}
 
       <div className="space-y-4">
         <div className="flex gap-4">

@@ -10,12 +10,14 @@ interface DateSelectionStepProps {
   formData: Partial<ApplicationFormData>;
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
 }
 
 export default function DateSelectionStep({
   formData,
   updateFormData,
   onNext,
+  doljanchiSubType,
 }: DateSelectionStepProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1)); // 2026년 1월
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
@@ -48,10 +50,26 @@ export default function DateSelectionStep({
     // 2026년 범위 체크
     if (date < minDate || date > maxDate) return;
     
-    // 일요일인지 확인
-    if (getDay(date) !== 0) {
-      alert('일요일만 선택 가능합니다.');
-      return;
+    const dayOfWeek = getDay(date);
+    
+    // 돌잔치인 경우
+    if (formData.type === 'doljanchi') {
+      if (doljanchiSubType === 'doljanchi') {
+        // 돌잔치는 월요일만 선택 가능
+        if (dayOfWeek !== 1) {
+          alert('돌잔치는 월요일만 선택 가능합니다.');
+          return;
+        }
+      } else {
+        // 찾아가는 돌잔치는 모든 요일 선택 가능
+        // 별도 체크 없음
+      }
+    } else {
+      // 전통혼례는 일요일과 월요일만 선택 가능
+      if (dayOfWeek !== 0 && dayOfWeek !== 1) {
+        alert('일요일과 월요일만 선택 가능합니다.');
+        return;
+      }
     }
 
     setSelectedDate(date);
@@ -71,9 +89,14 @@ export default function DateSelectionStep({
     }
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    // 돌잔치인 경우 시간은 17:00으로 고정, 찾아가는 돌잔치는 시간 없음
+    const scheduleTime = formData.type === 'doljanchi' 
+      ? (doljanchiSubType === 'doljanchi' ? '17:00' : '협의 후 결정')
+      : time;
+    
     const schedule: Schedule = {
       date: dateStr,
-      time,
+      time: scheduleTime as TimeSlot,
     };
 
     if (selectedPriority === '1') {
@@ -85,6 +108,28 @@ export default function DateSelectionStep({
     setShowTimePicker(false);
     setSelectedDate(null);
     setSelectedPriority(null);
+  };
+
+  const handleTimeClose = () => {
+    // 돌잔치나 찾아가는 돌잔치인 경우 시간 선택 없이 바로 저장
+    if (formData.type === 'doljanchi' && selectedDate && selectedPriority) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const scheduleTime = doljanchiSubType === 'doljanchi' ? '17:00' : '협의 후 결정';
+      const schedule: Schedule = {
+        date: dateStr,
+        time: scheduleTime as TimeSlot,
+      };
+
+      if (selectedPriority === '1') {
+        updateFormData({ schedule1: schedule });
+      } else {
+        updateFormData({ schedule2: schedule });
+      }
+
+      setSelectedDate(null);
+      setSelectedPriority(null);
+    }
+    setShowTimePicker(false);
   };
 
   const handleNext = () => {
@@ -137,13 +182,43 @@ export default function DateSelectionStep({
   };
 
   const isSunday = (date: Date) => getDay(date) === 0;
+  const isMonday = (date: Date) => getDay(date) === 1;
   const isCurrentMonth = (date: Date) => isSameMonth(date, currentMonth);
   const isInRange = (date: Date) => date >= minDate && date <= maxDate;
+  
+  // 날짜가 선택 가능한지 확인
+  const isDateSelectable = (date: Date) => {
+    if (!isInRange(date)) return false;
+    
+    if (formData.type === 'doljanchi') {
+      if (doljanchiSubType === 'doljanchi') {
+        // 돌잔치는 월요일만
+        return isMonday(date);
+      } else {
+        // 찾아가는 돌잔치는 모든 요일
+        return true;
+      }
+    } else {
+      // 전통혼례는 일요일과 월요일만
+      return isSunday(date) || isMonday(date);
+    }
+  };
+
+  const getDateSelectionDescription = () => {
+    if (formData.type === 'doljanchi') {
+      if (doljanchiSubType === 'doljanchi') {
+        return '2026년 월요일만 선택 가능합니다.';
+      } else {
+        return '2026년 모든 요일을 선택할 수 있습니다.';
+      }
+    }
+    return '2026년 일요일과 월요일만 선택 가능합니다.';
+  };
 
   return (
     <div className="space-y-4 pb-24">
       <h2 className="text-xl font-bold text-gray-800">날짜 및 시간 선택</h2>
-      <p className="text-sm text-gray-600">2026년 일요일만 선택 가능합니다.</p>
+      <p className="text-sm text-gray-600">{getDateSelectionDescription()}</p>
 
       {/* 선택된 일정 요약 */}
       <div className="rounded-lg bg-blue-50 p-3">
@@ -197,9 +272,15 @@ export default function DateSelectionStep({
           {daysInMonth.map((date, index) => {
             const dateStr = format(date, 'yyyy-MM-dd');
             const isSun = isSunday(date);
+            const isMon = isMonday(date);
             const isSelected = isDateSelected(date);
             const isCurrent = isCurrentMonth(date);
-            const isValid = isInRange(date) && isSun;
+            const isValid = isDateSelectable(date);
+            
+            // 전통혼례는 일요일과 월요일, 돌잔치는 월요일을 녹색으로 표시
+            const isHighlighted = formData.type === 'doljanchi' 
+              ? (doljanchiSubType === 'doljanchi' ? isMon : true)
+              : (isSun || isMon);
 
             return (
               <button
@@ -212,7 +293,9 @@ export default function DateSelectionStep({
                     : isValid
                     ? isSelected
                       ? 'bg-green-600 text-white'
-                      : 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : isHighlighted
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
@@ -259,28 +342,55 @@ export default function DateSelectionStep({
       {showTimePicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div className="w-full max-w-sm rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-bold">예식 시간을 선택해주세요</h3>
-            <div className="space-y-3">
-              {TIME_SLOTS.map((time) => (
+            {formData.type === 'doljanchi' ? (
+              // 돌잔치 시간 선택 팝업
+              <>
+                <h3 className="mb-4 text-xl font-bold">
+                  {doljanchiSubType === 'doljanchi' 
+                    ? '돌잔치 시간 안내' 
+                    : '찾아가는 돌잔치 시간 안내'}
+                </h3>
+                <div className="mb-4 rounded-lg bg-blue-50 p-4">
+                  <p className="text-lg font-semibold text-gray-800">
+                    {doljanchiSubType === 'doljanchi' 
+                      ? '돌잔치 시간은 17시입니다.'
+                      : '돌잔치 시간은 운영진과 협의 후 결정됩니다.'}
+                  </p>
+                </div>
                 <button
-                  key={time}
-                  onClick={() => handleTimeSelect(time as TimeSlot)}
+                  onClick={handleTimeClose}
                   className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700"
                 >
-                  {time}
+                  닫기
                 </button>
-              ))}
-            </div>
-            <button
-              onClick={() => {
-                setShowTimePicker(false);
-                setSelectedDate(null);
-                setSelectedPriority(null);
-              }}
-              className="mt-4 w-full rounded-lg bg-gray-200 py-3 font-semibold text-gray-700"
-            >
-              취소
-            </button>
+              </>
+            ) : (
+              // 전통혼례 시간 선택 팝업
+              <>
+                <h3 className="mb-4 text-xl font-bold">예식 시간을 선택해주세요</h3>
+                <div className="space-y-3">
+                  {TIME_SLOTS.map((time) => (
+                    <button
+                      key={time}
+                      onClick={() => handleTimeSelect(time as TimeSlot)}
+                      className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700"
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setShowTimePicker(false);
+                    setSelectedDate(null);
+                    setSelectedPriority(null);
+                  }}
+                  className="mt-4 w-full rounded-lg bg-gray-200 py-3 font-semibold text-gray-700"
+                >
+                  취소
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
