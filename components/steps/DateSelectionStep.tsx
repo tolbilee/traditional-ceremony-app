@@ -20,6 +20,7 @@ export default function DateSelectionStep({
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1)); // 2026년 1월
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showSecondScheduleAlert, setShowSecondScheduleAlert] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<'1' | '2' | null>(null);
 
@@ -87,11 +88,17 @@ export default function DateSelectionStep({
   };
 
   const handleNext = () => {
-    if (formData.schedule1?.date) {
-      onNext();
-    } else {
+    if (!formData.schedule1?.date) {
       alert('1순위 날짜와 시간을 선택해주세요.');
+      return;
     }
+    
+    if (!formData.schedule2?.date) {
+      setShowSecondScheduleAlert(true);
+      return;
+    }
+    
+    onNext();
   };
 
   const schedule1Display = formData.schedule1?.date && formData.schedule1.date !== ''
@@ -273,6 +280,21 @@ export default function DateSelectionStep({
               className="mt-4 w-full rounded-lg bg-gray-200 py-3 font-semibold text-gray-700"
             >
               취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2순위 날짜 지정 요청 팝업 */}
+      {showSecondScheduleAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6">
+            <h3 className="mb-4 text-xl font-bold">2순위 날짜를 지정해주세요</h3>
+            <button
+              onClick={() => setShowSecondScheduleAlert(false)}
+              className="mt-4 w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700"
+            >
+              확인
             </button>
           </div>
         </div>
