@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ApplicationFormData, SupportType } from '@/types';
+import { ApplicationFormData, SupportType, RequiredDocument } from '@/types';
 import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
 
 interface DocumentUploadStepProps {
