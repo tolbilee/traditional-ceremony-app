@@ -58,15 +58,15 @@ export const SUPPORT_TYPE_LABELS: Record<SupportType, string> = {
   north_korean_defector: '새터민',
   national_merit: '유공자',
   doljanchi: '돌잔치',
-  doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
-  doljanchi_orphanage: '찾아가는 돌잔치(영아원)',
+  doljanchi_welfare_facility: '한부모가족 복지시설',
+  doljanchi_orphanage: '영아원',
 };
 
 // 돌잔치 지원 유형 한글명
 export const DOLJANCHI_SUPPORT_TYPE_LABELS: Record<'doljanchi' | 'doljanchi_welfare_facility' | 'doljanchi_orphanage', string> = {
   doljanchi: '돌잔치',
-  doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
-  doljanchi_orphanage: '찾아가는 돌잔치(영아원)',
+  doljanchi_welfare_facility: '한부모가족 복지시설',
+  doljanchi_orphanage: '영아원',
 };
 
 // 시간대 옵션
