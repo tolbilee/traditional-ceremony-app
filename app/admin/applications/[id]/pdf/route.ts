@@ -31,11 +31,29 @@ export async function GET(
 
     // 지원 유형 한글 변환
     const supportTypeLabels: Record<string, string> = {
-      basic_livelihood: '기초수급자',
+      basic_livelihood: '기초생활수급자',
+      near_poor: '차상위계층',
       multicultural: '다문화가정',
       disabled: '장애인',
-      north_korean_defector: '북한이탈주민',
-      national_merit: '국가유공자',
+      north_korean_defector: '새터민',
+      national_merit: '유공자',
+      doljanchi: '돌잔치',
+      doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
+      doljanchi_orphanage: '찾아가는 돌잔치(영아원)',
+    };
+    
+    // 복수 선택된 지원유형 가져오기
+    const getSupportTypeDisplay = (supportType: string, applicationData: any): string => {
+      // application_data.supportType에 쉼표로 구분된 복수 선택 정보가 있는지 확인
+      if (applicationData && applicationData.supportType && typeof applicationData.supportType === 'string') {
+        const supportTypes = applicationData.supportType.split(',').map((t: string) => t.trim());
+        if (supportTypes.length > 1) {
+          // 복수 선택된 경우 모두 표시
+          return supportTypes.map((t: string) => supportTypeLabels[t] || t).join(', ');
+        }
+      }
+      // 단일 선택인 경우
+      return supportTypeLabels[supportType] || supportType || '-';
     };
 
     const appData = app.application_data || {};
@@ -225,7 +243,7 @@ export async function GET(
       </div>
       <div class="info-item">
         <span class="info-label">지원 유형:</span>
-        <span class="info-value">${supportTypeLabels[app.support_type] || app.support_type || '-'}</span>
+        <span class="info-value">${getSupportTypeDisplay(app.support_type, appData)}</span>
       </div>
       <div class="info-item">
         <span class="info-label">동의 여부:</span>

@@ -63,11 +63,61 @@ export default function DocumentUploadStep({
   
   const selectedSupportTypes = getSelectedSupportTypes();
   
+  // 돌잔치 복수 선택된 지원유형 가져오기 (찾아가는 돌잔치의 경우)
+  const getDoljanchiSelectedSupportTypes = (): SupportType[] => {
+    if (formData.type === 'doljanchi' && doljanchiSubType && doljanchiSubType !== 'doljanchi') {
+      // 찾아가는 돌잔치인 경우에만 복수 선택된 지원유형 확인
+      if (formData.applicationData && 'supportType' in formData.applicationData) {
+        const supportTypeString = formData.applicationData.supportType as string;
+        // 쉼표로 구분된 문자열을 배열로 변환
+        if (supportTypeString && supportTypeString.includes(',')) {
+          return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+        } else if (supportTypeString) {
+          return [supportTypeString as SupportType];
+        }
+      }
+    }
+    return [];
+  };
+  
+  const doljanchiSelectedSupportTypes = getDoljanchiSelectedSupportTypes();
+  
   // 선택된 모든 지원유형의 증빙서류 목록 가져오기
   const getAllRequiredDocuments = () => {
     if (formData.type === 'doljanchi') {
-      // 돌잔치는 단일 증빙서류만
-      return requiredDoc ? [requiredDoc] : [];
+      if (doljanchiSubType === 'doljanchi') {
+        // 4-6-1) 돌잔치: 4-3-1)에서 선택한 지원유형에 따라 증빙서류 목록 모두 표시
+        // 한부모가족은 필수이므로 항상 포함
+        const documents: RequiredDocument[] = [REQUIRED_DOCUMENTS.doljanchi];
+        
+        // 추가로 선택된 지원유형의 증빙서류
+        doljanchiSelectedSupportTypes.forEach(type => {
+          if (REQUIRED_DOCUMENTS[type]) {
+            documents.push(REQUIRED_DOCUMENTS[type]);
+          }
+        });
+        
+        return documents;
+      } else {
+        // 4-6-2) 찾아가는 돌잔치: 복수 선택된 지원유형에 따라 증빙서류 목록 모두 표시
+        const documents: RequiredDocument[] = [];
+        
+        // 기본 증빙서류 (복지시설 또는 영아원)
+        if (supportType === 'doljanchi_welfare_facility') {
+          documents.push(REQUIRED_DOCUMENTS.doljanchi_welfare_facility);
+        } else if (supportType === 'doljanchi_orphanage') {
+          documents.push(REQUIRED_DOCUMENTS.doljanchi_orphanage);
+        }
+        
+        // 추가로 선택된 지원유형의 증빙서류
+        doljanchiSelectedSupportTypes.forEach(type => {
+          if (REQUIRED_DOCUMENTS[type]) {
+            documents.push(REQUIRED_DOCUMENTS[type]);
+          }
+        });
+        
+        return documents;
+      }
     } else {
       // 전통혼례: 복수 선택된 모든 지원유형의 증빙서류
       return selectedSupportTypes
@@ -77,23 +127,6 @@ export default function DocumentUploadStep({
   };
   
   const allRequiredDocuments = getAllRequiredDocuments();
-  
-  // 돌잔치인 경우 증빙서류 안내 메시지
-  const getDoljanchiDocumentMessage = () => {
-    if (formData.type === 'doljanchi') {
-      if (doljanchiSubType === 'doljanchi') {
-        // 돌잔치: 한부모가족증명서만
-        return '한부모가족증명서를 촬영하여 첨부해주세요.';
-      } else {
-        // 찾아가는 돌잔치: 선택한 지원유형에 따라 다름
-        // doljanchi_welfare_facility 또는 doljanchi_orphanage의 기본 증빙서류 표시
-        return requiredDoc?.description || '필요한 증빙서류를 촬영하여 첨부해주세요.';
-      }
-    }
-    return null;
-  };
-  
-  const doljanchiMessage = getDoljanchiDocumentMessage();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -209,14 +242,7 @@ export default function DocumentUploadStep({
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">증빙서류 첨부</h2>
 
-      {formData.type === 'doljanchi' && doljanchiMessage ? (
-        <div className="rounded-lg bg-blue-50 p-4">
-          <p className="font-semibold text-gray-800">
-            {doljanchiSubType === 'doljanchi' ? '한부모가족증명서' : requiredDoc?.documentName || '증빙서류'}
-          </p>
-          <p className="mt-1 text-sm text-gray-600">{doljanchiMessage}</p>
-        </div>
-      ) : allRequiredDocuments.length > 0 ? (
+      {allRequiredDocuments.length > 0 ? (
         <div className="space-y-3">
           {allRequiredDocuments.map((doc, index) => (
             <div key={index} className="rounded-lg bg-blue-50 p-4">

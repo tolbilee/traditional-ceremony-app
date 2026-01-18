@@ -49,6 +49,17 @@ export default function SupportTypeStep({
   
   // 복수 선택을 위한 상태 (전통혼례와 돌잔치 모두 복수 선택 가능)
   const [selectedTypes, setSelectedTypes] = useState<SupportType[]>(() => {
+    // applicationData에서 복수 선택된 지원유형 확인 (편집 모드)
+    if (formData.applicationData && 'supportType' in formData.applicationData) {
+      const supportTypeString = formData.applicationData.supportType as string;
+      if (supportTypeString && supportTypeString.includes(',')) {
+        // 쉼표로 구분된 복수 선택
+        return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+      } else if (supportTypeString) {
+        return [supportTypeString as SupportType];
+      }
+    }
+    
     // 기존 supportType이 있으면 배열로 변환
     if (formData.supportType) {
       if (ceremonyType === 'doljanchi') {
@@ -88,8 +99,20 @@ export default function SupportTypeStep({
           return;
         }
         // 메인 타입은 이미 doljanchi로 설정되어 있음
-        // 선택된 타입들을 저장하기 위해 첫 번째 타입을 메인으로 사용하거나, 별도로 저장
-        updateFormData({ supportType: 'doljanchi' });
+        // 복수 선택된 타입들을 applicationData에 저장
+        const allTypesString = selectedTypes.join(',');
+        const currentApplicationData = formData.applicationData;
+        if (currentApplicationData && 'parent' in currentApplicationData) {
+          updateFormData({ 
+            supportType: 'doljanchi',
+            applicationData: {
+              ...currentApplicationData,
+              supportType: allTypesString, // 복수 선택된 모든 타입 저장
+            } as any
+          });
+        } else {
+          updateFormData({ supportType: 'doljanchi' });
+        }
       } else if (doljanchiSubType === 'welfare_facility' || doljanchiSubType === 'orphanage') {
         // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수
         // doljanchi_welfare_facility 또는 doljanchi_orphanage가 이미 선택되어 있어야 함
@@ -98,7 +121,20 @@ export default function SupportTypeStep({
           alert('복지시설과 영아원 중 하나는 지원 필수조건입니다.');
           return;
         }
-        updateFormData({ supportType: mainType });
+        // 복수 선택된 타입들을 applicationData에 저장
+        const allTypesString = selectedTypes.join(',');
+        const currentApplicationData = formData.applicationData;
+        if (currentApplicationData && 'parent' in currentApplicationData) {
+          updateFormData({ 
+            supportType: mainType,
+            applicationData: {
+              ...currentApplicationData,
+              supportType: allTypesString, // 복수 선택된 모든 타입 저장
+            } as any
+          });
+        } else {
+          updateFormData({ supportType: mainType });
+        }
       }
     } else {
       // 전통혼례: 복수 선택 가능, 최소 1개 이상 선택 필요

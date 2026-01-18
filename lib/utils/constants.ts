@@ -39,13 +39,13 @@ export const REQUIRED_DOCUMENTS: Record<SupportType, RequiredDocument> = {
   },
   doljanchi_welfare_facility: {
     supportType: 'doljanchi_welfare_facility',
-    documentName: '한부모가족증명서, 입소 및 등록서류',
-    description: '한부모가족증명서와 입소 및 등록서류를 촬영하여 첨부해주세요.',
+    documentName: '사업자등록증, 입소사실확인서, 한부모가족증명서',
+    description: '사업자등록증, 입소사실확인서, 한부모가족증명서를 촬영하여 첨부해주세요.',
   },
   doljanchi_orphanage: {
     supportType: 'doljanchi_orphanage',
-    documentName: '입소 및 등록서류',
-    description: '입소 및 등록서류를 촬영하여 첨부해주세요.',
+    documentName: '사업자등록증, 입소사실확인서, 한부모가족증명서',
+    description: '사업자등록증, 입소사실확인서, 한부모가족증명서를 촬영하여 첨부해주세요.',
   },
 };
 

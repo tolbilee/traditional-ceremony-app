@@ -93,14 +93,28 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
     return type === 'wedding' ? '전통혼례' : '돌잔치';
   };
 
-  const getSupportTypeLabel = (type: string) => {
+  const getSupportTypeLabel = (type: string, applicationData?: any) => {
     const labels: Record<string, string> = {
-      basic_livelihood: '기초수급자',
-      multicultural: '다문화',
+      basic_livelihood: '기초생활수급자',
+      near_poor: '차상위계층',
+      multicultural: '다문화가정',
       disabled: '장애인',
-      north_korean_defector: '북한이탈주민',
-      national_merit: '국가유공자',
+      north_korean_defector: '새터민',
+      national_merit: '유공자',
+      doljanchi: '돌잔치',
+      doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
+      doljanchi_orphanage: '찾아가는 돌잔치(영아원)',
     };
+    
+    // 복수 선택된 지원유형 확인 (application_data.supportType에 쉼표로 구분되어 저장됨)
+    if (applicationData && applicationData.supportType && typeof applicationData.supportType === 'string') {
+      const supportTypes = applicationData.supportType.split(',').map((t: string) => t.trim());
+      if (supportTypes.length > 1) {
+        // 복수 선택된 경우 모두 표시
+        return supportTypes.map((t: string) => labels[t] || t).join(', ');
+      }
+    }
+    
     return labels[type] || type;
   };
 
@@ -188,7 +202,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               <div>
                 <label className="text-sm font-medium text-gray-500">지원 유형</label>
                 <p className="mt-1 text-gray-900">
-                  {getSupportTypeLabel(application.support_type)}
+                  {getSupportTypeLabel(application.support_type, application.application_data)}
                 </p>
               </div>
               <div>

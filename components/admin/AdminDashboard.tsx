@@ -12,6 +12,7 @@ interface Application {
   user_name: string;
   birth_date: string;
   support_type: string;
+  application_data?: any;
   schedule_1: any;
   created_at: string;
   consent_status: boolean;
@@ -46,14 +47,28 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
     return type === 'wedding' ? '전통혼례' : '돌잔치';
   };
 
-  const getSupportTypeLabel = (type: string) => {
+  const getSupportTypeLabel = (type: string, applicationData?: any) => {
     const labels: Record<string, string> = {
-      basic_livelihood: '기초수급자',
-      multicultural: '다문화',
+      basic_livelihood: '기초생활수급자',
+      near_poor: '차상위계층',
+      multicultural: '다문화가정',
       disabled: '장애인',
-      north_korean_defector: '북한이탈주민',
-      national_merit: '국가유공자',
+      north_korean_defector: '새터민',
+      national_merit: '유공자',
+      doljanchi: '돌잔치',
+      doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
+      doljanchi_orphanage: '찾아가는 돌잔치(영아원)',
     };
+    
+    // 복수 선택된 지원유형 확인 (application_data.supportType에 쉼표로 구분되어 저장됨)
+    if (applicationData && applicationData.supportType && typeof applicationData.supportType === 'string') {
+      const supportTypes = applicationData.supportType.split(',').map((t: string) => t.trim());
+      if (supportTypes.length > 1) {
+        // 복수 선택된 경우 모두 표시
+        return supportTypes.map((t: string) => labels[t] || t).join(', ');
+      }
+    }
+    
     return labels[type] || type;
   };
 
@@ -219,8 +234,8 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
                       <br />
                       <span className="text-gray-500">{app.birth_date}</span>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {getSupportTypeLabel(app.support_type)}
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {getSupportTypeLabel(app.support_type, app.application_data)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                       {app.schedule_1?.date

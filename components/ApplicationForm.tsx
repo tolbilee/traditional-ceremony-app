@@ -20,11 +20,31 @@ interface ApplicationFormProps {
 
 const TOTAL_STEPS = 6;
 
-export default function ApplicationForm({ type, isEditMode = false, originalApplication, initialSupportType, doljanchiSubType }: ApplicationFormProps) {
+export default function ApplicationForm({ type, isEditMode = false, originalApplication, initialSupportType, doljanchiSubType: propDoljanchiSubType }: ApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [savedApplicationId, setSavedApplicationId] = useState<string | null>(
     isEditMode && originalApplication ? originalApplication.id : null
   );
+  
+  // 편집 모드에서 doljanchiSubType 결정 (originalApplication의 support_type 기반)
+  const getDoljanchiSubType = (): 'doljanchi' | 'welfare_facility' | 'orphanage' | undefined => {
+    if (propDoljanchiSubType) {
+      return propDoljanchiSubType;
+    }
+    if (isEditMode && originalApplication && originalApplication.type === 'doljanchi') {
+      const supportType = originalApplication.support_type;
+      if (supportType === 'doljanchi') {
+        return 'doljanchi';
+      } else if (supportType === 'doljanchi_welfare_facility') {
+        return 'welfare_facility';
+      } else if (supportType === 'doljanchi_orphanage') {
+        return 'orphanage';
+      }
+    }
+    return propDoljanchiSubType;
+  };
+  
+  const doljanchiSubType = getDoljanchiSubType();
   
   // 수정 모드일 때 기존 데이터 로드
   const getInitialFormData = (): Partial<ApplicationFormData> => {
