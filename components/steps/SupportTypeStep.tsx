@@ -9,7 +9,7 @@ interface SupportTypeStepProps {
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
   onPrev: () => void;
-  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
 }
 
 // 전통혼례 지원 유형 (복수 선택 가능)
@@ -31,8 +31,13 @@ const DOLJANCHI_SUPPORT_TYPES: SupportType[] = [
 ];
 
 // 찾아가는 돌잔치 지원 유형 (복수 선택 가능)
+// [한부모가족 복지시설], [영아원]은 필수 선택 중 하나
+// [기초생활수급자], [차상위계층], [장애인], [유공자], [새터민]은 추가 선택
 const VISITING_DOLJANCHI_SUPPORT_TYPES: SupportType[] = [
+  'doljanchi_welfare_facility', // 한부모가족 복지시설 (필수 중 하나)
+  'doljanchi_orphanage', // 영아원 (필수 중 하나)
   'basic_livelihood', // 기초생활수급자
+  'near_poor', // 차상위계층
   'disabled', // 장애인
   'national_merit', // 유공자
   'north_korean_defector', // 새터민
@@ -115,25 +120,29 @@ export default function SupportTypeStep({
         } else {
           updateFormData({ supportType: 'doljanchi' });
         }
-      } else if (doljanchiSubType === 'welfare_facility' || doljanchiSubType === 'orphanage') {
+      } else if (doljanchiSubType === 'welfare_facility' || doljanchiSubType === 'orphanage' || doljanchiSubType === 'visiting') {
         // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수
-        // doljanchi_welfare_facility 또는 doljanchi_orphanage가 이미 선택되어 있어야 함
-        const mainType = doljanchiSubType === 'welfare_facility' ? 'doljanchi_welfare_facility' : 'doljanchi_orphanage';
-        if (selectedTypes.length === 0) {
+        // selectedTypes에 'doljanchi_welfare_facility' 또는 'doljanchi_orphanage'가 포함되어 있는지 확인
+        const hasWelfareFacility = selectedTypes.includes('doljanchi_welfare_facility');
+        const hasOrphanage = selectedTypes.includes('doljanchi_orphanage');
+        
+        if (!hasWelfareFacility && !hasOrphanage) {
           alert('복지시설과 영아원 중 하나는 지원 필수조건입니다.');
           return;
         }
-        // 복수 선택된 타입들을 applicationData에 저장 (기본 타입 포함)
-        // 기본 타입(mainType)을 맨 앞에 추가하여 필수 지원유형도 포함
-        const allTypes = [mainType, ...selectedTypes];
-        const allTypesString = allTypes.join(',');
+        
+        // 선택된 타입 중 필수 타입을 메인 타입으로 설정
+        const mainType = hasWelfareFacility ? 'doljanchi_welfare_facility' : 'doljanchi_orphanage';
+        
+        // 복수 선택된 타입들을 applicationData에 저장 (필수 타입 포함)
+        const allTypesString = selectedTypes.join(',');
         const currentApplicationData = formData.applicationData;
         if (currentApplicationData && 'parent' in currentApplicationData) {
           updateFormData({ 
             supportType: mainType,
             applicationData: {
               ...currentApplicationData,
-              supportType: allTypesString, // 복수 선택된 모든 타입 저장 (기본 타입 포함)
+              supportType: allTypesString, // 복수 선택된 모든 타입 저장
             } as any
           });
         } else {
@@ -246,36 +255,43 @@ export default function SupportTypeStep({
                 ))}
               </>
             ) : (
-              // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수
+              // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수 (선택 가능)
               <>
                 <div className="rounded-lg border-2 border-green-500 bg-green-50 p-4">
                   <div className="text-lg font-semibold text-gray-800">
-                    {doljanchiSubType === 'welfare_facility' ? '한부모가족 복지시설' : '영아원'} (필수)
+                    한부모가족 복지시설 또는 영아원 (필수)
                   </div>
                   <div className="mt-1 text-sm text-gray-600">
-                    찾아가는 돌잔치 신청의 필수조건입니다.
+                    찾아가는 돌잔치 신청의 필수조건입니다. 둘 중 하나를 반드시 선택해주세요.
                   </div>
                 </div>
-                {VISITING_DOLJANCHI_SUPPORT_TYPES.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => handleSelect(type)}
-                    className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
-                      isSelected(type)
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl font-semibold text-gray-800">
-                        {SUPPORT_TYPE_LABELS[type]}
+                {VISITING_DOLJANCHI_SUPPORT_TYPES.map((type) => {
+                  // 필수 타입인지 확인
+                  const isRequired = type === 'doljanchi_welfare_facility' || type === 'doljanchi_orphanage';
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => handleSelect(type)}
+                      className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
+                        isSelected(type)
+                          ? 'border-blue-600 bg-blue-50'
+                          : isRequired
+                          ? 'border-green-300 bg-green-50 hover:border-green-400'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-semibold text-gray-800">
+                          {SUPPORT_TYPE_LABELS[type]}
+                          {isRequired && <span className="ml-2 text-sm text-green-600">(필수 중 하나)</span>}
+                        </div>
+                        {isSelected(type) && (
+                          <span className="text-2xl">✓</span>
+                        )}
                       </div>
-                      {isSelected(type) && (
-                        <span className="text-2xl">✓</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </>
             )}
             <p className="text-sm text-gray-500">

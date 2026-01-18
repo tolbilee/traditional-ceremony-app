@@ -15,7 +15,7 @@ interface ApplicationFormProps {
   isEditMode?: boolean;
   originalApplication?: any;
   initialSupportType?: SupportType;
-  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
 }
 
 const TOTAL_STEPS = 6;
@@ -27,7 +27,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   );
   
   // 편집 모드에서 doljanchiSubType 결정 (originalApplication의 support_type 기반)
-  const getDoljanchiSubType = (): 'doljanchi' | 'welfare_facility' | 'orphanage' | undefined => {
+  const getDoljanchiSubType = (): 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting' | undefined => {
     if (propDoljanchiSubType) {
       return propDoljanchiSubType;
     }

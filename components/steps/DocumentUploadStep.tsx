@@ -10,7 +10,7 @@ interface DocumentUploadStepProps {
   onNext: () => void;
   onPrev: () => void;
   onFileUploaded?: (fileUrls: string[]) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
-  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
 }
 
 export default function DocumentUploadStep({
@@ -132,11 +132,16 @@ export default function DocumentUploadStep({
         const documents: RequiredDocument[] = [];
         const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
         
+        // 선택된 지원유형에서 복지시설 또는 영아원 찾기
+        const hasWelfareFacility = doljanchiSelectedSupportTypes.includes('doljanchi_welfare_facility');
+        const hasOrphanage = doljanchiSelectedSupportTypes.includes('doljanchi_orphanage');
+        
         // 기본 증빙서류 (복지시설 또는 영아원)
-        if (supportType === 'doljanchi_welfare_facility') {
+        if (hasWelfareFacility) {
           documents.push(REQUIRED_DOCUMENTS.doljanchi_welfare_facility);
           addedTypes.add('doljanchi_welfare_facility');
-        } else if (supportType === 'doljanchi_orphanage') {
+        }
+        if (hasOrphanage) {
           documents.push(REQUIRED_DOCUMENTS.doljanchi_orphanage);
           addedTypes.add('doljanchi_orphanage');
         }

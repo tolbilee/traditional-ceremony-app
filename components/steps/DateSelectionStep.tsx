@@ -10,7 +10,7 @@ interface DateSelectionStepProps {
   formData: Partial<ApplicationFormData>;
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
-  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
 }
 
 export default function DateSelectionStep({

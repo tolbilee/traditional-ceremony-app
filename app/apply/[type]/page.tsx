@@ -11,8 +11,14 @@ export default function ApplyPage() {
   const [showDoljanchiTypePicker, setShowDoljanchiTypePicker] = useState(type === 'doljanchi');
   const [selectedDoljanchiType, setSelectedDoljanchiType] = useState<SupportType | null>(null);
 
-  const handleDoljanchiTypeSelect = (doljanchiType: 'doljanchi' | 'doljanchi_welfare_facility' | 'doljanchi_orphanage') => {
-    setSelectedDoljanchiType(doljanchiType);
+  const handleDoljanchiTypeSelect = (doljanchiType: 'doljanchi' | 'visiting') => {
+    if (doljanchiType === 'doljanchi') {
+      setSelectedDoljanchiType('doljanchi');
+    } else {
+      // 찾아가는 돌잔치는 초기 선택에서 구체적인 타입을 결정하지 않음
+      // 지원유형 선택 단계에서 [한부모가족 복지시설] 또는 [영아원]을 선택하도록 함
+      setSelectedDoljanchiType('doljanchi_welfare_facility' as SupportType); // 임시 값, 실제로는 지원유형 선택 단계에서 결정
+    }
     setShowDoljanchiTypePicker(false);
   };
 
@@ -40,7 +46,7 @@ export default function ApplyPage() {
                 돌잔치
               </button>
               <button
-                onClick={() => handleDoljanchiTypeSelect('doljanchi_welfare_facility')}
+                onClick={() => handleDoljanchiTypeSelect('visiting')}
                 className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700"
               >
                 찾아가는 돌잔치
@@ -52,13 +58,13 @@ export default function ApplyPage() {
     );
   }
 
-  // 돌잔치 타입이 선택되었으면 ApplicationForm 표시 (supportType을 미리 설정)
+  // 돌잔치 타입이 선택되었으면 ApplicationForm 표시
   return (
     <div className="min-h-screen bg-gray-50">
       <ApplicationForm 
         type={type} 
-        initialSupportType={selectedDoljanchiType}
-        doljanchiSubType={selectedDoljanchiType === 'doljanchi' ? 'doljanchi' : selectedDoljanchiType === 'doljanchi_welfare_facility' ? 'welfare_facility' : 'orphanage'}
+        initialSupportType={selectedDoljanchiType === 'doljanchi' ? 'doljanchi' : undefined}
+        doljanchiSubType={selectedDoljanchiType === 'doljanchi' ? 'doljanchi' : 'visiting'}
       />
     </div>
   );
