@@ -20,7 +20,7 @@ interface ApplicationFormProps {
 
 const TOTAL_STEPS = 6;
 
-export default function ApplicationForm({ type, isEditMode = false, originalApplication }: ApplicationFormProps) {
+export default function ApplicationForm({ type, isEditMode = false, originalApplication, initialSupportType, doljanchiSubType }: ApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [savedApplicationId, setSavedApplicationId] = useState<string | null>(
     isEditMode && originalApplication ? originalApplication.id : null
