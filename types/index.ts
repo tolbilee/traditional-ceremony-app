@@ -12,7 +12,7 @@ export type SupportType =
   | 'doljanchi_welfare_facility' // 찾아가는 돌잔치(복지시설)
   | 'doljanchi_orphanage'; // 찾아가는 돌잔치(영아원)
 
-export type TimeSlot = '12:00' | '15:00' | '18:00';
+export type TimeSlot = '12:00' | '15:00';
 
 export interface Schedule {
   date: string; // YYYY-MM-DD 형식
