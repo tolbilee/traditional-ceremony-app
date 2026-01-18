@@ -5,12 +5,15 @@ import { useState } from 'react';
 
 interface IntroScreenProps {
   onEnter: () => void;
+  allowEnter?: boolean; // 입장 허용 여부
 }
 
-export default function IntroScreen({ onEnter }: IntroScreenProps) {
+export default function IntroScreen({ onEnter, allowEnter = false }: IntroScreenProps) {
   const [isExiting, setIsExiting] = useState(false);
 
   const handleEnter = () => {
+    if (!allowEnter) return; // 입장이 허용되지 않으면 아무 동작도 하지 않음
+    
     setIsExiting(true);
     setTimeout(() => {
       onEnter();
