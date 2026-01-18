@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ApplicationFormData, SupportType, CeremonyType } from '@/types';
+import { ApplicationFormData, SupportType, CeremonyType, WeddingApplicationData } from '@/types';
 import { SUPPORT_TYPE_LABELS } from '@/lib/utils/constants';
 
 interface SupportTypeStepProps {
@@ -112,16 +112,20 @@ export default function SupportTypeStep({
       const allTypesString = selectedTypes.join(',');
       
       // applicationData 업데이트 (복수 선택 정보 저장)
-      const currentApplicationData = formData.applicationData || {};
-      if ('supportType' in currentApplicationData) {
+      // 전통혼례인 경우 WeddingApplicationData 타입인지 확인
+      const currentApplicationData = formData.applicationData;
+      if (currentApplicationData && 'groom' in currentApplicationData) {
+        // WeddingApplicationData 타입인 경우에만 업데이트
+        const weddingData = currentApplicationData as WeddingApplicationData;
         updateFormData({ 
           supportType: mainType,
           applicationData: {
-            ...currentApplicationData,
+            ...weddingData,
             supportType: allTypesString, // 복수 선택된 모든 타입 저장
-          }
+          } as WeddingApplicationData
         });
       } else {
+        // applicationData가 없거나 다른 타입인 경우 supportType만 업데이트
         updateFormData({ supportType: mainType });
       }
     }
