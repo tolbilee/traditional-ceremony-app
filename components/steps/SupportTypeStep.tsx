@@ -257,14 +257,6 @@ export default function SupportTypeStep({
             ) : (
               // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수 (선택 가능)
               <>
-                <div className="rounded-lg border-2 border-green-500 bg-green-50 p-4">
-                  <div className="text-lg font-semibold text-gray-800">
-                    한부모가족 복지시설 또는 영아원 (필수)
-                  </div>
-                  <div className="mt-1 text-sm text-gray-600">
-                    찾아가는 돌잔치 신청의 필수조건입니다. 둘 중 하나를 반드시 선택해주세요.
-                  </div>
-                </div>
                 {VISITING_DOLJANCHI_SUPPORT_TYPES.map((type) => {
                   // 필수 타입인지 확인
                   const isRequired = type === 'doljanchi_welfare_facility' || type === 'doljanchi_orphanage';
