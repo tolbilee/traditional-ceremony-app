@@ -75,7 +75,37 @@ export interface DoljanchiApplicationData {
   applicationReason: string; // 최대 1,000자
 }
 
-export type ApplicationData = WeddingApplicationData | DoljanchiApplicationData;
+// 찾아가는 돌잔치 신청서 데이터 (7-4)
+export interface VisitingDoljanchiApplicationData {
+  // 참가자 정보
+  // 대상자
+  target: {
+    name: string;
+    birthDate: string; // YYMMDD
+    gender: 'male' | 'female';
+    targetType: string; // 대상유형 (한부모가족 복지시설, 영아원) - 자동 입력
+    additionalTypes: string; // 추가유형 (기초생활수급자, 차상위계층, 장애인, 유공자, 새터민) - 자동 입력
+  };
+  // 복지시설
+  facility: {
+    name: string; // 시설명
+    representative: string; // 대표자 이름
+    address: string; // 주소
+    businessNumber: string; // 사업자번호 (10자리)
+    website: string; // 홈페이지
+    manager: string; // 담당자 이름
+    phone: string; // 전화번호
+    email: string; // 이메일
+  };
+  supportType: string; // 자동 입력
+  documentSubmitted: boolean; // 자동 입력
+  
+  // 진행 정보
+  preferredDateTime: string; // 자동 입력
+  applicationReason: string; // 최대 1,000자
+}
+
+export type ApplicationData = WeddingApplicationData | DoljanchiApplicationData | VisitingDoljanchiApplicationData;
 
 export interface Application {
   id: string; // UUID

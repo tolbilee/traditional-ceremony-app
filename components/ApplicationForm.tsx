@@ -493,6 +493,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             type={type}
             isEditMode={isEditMode}
             originalData={originalApplication?.application_data}
+            doljanchiSubType={doljanchiSubType}
           />
         )}
         {currentStep === 4 && (

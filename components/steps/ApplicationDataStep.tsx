@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ApplicationFormData, CeremonyType, WeddingApplicationData, DoljanchiApplicationData } from '@/types';
+import { ApplicationFormData, CeremonyType, WeddingApplicationData, DoljanchiApplicationData, VisitingDoljanchiApplicationData } from '@/types';
 
 interface ApplicationDataStepProps {
   formData: Partial<ApplicationFormData>;
@@ -11,6 +11,7 @@ interface ApplicationDataStepProps {
   type: CeremonyType;
   isEditMode?: boolean;
   originalData?: any;
+  doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
 }
 
 export default function ApplicationDataStep({
@@ -21,6 +22,7 @@ export default function ApplicationDataStep({
   type,
   isEditMode = false,
   originalData,
+  doljanchiSubType,
 }: ApplicationDataStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -451,7 +453,443 @@ export default function ApplicationDataStep({
     );
   }
 
-  // 돌잔치 신청서
+  // 찾아가는 돌잔치 신청서 (7-4)
+  if (type === 'doljanchi' && doljanchiSubType === 'visiting') {
+    const visitingData = (formData.applicationData as Partial<VisitingDoljanchiApplicationData>) || {};
+    
+    const handleVisitingChange = (field: string, value: any) => {
+      const newData = {
+        ...visitingData,
+        [field]: value,
+      } as Partial<VisitingDoljanchiApplicationData>;
+      
+      updateFormData({ applicationData: newData as any });
+      
+      if (errors[field]) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+    };
+
+    const validateVisiting = () => {
+      const newErrors: Record<string, string> = {};
+      
+      // 대상자 정보
+      if (!visitingData.target?.name) newErrors['target.name'] = '이름을 입력해주세요.';
+      if (!visitingData.target?.birthDate || visitingData.target.birthDate.length !== 6) {
+        newErrors['target.birthDate'] = '생년월일 6자리를 입력해주세요.';
+      }
+      if (!visitingData.target?.gender) newErrors['target.gender'] = '성별을 선택해주세요.';
+      
+      // 복지시설 정보
+      if (!visitingData.facility?.name) newErrors['facility.name'] = '시설명을 입력해주세요.';
+      if (!visitingData.facility?.representative) newErrors['facility.representative'] = '대표자 이름을 입력해주세요.';
+      if (!visitingData.facility?.address) newErrors['facility.address'] = '주소를 입력해주세요.';
+      // 사업자번호는 10자리 숫자 (하이픈 제외) 또는 13자리 (하이픈 포함)
+      const businessNumberDigits = visitingData.facility?.businessNumber?.replace(/\D/g, '') || '';
+      if (!businessNumberDigits || businessNumberDigits.length !== 10) {
+        newErrors['facility.businessNumber'] = '사업자번호를 입력해주세요. (10자리 숫자)';
+      }
+      if (!visitingData.facility?.manager) newErrors['facility.manager'] = '담당자 이름을 입력해주세요.';
+      if (!visitingData.facility?.phone) newErrors['facility.phone'] = '전화번호를 입력해주세요.';
+      if (!visitingData.facility?.email) newErrors['facility.email'] = '이메일을 입력해주세요.';
+      
+      if (!visitingData.applicationReason || visitingData.applicationReason.length > 1000) {
+        newErrors['applicationReason'] = '신청동기를 입력해주세요. (최대 1,000자)';
+      }
+      
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleNext = () => {
+      if (validateVisiting()) {
+        // applicationData.supportType이 이미 있으면 유지 (복수 선택된 경우), 없으면 formData.supportType 사용
+        const existingSupportType = visitingData?.supportType;
+        
+        // 대상유형과 추가유형 자동 입력
+        const supportTypeString = formData.applicationData?.supportType as string || formData.supportType || '';
+        const supportTypes = supportTypeString ? supportTypeString.split(',').map(t => t.trim()) : [];
+        const targetType = supportTypes.find(t => t === 'doljanchi_welfare_facility' || t === 'doljanchi_orphanage') || '';
+        const additionalTypes = supportTypes.filter(t => t !== 'doljanchi_welfare_facility' && t !== 'doljanchi_orphanage').join(',');
+        
+        const finalData: VisitingDoljanchiApplicationData = {
+          ...visitingData as VisitingDoljanchiApplicationData,
+          supportType: existingSupportType || formData.supportType || '',
+          documentSubmitted: (formData.files?.length || 0) > 0,
+          preferredDateTime: formData.schedule1 
+            ? `${formData.schedule1.date} ${formData.schedule1.time}`
+            : '',
+          target: {
+            ...visitingData.target,
+            targetType: targetType || visitingData.target?.targetType || '',
+            additionalTypes: additionalTypes || visitingData.target?.additionalTypes || '',
+          } as any,
+        };
+        
+        // userName과 birthDate를 명시적으로 설정 (로그인용 - 대상자 이름 사용)
+        const userName = visitingData.target?.name || formData.userName || '';
+        const birthDate = visitingData.target?.birthDate || formData.birthDate || '';
+        
+        updateFormData({ 
+          applicationData: finalData,
+          userName: userName,
+          birthDate: birthDate,
+        });
+        onNext();
+      } else {
+        const firstErrorField = Object.keys(errors)[0];
+        if (firstErrorField) {
+          const element = document.querySelector(`[name="${firstErrorField}"]`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (element as HTMLInputElement)?.focus();
+        }
+      }
+    };
+
+    const getOriginalValue = (field: string) => {
+      if (!isEditMode || !originalData) return '';
+      const keys = field.split('.');
+      let value: any = originalData;
+      for (const key of keys) {
+        value = value?.[key];
+      }
+      return value || '';
+    };
+
+    // 사업자번호 포맷팅 함수
+    const formatBusinessNumber = (value: string) => {
+      const numbers = value.replace(/\D/g, '').slice(0, 10);
+      if (numbers.length <= 3) return numbers;
+      if (numbers.length <= 5) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 5)}-${numbers.slice(5)}`;
+    };
+
+    // 전화번호 포맷팅 함수
+    const formatPhone = (value: string) => {
+      const numbers = value.replace(/\D/g, '');
+      if (numbers.length <= 3) return numbers;
+      if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    };
+
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-800">신청서 작성</h2>
+        <p className="text-gray-600">신청자 정보를 입력해주세요.</p>
+
+        {/* 참가자 정보 */}
+        <div className="space-y-6 rounded-lg border-2 border-gray-200 bg-white p-6">
+          <h3 className="text-xl font-semibold text-gray-800">참가자 정보</h3>
+          
+          {/* 대상자 정보 */}
+          <div className="space-y-4 border-b border-gray-200 pb-4">
+            <h4 className="font-semibold text-gray-700">대상자 (1팀)</h4>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="target.name"
+                value={visitingData.target?.name || ''}
+                onChange={(e) => {
+                  handleVisitingChange('target', { ...visitingData.target, name: e.target.value });
+                  updateFormData({ userName: e.target.value });
+                }}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['target.name'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('target.name') ? 'text-red-600' : ''}`}
+                placeholder="홍길동"
+              />
+              {errors['target.name'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['target.name']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                생년월일 (6자리) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="target.birthDate"
+                value={visitingData.target?.birthDate || ''}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  handleVisitingChange('target', { ...visitingData.target, birthDate: value });
+                  updateFormData({ birthDate: value });
+                }}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['target.birthDate'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('target.birthDate') ? 'text-red-600' : ''}`}
+                placeholder="900101"
+                maxLength={6}
+              />
+              {errors['target.birthDate'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['target.birthDate']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                성별 <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="target.gender"
+                value={visitingData.target?.gender || ''}
+                onChange={(e) => handleVisitingChange('target', { ...visitingData.target, gender: e.target.value as 'male' | 'female' })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['target.gender'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('target.gender') ? 'text-red-600' : ''}`}
+              >
+                <option value="">선택해주세요</option>
+                <option value="male">남성</option>
+                <option value="female">여성</option>
+              </select>
+              {errors['target.gender'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['target.gender']}</p>
+              )}
+            </div>
+            {/* 대상유형과 추가유형은 자동 입력이므로 표시만 */}
+            <div className="rounded-lg bg-gray-50 p-3">
+              <p className="text-sm text-gray-600">
+                <strong>대상유형:</strong> {visitingData.target?.targetType || '자동 입력'}
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                <strong>추가유형:</strong> {visitingData.target?.additionalTypes || '자동 입력'}
+              </p>
+            </div>
+          </div>
+
+          {/* 복지시설 정보 */}
+          <div className="space-y-4 pt-4">
+            <h4 className="font-semibold text-gray-700">복지시설</h4>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                시설명 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.name"
+                value={visitingData.facility?.name || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, name: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.name'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.name') ? 'text-red-600' : ''}`}
+                placeholder="○○복지시설"
+              />
+              {errors['facility.name'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.name']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                대표자 이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.representative"
+                value={visitingData.facility?.representative || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, representative: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.representative'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.representative') ? 'text-red-600' : ''}`}
+                placeholder="홍길동"
+              />
+              {errors['facility.representative'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.representative']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                주소 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.address"
+                value={visitingData.facility?.address || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, address: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.address'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.address') ? 'text-red-600' : ''}`}
+                placeholder="서울시 강남구..."
+              />
+              {errors['facility.address'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.address']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                사업자번호 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.businessNumber"
+                value={visitingData.facility?.businessNumber || ''}
+                onChange={(e) => {
+                  const formatted = formatBusinessNumber(e.target.value);
+                  handleVisitingChange('facility', { ...visitingData.facility, businessNumber: formatted });
+                }}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.businessNumber'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.businessNumber') ? 'text-red-600' : ''}`}
+                placeholder="000-00-00000"
+                maxLength={13}
+              />
+              {errors['facility.businessNumber'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.businessNumber']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                홈페이지
+              </label>
+              <input
+                type="text"
+                name="facility.website"
+                value={visitingData.facility?.website || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, website: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.website'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.website') ? 'text-red-600' : ''}`}
+                placeholder="https://example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                담당자 이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.manager"
+                value={visitingData.facility?.manager || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, manager: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.manager'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.manager') ? 'text-red-600' : ''}`}
+                placeholder="홍길동"
+              />
+              {errors['facility.manager'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.manager']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                전화번호 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="facility.phone"
+                value={visitingData.facility?.phone || ''}
+                onChange={(e) => {
+                  const formatted = formatPhone(e.target.value);
+                  handleVisitingChange('facility', { ...visitingData.facility, phone: formatted });
+                }}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.phone'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.phone') ? 'text-red-600' : ''}`}
+                placeholder="010-0000-0000"
+                maxLength={13}
+              />
+              {errors['facility.phone'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.phone']}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                이메일 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="facility.email"
+                value={visitingData.facility?.email || ''}
+                onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, email: e.target.value })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                  errors['facility.email'] ? 'border-red-500' : 'border-gray-300'
+                } ${isEditMode && getOriginalValue('facility.email') ? 'text-red-600' : ''}`}
+                placeholder="example@email.com"
+              />
+              {errors['facility.email'] && (
+                <p className="mt-1 text-sm text-red-500">{errors['facility.email']}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 진행 정보 */}
+        <div className="space-y-6 rounded-lg border-2 border-gray-200 bg-white p-6">
+          <h3 className="text-xl font-semibold text-gray-800">진행 정보</h3>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              희망 일시
+            </label>
+            {formData.schedule1?.date ? (
+              <input
+                type="text"
+                value={`${formData.schedule1.date} ${formData.schedule1.time}`}
+                disabled
+                className="mt-1 w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-600"
+              />
+            ) : (
+              <input
+                type="text"
+                value="날짜를 선택하지 않았습니다"
+                disabled
+                className="mt-1 w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-400"
+              />
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              신청동기 <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs font-normal text-gray-500">(최대 1,000자)</span>
+            </label>
+            <textarea
+              name="applicationReason"
+              value={visitingData.applicationReason || ''}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 1000);
+                handleVisitingChange('applicationReason', value);
+              }}
+              className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                errors['applicationReason'] ? 'border-red-500' : 'border-gray-300'
+              } ${isEditMode && getOriginalValue('applicationReason') ? 'text-red-600' : ''}`}
+              rows={6}
+              placeholder="신청동기를 입력해주세요."
+              maxLength={1000}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {visitingData.applicationReason?.length || 0} / 1,000자
+            </p>
+            {errors['applicationReason'] && (
+              <p className="mt-1 text-sm text-red-500">{errors['applicationReason']}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-between pt-6 pb-32">
+          <button
+            onClick={onPrev}
+            className="rounded-full bg-gray-200 px-8 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-300 active:scale-95"
+          >
+            이전
+          </button>
+          <button
+            onClick={handleNext}
+            className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+          >
+            다음 단계
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 돌잔치 신청서 (7-3)
   const doljanchiData = (formData.applicationData as Partial<DoljanchiApplicationData>) || {};
   
   const handleDoljanchiChange = (field: string, value: any) => {
