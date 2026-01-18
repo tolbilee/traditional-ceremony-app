@@ -99,15 +99,17 @@ export default function SupportTypeStep({
           return;
         }
         // 메인 타입은 이미 doljanchi로 설정되어 있음
-        // 복수 선택된 타입들을 applicationData에 저장
-        const allTypesString = selectedTypes.join(',');
+        // 복수 선택된 타입들을 applicationData에 저장 (한부모가족(doljanchi) 포함)
+        // doljanchi를 맨 앞에 추가하여 한부모가족도 지원유형에 포함
+        const allTypes = ['doljanchi', ...selectedTypes];
+        const allTypesString = allTypes.join(',');
         const currentApplicationData = formData.applicationData;
         if (currentApplicationData && 'parent' in currentApplicationData) {
           updateFormData({ 
             supportType: 'doljanchi',
             applicationData: {
               ...currentApplicationData,
-              supportType: allTypesString, // 복수 선택된 모든 타입 저장
+              supportType: allTypesString, // 복수 선택된 모든 타입 저장 (한부모가족 포함)
             } as any
           });
         } else {
@@ -121,15 +123,17 @@ export default function SupportTypeStep({
           alert('복지시설과 영아원 중 하나는 지원 필수조건입니다.');
           return;
         }
-        // 복수 선택된 타입들을 applicationData에 저장
-        const allTypesString = selectedTypes.join(',');
+        // 복수 선택된 타입들을 applicationData에 저장 (기본 타입 포함)
+        // 기본 타입(mainType)을 맨 앞에 추가하여 필수 지원유형도 포함
+        const allTypes = [mainType, ...selectedTypes];
+        const allTypesString = allTypes.join(',');
         const currentApplicationData = formData.applicationData;
         if (currentApplicationData && 'parent' in currentApplicationData) {
           updateFormData({ 
             supportType: mainType,
             applicationData: {
               ...currentApplicationData,
-              supportType: allTypesString, // 복수 선택된 모든 타입 저장
+              supportType: allTypesString, // 복수 선택된 모든 타입 저장 (기본 타입 포함)
             } as any
           });
         } else {
