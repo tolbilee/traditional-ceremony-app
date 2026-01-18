@@ -4,6 +4,7 @@ export type CeremonyType = 'wedding' | 'doljanchi'; // 혼례 / 돌잔치
 
 export type SupportType =
   | 'basic_livelihood' // 기초수급자
+  | 'near_poor' // 차상위계층
   | 'multicultural' // 다문화가정
   | 'disabled' // 장애인
   | 'north_korean_defector' // 북한이탈주민

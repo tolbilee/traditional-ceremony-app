@@ -7,15 +7,20 @@ export const REQUIRED_DOCUMENTS: Record<SupportType, RequiredDocument> = {
     documentName: '기초수급증명서',
     description: '기초수급증명서를 촬영하여 첨부해주세요.',
   },
+  near_poor: {
+    supportType: 'near_poor',
+    documentName: '차상위계층확인서 또는 차상위본인부담경감대상자 증명서',
+    description: '차상위계층확인서 또는 차상위본인부담경감대상자 증명서를 촬영하여 첨부해주세요.',
+  },
   multicultural: {
     supportType: 'multicultural',
-    documentName: '국적이 표시된 공통 증빙서류',
-    description: '국적이 표시된 공통 증빙서류를 촬영하여 첨부해주세요.',
+    documentName: '가족관계증명서',
+    description: '가족관계증명서를 촬영하여 첨부해주세요.',
   },
   disabled: {
     supportType: 'disabled',
-    documentName: '장애인복지카드',
-    description: '장애인복지카드를 촬영하여 첨부해주세요.',
+    documentName: '장애인 등록증 또는 복지카드',
+    description: '장애인 등록증 또는 복지카드를 촬영하여 첨부해주세요.',
   },
   north_korean_defector: {
     supportType: 'north_korean_defector',
@@ -46,11 +51,12 @@ export const REQUIRED_DOCUMENTS: Record<SupportType, RequiredDocument> = {
 
 // 지원 유형 한글명 (전통혼례)
 export const SUPPORT_TYPE_LABELS: Record<SupportType, string> = {
-  basic_livelihood: '기초수급자',
+  basic_livelihood: '기초생활수급자',
+  near_poor: '차상위계층',
   multicultural: '다문화가정',
   disabled: '장애인',
-  north_korean_defector: '북한이탈주민',
-  national_merit: '국가유공자',
+  north_korean_defector: '새터민',
+  national_merit: '유공자',
   doljanchi: '돌잔치',
   doljanchi_welfare_facility: '찾아가는 돌잔치(복지시설)',
   doljanchi_orphanage: '찾아가는 돌잔치(영아원)',

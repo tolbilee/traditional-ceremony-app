@@ -12,13 +12,14 @@ interface SupportTypeStepProps {
   doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage';
 }
 
-// 전통혼례 지원 유형
+// 전통혼례 지원 유형 (복수 선택 가능)
 const WEDDING_SUPPORT_TYPES: SupportType[] = [
-  'basic_livelihood',
-  'multicultural',
-  'disabled',
-  'north_korean_defector',
-  'national_merit',
+  'basic_livelihood', // 기초생활수급자
+  'near_poor', // 차상위계층
+  'disabled', // 장애인
+  'multicultural', // 다문화가정
+  'national_merit', // 유공자
+  'north_korean_defector', // 새터민
 ];
 
 // 돌잔치 지원 유형 (복수 선택 가능)
@@ -46,34 +47,34 @@ export default function SupportTypeStep({
 }: SupportTypeStepProps) {
   const ceremonyType: CeremonyType = formData.type || 'wedding';
   
-  // 복수 선택을 위한 상태 (돌잔치인 경우만)
+  // 복수 선택을 위한 상태 (전통혼례와 돌잔치 모두 복수 선택 가능)
   const [selectedTypes, setSelectedTypes] = useState<SupportType[]>(() => {
     // 기존 supportType이 있으면 배열로 변환
-    if (formData.supportType && ceremonyType === 'doljanchi') {
-      // doljanchi, doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
-      const mainType = formData.supportType;
-      if (mainType === 'doljanchi' || mainType === 'doljanchi_welfare_facility' || mainType === 'doljanchi_orphanage') {
-        return [];
+    if (formData.supportType) {
+      if (ceremonyType === 'doljanchi') {
+        // 돌잔치: doljanchi, doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
+        const mainType = formData.supportType;
+        if (mainType === 'doljanchi' || mainType === 'doljanchi_welfare_facility' || mainType === 'doljanchi_orphanage') {
+          return [];
+        }
+        return [formData.supportType];
+      } else {
+        // 전통혼례: 단일 값이었던 것을 배열로 변환
+        return [formData.supportType];
       }
-      return [formData.supportType];
     }
     return [];
   });
 
   const handleSelect = (type: SupportType) => {
-    if (ceremonyType === 'doljanchi') {
-      // 돌잔치는 복수 선택
-      setSelectedTypes((prev) => {
-        if (prev.includes(type)) {
-          return prev.filter((t) => t !== type);
-        } else {
-          return [...prev, type];
-        }
-      });
-    } else {
-      // 전통혼례는 단일 선택
-      updateFormData({ supportType: type });
-    }
+    // 전통혼례와 돌잔치 모두 복수 선택 가능
+    setSelectedTypes((prev) => {
+      if (prev.includes(type)) {
+        return prev.filter((t) => t !== type);
+      } else {
+        return [...prev, type];
+      }
+    });
   };
 
   const handleNext = () => {
@@ -87,6 +88,7 @@ export default function SupportTypeStep({
           return;
         }
         // 메인 타입은 이미 doljanchi로 설정되어 있음
+        // 선택된 타입들을 저장하기 위해 첫 번째 타입을 메인으로 사용하거나, 별도로 저장
         updateFormData({ supportType: 'doljanchi' });
       } else if (doljanchiSubType === 'welfare_facility' || doljanchiSubType === 'orphanage') {
         // 찾아가는 돌잔치: 복지시설 또는 영아원 중 하나는 필수
@@ -99,21 +101,36 @@ export default function SupportTypeStep({
         updateFormData({ supportType: mainType });
       }
     } else {
-      // 전통혼례
-      if (!formData.supportType) {
-        alert('지원 유형을 선택해주세요.');
+      // 전통혼례: 복수 선택 가능, 최소 1개 이상 선택 필요
+      if (selectedTypes.length === 0) {
+        alert('지원 유형을 최소 1개 이상 선택해주세요.');
         return;
+      }
+      // 첫 번째 선택된 타입을 메인 supportType으로 저장
+      // 복수 선택된 타입들은 applicationData.supportType에 쉼표로 구분하여 저장
+      const mainType = selectedTypes[0];
+      const allTypesString = selectedTypes.join(',');
+      
+      // applicationData 업데이트 (복수 선택 정보 저장)
+      const currentApplicationData = formData.applicationData || {};
+      if ('supportType' in currentApplicationData) {
+        updateFormData({ 
+          supportType: mainType,
+          applicationData: {
+            ...currentApplicationData,
+            supportType: allTypesString, // 복수 선택된 모든 타입 저장
+          }
+        });
+      } else {
+        updateFormData({ supportType: mainType });
       }
     }
     onNext();
   };
 
   const isSelected = (type: SupportType) => {
-    if (ceremonyType === 'doljanchi') {
-      return selectedTypes.includes(type);
-    } else {
-      return formData.supportType === type;
-    }
+    // 전통혼례와 돌잔치 모두 selectedTypes 배열로 확인
+    return selectedTypes.includes(type);
   };
 
   return (
@@ -123,22 +140,32 @@ export default function SupportTypeStep({
 
       <div className="space-y-4">
         {ceremonyType === 'wedding' ? (
-          // 전통혼례 지원 유형 (단일 선택)
-          WEDDING_SUPPORT_TYPES.map((type) => (
-            <button
-              key={type}
-              onClick={() => handleSelect(type)}
-              className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
-                formData.supportType === type
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
-              }`}
-            >
-              <div className="text-xl font-semibold text-gray-800">
-                {SUPPORT_TYPE_LABELS[type]}
-              </div>
-            </button>
-          ))
+          // 전통혼례 지원 유형 (복수 선택)
+          <>
+            {WEDDING_SUPPORT_TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => handleSelect(type)}
+                className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
+                  isSelected(type)
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-xl font-semibold text-gray-800">
+                    {SUPPORT_TYPE_LABELS[type]}
+                  </div>
+                  {isSelected(type) && (
+                    <span className="text-2xl">✓</span>
+                  )}
+                </div>
+              </button>
+            ))}
+            <p className="text-sm text-gray-500">
+              * 복수 선택 가능합니다. 해당하는 모든 항목을 선택해주세요.
+            </p>
+          </>
         ) : (
           // 돌잔치 지원 유형 (복수 선택)
           <>

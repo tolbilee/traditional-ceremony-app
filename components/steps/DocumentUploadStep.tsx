@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ApplicationFormData } from '@/types';
+import { ApplicationFormData, SupportType } from '@/types';
 import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
 
 interface DocumentUploadStepProps {
@@ -42,6 +42,41 @@ export default function DocumentUploadStep({
 
   const supportType = formData.supportType;
   const requiredDoc = supportType ? REQUIRED_DOCUMENTS[supportType] : null;
+  
+  // 복수 선택된 지원유형 가져오기 (전통혼례의 경우)
+  const getSelectedSupportTypes = (): SupportType[] => {
+    if (formData.type === 'wedding' && formData.applicationData && 'supportType' in formData.applicationData) {
+      const supportTypeString = formData.applicationData.supportType as string;
+      // 쉼표로 구분된 문자열을 배열로 변환
+      if (supportTypeString && supportTypeString.includes(',')) {
+        return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+      } else if (supportTypeString) {
+        return [supportTypeString as SupportType];
+      }
+    }
+    // 단일 선택인 경우
+    if (supportType) {
+      return [supportType];
+    }
+    return [];
+  };
+  
+  const selectedSupportTypes = getSelectedSupportTypes();
+  
+  // 선택된 모든 지원유형의 증빙서류 목록 가져오기
+  const getAllRequiredDocuments = () => {
+    if (formData.type === 'doljanchi') {
+      // 돌잔치는 단일 증빙서류만
+      return requiredDoc ? [requiredDoc] : [];
+    } else {
+      // 전통혼례: 복수 선택된 모든 지원유형의 증빙서류
+      return selectedSupportTypes
+        .map(type => REQUIRED_DOCUMENTS[type])
+        .filter(doc => doc !== undefined);
+    }
+  };
+  
+  const allRequiredDocuments = getAllRequiredDocuments();
   
   // 돌잔치인 경우 증빙서류 안내 메시지
   const getDoljanchiDocumentMessage = () => {
@@ -181,10 +216,14 @@ export default function DocumentUploadStep({
           </p>
           <p className="mt-1 text-sm text-gray-600">{doljanchiMessage}</p>
         </div>
-      ) : requiredDoc ? (
-        <div className="rounded-lg bg-blue-50 p-4">
-          <p className="font-semibold text-gray-800">{requiredDoc.documentName}</p>
-          <p className="mt-1 text-sm text-gray-600">{requiredDoc.description}</p>
+      ) : allRequiredDocuments.length > 0 ? (
+        <div className="space-y-3">
+          {allRequiredDocuments.map((doc, index) => (
+            <div key={index} className="rounded-lg bg-blue-50 p-4">
+              <p className="font-semibold text-gray-800">{doc.documentName}</p>
+              <p className="mt-1 text-sm text-gray-600">{doc.description}</p>
+            </div>
+          ))}
         </div>
       ) : null}
 
