@@ -92,11 +92,14 @@ export default function DocumentUploadStep({
         // 4-6-1) 돌잔치: 4-3-1)에서 선택한 지원유형에 따라 증빙서류 목록 모두 표시
         // 한부모가족은 필수이므로 항상 포함
         const documents: RequiredDocument[] = [REQUIRED_DOCUMENTS.doljanchi];
+        const addedTypes = new Set<SupportType>(['doljanchi']); // 이미 추가된 타입 추적
         
-        // 추가로 선택된 지원유형의 증빙서류
+        // 추가로 선택된 지원유형의 증빙서류 (중복 방지)
         doljanchiSelectedSupportTypes.forEach(type => {
-          if (REQUIRED_DOCUMENTS[type]) {
+          // 'doljanchi'는 이미 추가되었으므로 제외하고, 중복 방지
+          if (type !== 'doljanchi' && !addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
             documents.push(REQUIRED_DOCUMENTS[type]);
+            addedTypes.add(type);
           }
         });
         
@@ -104,28 +107,41 @@ export default function DocumentUploadStep({
       } else {
         // 4-6-2) 찾아가는 돌잔치: 복수 선택된 지원유형에 따라 증빙서류 목록 모두 표시
         const documents: RequiredDocument[] = [];
+        const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
         
         // 기본 증빙서류 (복지시설 또는 영아원)
         if (supportType === 'doljanchi_welfare_facility') {
           documents.push(REQUIRED_DOCUMENTS.doljanchi_welfare_facility);
+          addedTypes.add('doljanchi_welfare_facility');
         } else if (supportType === 'doljanchi_orphanage') {
           documents.push(REQUIRED_DOCUMENTS.doljanchi_orphanage);
+          addedTypes.add('doljanchi_orphanage');
         }
         
-        // 추가로 선택된 지원유형의 증빙서류
+        // 추가로 선택된 지원유형의 증빙서류 (중복 방지)
         doljanchiSelectedSupportTypes.forEach(type => {
-          if (REQUIRED_DOCUMENTS[type]) {
+          // 기본 타입과 중복되지 않도록 확인
+          if (type !== 'doljanchi_welfare_facility' && type !== 'doljanchi_orphanage' && !addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
             documents.push(REQUIRED_DOCUMENTS[type]);
+            addedTypes.add(type);
           }
         });
         
         return documents;
       }
     } else {
-      // 전통혼례: 복수 선택된 모든 지원유형의 증빙서류
-      return selectedSupportTypes
-        .map(type => REQUIRED_DOCUMENTS[type])
-        .filter(doc => doc !== undefined);
+      // 전통혼례: 복수 선택된 모든 지원유형의 증빙서류 (중복 방지)
+      const documents: RequiredDocument[] = [];
+      const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
+      
+      selectedSupportTypes.forEach(type => {
+        if (!addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
+          documents.push(REQUIRED_DOCUMENTS[type]);
+          addedTypes.add(type);
+        }
+      });
+      
+      return documents;
     }
   };
   
