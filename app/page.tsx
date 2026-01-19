@@ -7,7 +7,7 @@ import MainScreen from '@/components/MainScreen';
 
 // 사이트 오픈 전까지 오픈 안내 화면만 표시
 // 일반 사용자는 입장 불가, 관리자는 /test 경로로 접근
-const SITE_OPEN_DATE = new Date('2026-06-22T09:00:00');
+const SITE_OPEN_DATE = new Date('2026-01-22T09:00:00');
 const IS_SITE_OPEN = new Date() >= SITE_OPEN_DATE;
 
 export default function Home() {
