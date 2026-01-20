@@ -63,7 +63,7 @@ export default function MainScreen() {
               zIndex: activeTab === 'wedding' ? 30 : 10,
               '--tab-color': colors.wedding,
               /* 탭 본체의 색상 변화도 마스크와 동일하게 0.5s 지연 */
-              transition: 'background-color 0.25s ease 0.3s, color 0.25s ease 0.3s'
+              transition: 'background-color 0s ease 0.1s, color 0s ease 0.1s'
             } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg
               ${activeTab === 'wedding' 
@@ -82,7 +82,7 @@ export default function MainScreen() {
               color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
               zIndex: activeTab === 'doljanchi' ? 30 : 10,
               '--tab-color': colors.doljanchi,
-              transition: 'background-color 0.25s ease 0.3s, color 0.25s ease 0.3s'
+              transition: 'background-color 0s ease 0.1s, color 0s ease 0.1s'
             } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg
               ${activeTab === 'doljanchi' 
