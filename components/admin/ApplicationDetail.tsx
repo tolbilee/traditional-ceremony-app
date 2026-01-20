@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
 import { useRouter } from 'next/navigation';
+import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
+import { SupportType } from '@/types';
 
 interface ApplicationDetailProps {
   application: any;
@@ -117,6 +119,60 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
     
     return labels[type] || type;
   };
+
+  // 선택된 지원유형을 순서대로 정렬하여 증빙서류 목록 생성 (DocumentUploadStep과 동일한 로직)
+  const getOrderedDocumentNames = (): string[] => {
+    const appData = application.application_data || {};
+    if (!appData.supportType) return [];
+
+    const supportTypes = appData.supportType.split(',').map((t: string) => t.trim()).filter((t: string) => t) as SupportType[];
+    
+    if (application.type === 'doljanchi') {
+      // 돌잔치: 한부모가족은 항상 첫 번째, 그 다음 선택한 순서대로
+      const orderedTypes: SupportType[] = [];
+      
+      // 한부모가족이 있으면 첫 번째로
+      if (supportTypes.includes('doljanchi')) {
+        orderedTypes.push('doljanchi');
+      }
+      
+      // 나머지는 순서대로
+      supportTypes.forEach(type => {
+        if (type !== 'doljanchi' && !orderedTypes.includes(type)) {
+          orderedTypes.push(type);
+        }
+      });
+      
+      // 찾아가는 돌잔치의 경우 복지시설/영아원이 첫 번째
+      const hasWelfareFacility = supportTypes.includes('doljanchi_welfare_facility');
+      const hasOrphanage = supportTypes.includes('doljanchi_orphanage');
+      
+      if (hasWelfareFacility || hasOrphanage) {
+        const visitingTypes: SupportType[] = [];
+        if (hasWelfareFacility) {
+          visitingTypes.push('doljanchi_welfare_facility');
+        }
+        if (hasOrphanage) {
+          visitingTypes.push('doljanchi_orphanage');
+        }
+        
+        supportTypes.forEach(type => {
+          if (type !== 'doljanchi_welfare_facility' && type !== 'doljanchi_orphanage' && !visitingTypes.includes(type)) {
+            visitingTypes.push(type);
+          }
+        });
+        
+        return visitingTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
+      }
+      
+      return orderedTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
+    } else {
+      // 전통혼례: 선택한 순서대로
+      return supportTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
+    }
+  };
+
+  const orderedDocumentNames = getOrderedDocumentNames();
 
   const appData = application.application_data || {};
 
@@ -251,11 +307,19 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   const fileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
                   const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName) || url.includes('image') || url.includes('photo');
                   
+                  // 해당 인덱스에 매핑된 증빙서류명 가져오기
+                  const documentName = orderedDocumentNames[index] || `증빙서류 ${index + 1}`;
+                  
                   return (
                     <div
                       key={index}
                       className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
                     >
+                      {/* 증빙서류명 표시 */}
+                      <div className="mb-2 rounded-lg bg-blue-100 px-3 py-2">
+                        <p className="text-sm font-semibold text-blue-800">{documentName}</p>
+                      </div>
+                      
                       <div className="mb-3">
                         {isImage ? (
                           <img
@@ -280,7 +344,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                           </div>
                         )}
                       </div>
-                      <p className="mb-3 truncate text-sm font-medium text-gray-700" title={fileName}>
+                      <p className="mb-3 truncate text-xs text-gray-500" title={fileName}>
                         {fileName}
                       </p>
                       <div className="flex gap-2">
