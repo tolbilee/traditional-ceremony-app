@@ -86,6 +86,14 @@ export interface VisitingDoljanchiApplicationData {
     targetType: string; // 대상유형 (한부모가족 복지시설, 영아원) - 자동 입력
     additionalTypes: string; // 추가유형 (기초생활수급자, 차상위계층, 장애인, 유공자, 새터민) - 자동 입력
   }>;
+  // 하위 호환성을 위한 legacy target 속성 (기존 데이터와의 호환성)
+  target?: {
+    name: string;
+    birthDate: string; // YYMMDD
+    gender: 'male' | 'female';
+    targetType: string;
+    additionalTypes: string;
+  };
   // 복지시설
   facility: {
     name: string; // 시설명
