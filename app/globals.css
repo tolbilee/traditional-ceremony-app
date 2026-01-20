@@ -14,54 +14,31 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 역곡률(Negative Border Radius) 구현을 위한 핵심 클래스 */
-.inverted-radius-left::before {
+/* --- 물방울 슬라이딩 탭 전용 S자 곡선 (이 부분만 정확히 있으면 됩니다) --- */
+
+/* 1. 왼쪽 탭(전통혼례) 활성화 시 중앙 경계선 곡선 */
+.curve-center-right::after {
   content: "";
   position: absolute;
   top: 0;
-  left: -20px;
-  width: 20px;
-  height: 20px;
-  background: transparent;
-  border-top-right-radius: 20px;
-  /* 부모의 배경색과 반드시 일치해야 함 */
-  box-shadow: 5px -5px 0 5px currentColor; 
+  right: -40px; /* 곡선의 너비 (MainScreen의 rounded-br 값과 맞춤) */
+  width: 40px;
+  height: 40px;
+  background-color: currentColor; /* 부모 버튼의 배경색을 자동으로 따라감 */
+  /* 역곡률을 만드는 고정밀 마스크 효과 */
+  mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
+  -webkit-mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
 }
 
-.inverted-radius-right::after {
+/* 2. 오른쪽 탭(돌잔치) 활성화 시 중앙 경계선 곡선 */
+.curve-center-left::before {
   content: "";
   position: absolute;
   top: 0;
-  right: -20px;
-  width: 20px;
-  height: 20px;
-  background: transparent;
-  border-top-left-radius: 20px;
-  /* 부모의 배경색과 반드시 일치해야 함 */
-  box-shadow: -5px -5px 0 5px currentColor;
-}
-
-/* 중앙 경계면을 위한 역곡률 트릭 */
-.curve-inner-right::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: -25px; /* 곡률 크기 */
-  width: 25px;
-  height: 25px;
-  background: transparent;
-  border-top-left-radius: 25px;
-  box-shadow: -10px -10px 0 10px currentColor; /* 부모 색상으로 채움 */
-}
-
-.curve-inner-left::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -25px;
-  width: 25px;
-  height: 25px;
-  background: transparent;
-  border-top-right-radius: 25px;
-  box-shadow: 10px -10px 0 10px currentColor;
+  left: -40px;
+  width: 40px;
+  height: 40px;
+  background-color: currentColor;
+  mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
+  -webkit-mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
 }

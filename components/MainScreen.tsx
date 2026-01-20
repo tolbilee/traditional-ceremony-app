@@ -12,89 +12,93 @@ export default function MainScreen() {
   const colors = {
     wedding: '#2E5BB6',
     doljanchi: '#D4AF37',
-    textInactive: '#9CA3AF', // 비활성 상태 회색
+    inactiveText: '#888888'
   };
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-white flex flex-col">
       
-      {/* 1. 상단 슬라이딩 배경 영역 */}
+      {/* 1. 상단 슬라이딩 배경 영역 (배경이 밀려나는 느낌) */}
       <div className="relative h-[60%] w-full overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: activeTab === 'wedding' ? '0%' : '-50%' }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 25 }}
         >
           {/* 전통혼례 배경 */}
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.wedding }}>
-            <div className="absolute left-8 top-12 text-white">
+            <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
-              <h1 className="text-4xl font-bold font-serif">전통혼례 및<br />돌잔치</h1>
+              <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
             </div>
-            {/* 일러스트 삽입부 */}
-            <div className="absolute right-4 bottom-10 w-1/2 h-1/2">
-               <img src="/images/wedding_couple.png" alt="" className="object-contain w-full h-full" />
+            <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
+               <img src="/images/wedding_couple.png" alt="Wedding" className="object-contain max-h-full" />
             </div>
           </div>
 
           {/* 돌잔치 배경 */}
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.doljanchi }}>
-            <div className="absolute left-8 top-12 text-white">
+            <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
-              <h1 className="text-4xl font-bold font-serif">전통혼례 및<br />돌잔치</h1>
+              <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
             </div>
-            {/* 일러스트 삽입부 */}
-            <div className="absolute right-4 bottom-10 w-1/2 h-1/2">
-               <img src="/images/doljanchi_baby.png" alt="" className="object-contain w-full h-full" />
+            <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
+               <img src="/images/doljanchi_baby.png" alt="Doljanchi" className="object-contain max-h-full" />
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* 2. 탭 메뉴 영역 (중앙 경계선 물방울 트릭) */}
+      {/* 2. 탭 메뉴 영역 (중앙 경계선만 물방울 트릭) */}
       <div className="relative flex-1 bg-white">
-        <div className="absolute -top-[1px] left-0 w-full flex">
+        {/* 탭 버튼 컨테이너: 배경색과 맞물리도록 -1px 조정 */}
+        <div className="absolute -top-[1px] left-0 w-full flex h-[60px]">
           
-          {/* 전통혼례 탭: 왼쪽은 화면 끝에 꽉 채움 */}
+          {/* 왼쪽 탭: 전통혼례 (왼쪽 끝은 직선, 중앙 우측만 곡선) */}
           <button
             onClick={() => setActiveTab('wedding')}
             style={{ 
               backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
-              color: activeTab === 'wedding' ? 'white' : colors.textInactive 
+              color: activeTab === 'wedding' ? 'white' : colors.inactiveText
             }}
-            className={`relative flex-1 py-5 text-center font-bold text-lg transition-colors duration-300
-              ${activeTab === 'wedding' ? 'curve-inner-right' : ''}`}
+            className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-colors duration-300
+              ${activeTab === 'wedding' ? 'curve-center-right rounded-br-[40px]' : ''}
+            `}
           >
             전통혼례
           </button>
 
-          {/* 돌잔치 탭: 오른쪽은 화면 끝에 꽉 채움 */}
+          {/* 오른쪽 탭: 돌잔치 (오른쪽 끝은 직선, 중앙 좌측만 곡선) */}
           <button
             onClick={() => setActiveTab('doljanchi')}
             style={{ 
               backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
-              color: activeTab === 'doljanchi' ? 'white' : colors.textInactive 
+              color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText
             }}
-            className={`relative flex-1 py-5 text-center font-bold text-lg transition-colors duration-300
-              ${activeTab === 'doljanchi' ? 'curve-inner-left' : ''}`}
+            className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-colors duration-300
+              ${activeTab === 'doljanchi' ? 'curve-center-left rounded-bl-[40px]' : ''}
+            `}
           >
             돌잔치
           </button>
 
         </div>
 
-        {/* 3. 하단 신청 버튼 영역 */}
-        <div className="flex flex-col items-center justify-center h-full pt-20 px-6">
+        {/* 3. 하단 신청 버튼 영역 (여백 넉넉히) */}
+        <div className="flex flex-col items-center justify-center h-full pt-16 px-6">
           <div className="flex w-full gap-4 max-w-md">
             <Link
               href={activeTab === 'wedding' ? '/apply/wedding' : '/apply/doljanchi'}
-              className="flex-1 py-4 rounded-xl text-white text-center font-bold bg-[#FF4B3A] shadow-md"
+              className="flex-1 py-5 rounded-2xl text-white text-center font-bold text-lg shadow-lg active:scale-95 transition-transform"
+              style={{ backgroundColor: '#FF4B3A' }}
             >
               온라인 신청하기
             </Link>
+            
             <Link
               href={activeTab === 'wedding' ? '/wedding/program' : '/doljanchi/program'}
-              className="flex-1 py-4 rounded-xl text-white text-center font-bold bg-[#4DA9FF] shadow-md"
+              className="flex-1 py-5 rounded-2xl text-white text-center font-bold text-lg shadow-lg active:scale-95 transition-transform"
+              style={{ backgroundColor: '#4DA9FF' }}
             >
               {activeTab === 'wedding' ? '전통혼례 맛보기' : '돌잔치 맛보기'}
             </Link>
