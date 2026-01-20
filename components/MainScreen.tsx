@@ -62,7 +62,7 @@ export default function MainScreen() {
               color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
               zIndex: activeTab === 'wedding' ? 30 : 10,
               '--tab-color': colors.wedding,
-              /* 탭 본체의 색상 변화도 마스크와 동일하게 0.3s 지연 */
+              /* 탭 본체의 색상 변화도 마스크와 동일하게 0.5s 지연 */
               transition: 'background-color 0.25s ease 0.3s, color 0.25s ease 0.3s'
             } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg
