@@ -3,252 +3,166 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { INQUIRY_PHONE } from '@/lib/utils/constants';
 
-type ViewMode = 'split' | 'wedding' | 'doljanchi';
+type TabType = 'wedding' | 'doljanchi';
 
 export default function MainScreen() {
-  const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [activeTab, setActiveTab] = useState<TabType>('wedding');
 
-  const handleSectionClick = (mode: 'wedding' | 'doljanchi') => {
-    setViewMode(mode);
+  const handleTabClick = (tab: TabType) => {
+    setActiveTab(tab);
   };
-
-  const handleClose = () => {
-    setViewMode('split');
-  };
-
-  // 애니메이션 변수 계산
-  const weddingWidth = viewMode === 'split' ? '50%' : viewMode === 'wedding' ? '100%' : '0%';
-  const weddingX = viewMode === 'split' ? '0%' : viewMode === 'wedding' ? '0%' : '-100%';
-  
-  const doljanchiWidth = viewMode === 'split' ? '50%' : viewMode === 'doljanchi' ? '100%' : '0%';
-  const doljanchiX = viewMode === 'split' ? '0%' : viewMode === 'doljanchi' ? '0%' : '100%';
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden" style={{ backgroundColor: '#FDFCF8' }}>
-      <div className="relative flex h-full w-full">
-        {/* 전통혼례 섹션 */}
-        <motion.div
-          animate={{
-            width: weddingWidth,
-            x: weddingX,
+    <div className="relative h-screen w-screen overflow-hidden bg-white">
+      {/* 상단 비주얼 영역 (70%) */}
+      <div className="relative h-[70vh] w-full overflow-hidden">
+        {/* 슬라이딩 컨테이너 */}
+        <div
+          className="flex h-full transition-transform duration-500 ease-in-out"
+          style={{
+            width: '200%',
+            transform: activeTab === 'wedding' ? 'translateX(0)' : 'translateX(-50%)',
           }}
-          transition={{
-            duration: 0.6,
-            ease: [0.4, 0, 0.2, 1], // cubic-bezier for smooth animation
-          }}
-          className="relative flex h-full flex-shrink-0 flex-col items-center justify-center"
-          style={{ backgroundColor: '#1a365d' }}
         >
-          {viewMode === 'split' ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center space-y-6 px-8"
-              onClick={() => handleSectionClick('wedding')}
-            >
-              <h2
-                className="text-center text-4xl font-serif font-bold text-white"
-                style={{ fontFamily: 'serif' }}
+          {/* 전통혼례 비주얼 */}
+          <div
+            className="relative h-full w-1/2 flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: '#2E5BB6' }}
+          >
+            {/* 텍스트 오버레이 */}
+            <div className="absolute left-6 top-6 z-10 text-white">
+              <p className="text-sm font-sans mb-2" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                2026 사회적배려대상자
+              </p>
+              <h1
+                className="text-3xl md:text-4xl font-bold leading-tight"
+                style={{ fontFamily: '"Noto Serif KR", "나눔명조", serif' }}
               >
-                전통혼례
-              </h2>
-              <p className="text-center text-lg text-white/80">클릭하여 선택</p>
-            </motion.div>
-          ) : viewMode === 'wedding' ? (
-            <>
-              {/* 닫기 버튼 */}
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                onClick={handleClose}
-                className="absolute right-6 top-6 z-10 rounded-full p-3 text-white transition-all hover:bg-white/20"
-                aria-label="홈으로 돌아가기"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </motion.button>
-
-              {/* 메뉴 버튼들 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col items-center justify-center space-y-6 px-8"
-              >
-                <motion.h2
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mb-12 text-center text-5xl font-serif font-bold text-white"
-                  style={{ fontFamily: 'serif' }}
-                >
-                  전통혼례
-                </motion.h2>
-
-                <div className="flex w-full max-w-md flex-col space-y-4">
-                  <Link
-                    href="/apply/wedding"
-                    className="group relative block w-full overflow-hidden rounded-lg px-8 py-6 text-center text-xl font-semibold text-white transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      backgroundColor: '#D4AF37',
-                      fontFamily: 'sans-serif',
-                    }}
-                  >
-                    <span className="relative z-10">온라인 신청</span>
-                    <motion.div
-                      className="absolute inset-0 bg-white/20"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </Link>
-
-                  <Link
-                    href="/wedding/program"
-                    className="group relative block w-full overflow-hidden rounded-lg border-2 border-white/30 bg-white/10 px-8 py-6 text-center text-xl font-semibold text-white backdrop-blur-sm transition-all hover:border-white/50 hover:bg-white/20 active:scale-95"
-                    style={{
-                      fontFamily: 'sans-serif',
-                    }}
-                  >
-                    <span className="relative z-10">전통혼례 맛보기</span>
-                    <motion.div
-                      className="absolute inset-0 bg-white/10"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </Link>
-                </div>
-              </motion.div>
-            </>
-          ) : null}
-        </motion.div>
-
-        {/* 돌잔치 섹션 */}
-        <motion.div
-          animate={{
-            width: doljanchiWidth,
-            x: doljanchiX,
-          }}
-          transition={{
-            duration: 0.6,
-            ease: [0.4, 0, 0.2, 1],
-          }}
-          className="relative flex h-full flex-shrink-0 flex-col items-center justify-center"
-          style={{ backgroundColor: '#c53030' }}
-        >
-          {viewMode === 'split' ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center space-y-6 px-8"
-              onClick={() => handleSectionClick('doljanchi')}
-            >
-              <h2
-                className="text-center text-4xl font-serif font-bold text-white"
-                style={{ fontFamily: 'serif' }}
-              >
+                전통혼례 및
+                <br />
                 돌잔치
-              </h2>
-              <p className="text-center text-lg text-white/80">클릭하여 선택</p>
-            </motion.div>
-          ) : viewMode === 'doljanchi' ? (
-            <>
-              {/* 닫기 버튼 */}
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                onClick={handleClose}
-                className="absolute right-6 top-6 z-10 rounded-full p-3 text-white transition-all hover:bg-white/20"
-                aria-label="홈으로 돌아가기"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </motion.button>
+              </h1>
+            </div>
 
-              {/* 메뉴 버튼들 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col items-center justify-center space-y-6 px-8"
-              >
-                <motion.h2
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mb-12 text-center text-5xl font-serif font-bold text-white"
-                  style={{ fontFamily: 'serif' }}
-                >
-                  돌잔치
-                </motion.h2>
-
-                <div className="flex w-full max-w-md flex-col space-y-4">
-                  <Link
-                    href="/apply/doljanchi"
-                    className="group relative block w-full overflow-hidden rounded-lg px-8 py-6 text-center text-xl font-semibold text-white transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      backgroundColor: '#D4AF37',
-                      fontFamily: 'sans-serif',
-                    }}
-                  >
-                    <span className="relative z-10">온라인 신청</span>
-                    <motion.div
-                      className="absolute inset-0 bg-white/20"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </Link>
-
-                  <Link
-                    href="/doljanchi/program"
-                    className="group relative block w-full overflow-hidden rounded-lg border-2 border-white/30 bg-white/10 px-8 py-6 text-center text-xl font-semibold text-white backdrop-blur-sm transition-all hover:border-white/50 hover:bg-white/20 active:scale-95"
-                    style={{
-                      fontFamily: 'sans-serif',
-                    }}
-                  >
-                    <span className="relative z-10">돌잔치 맛보기</span>
-                    <motion.div
-                      className="absolute inset-0 bg-white/10"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </Link>
+            {/* 일러스트 영역 - 혼례 커플 이미지가 들어갈 자리 */}
+            <div className="absolute right-0 bottom-0 w-1/2 h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center">
+                {/* 실제 이미지가 있으면 여기에 img 태그로 교체 */}
+                <div className="w-64 h-64 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-white/50 text-sm">혼례 커플 일러스트</span>
                 </div>
-              </motion.div>
-            </>
-          ) : null}
-        </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {/* 돌잔치 비주얼 */}
+          <div
+            className="relative h-full w-1/2 flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: '#D4AF37' }}
+          >
+            {/* 텍스트 오버레이 */}
+            <div className="absolute left-6 top-6 z-10 text-white">
+              <p className="text-sm font-sans mb-2" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                2026 사회적배려대상자
+              </p>
+              <h1
+                className="text-3xl md:text-4xl font-bold leading-tight"
+                style={{ fontFamily: '"Noto Serif KR", "나눔명조", serif' }}
+              >
+                전통혼례 및
+                <br />
+                돌잔치
+              </h1>
+            </div>
+
+            {/* 일러스트 영역 - 돌잡이 아이 이미지가 들어갈 자리 */}
+            <div className="absolute right-0 bottom-0 w-1/2 h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center">
+                {/* 실제 이미지가 있으면 여기에 img 태그로 교체 */}
+                <div className="w-64 h-64 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-white/50 text-sm">돌잡이 아이 일러스트</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 하단 메뉴 영역 (30%) */}
+      <div className="relative h-[30vh] w-full bg-white">
+        {/* 탭 버튼들 - 메뉴 영역 상단에 겹쳐서 배치 */}
+        <div className="relative -mt-8 flex justify-center z-10">
+          <div className="flex shadow-lg" style={{ borderRadius: '1rem 1rem 0 0' }}>
+            <button
+              onClick={() => handleTabClick('wedding')}
+              className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
+                activeTab === 'wedding'
+                  ? 'text-white'
+                  : 'text-gray-800'
+              }`}
+              style={{
+                backgroundColor: activeTab === 'wedding' ? '#2E5BB6' : 'white',
+                fontFamily: 'Pretendard, sans-serif',
+                borderTopLeftRadius: '1rem',
+                borderTopRightRadius: activeTab === 'wedding' ? '0' : '1rem',
+                borderBottomLeftRadius: '0',
+                borderBottomRightRadius: '0',
+              }}
+            >
+              전통혼례
+            </button>
+            <button
+              onClick={() => handleTabClick('doljanchi')}
+              className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
+                activeTab === 'doljanchi'
+                  ? 'text-white'
+                  : 'text-gray-800'
+              }`}
+              style={{
+                backgroundColor: activeTab === 'doljanchi' ? '#D4AF37' : 'white',
+                fontFamily: 'Pretendard, sans-serif',
+                borderTopLeftRadius: activeTab === 'doljanchi' ? '0' : '1rem',
+                borderTopRightRadius: '1rem',
+                borderBottomLeftRadius: '0',
+                borderBottomRightRadius: '0',
+              }}
+            >
+              돌잔치
+            </button>
+          </div>
+        </div>
+
+        {/* 버튼 영역 */}
+        <div className="flex flex-col items-center justify-center h-full px-6 pb-6">
+          <div className="flex gap-4 w-full max-w-md">
+            {/* 온라인 신청하기 버튼 */}
+            <Link
+              href={activeTab === 'wedding' ? '/apply/wedding' : '/apply/doljanchi'}
+              className="flex-1 rounded-xl px-6 py-4 text-center text-base font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: '#FF4B3A',
+                fontFamily: 'Pretendard, sans-serif',
+                boxShadow: '0 4px 12px rgba(255, 75, 58, 0.3)',
+              }}
+            >
+              온라인 신청하기
+            </Link>
+
+            {/* 맛보기 버튼 */}
+            <Link
+              href={activeTab === 'wedding' ? '/wedding/program' : '/doljanchi/program'}
+              className="flex-1 rounded-xl px-6 py-4 text-center text-base font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: '#4DA9FF',
+                fontFamily: 'Pretendard, sans-serif',
+                boxShadow: '0 4px 12px rgba(77, 169, 255, 0.3)',
+              }}
+            >
+              {activeTab === 'wedding' ? '전통혼례 맛보기' : '돌잔치 맛보기'}
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
