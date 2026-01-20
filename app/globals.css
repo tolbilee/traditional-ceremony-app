@@ -16,15 +16,16 @@ body {
 
 /* --- 물방울 슬라이딩 탭 전용 S자 곡선 (이 부분만 정확히 있으면 됩니다) --- */
 
-/* 물방울 S자 곡선을 위한 정밀 마스크 트릭 */
+/* [최종 수정] 물방울 S자 곡선 정밀 정렬 버전 */
 .curve-center-right::after,
 .curve-center-left::before {
   content: "";
   position: absolute;
-  top: 0;
-  width: 40px;
-  height: 40px;
-  /* 부모 버튼에서 전달받은 --tab-color 변수를 배경색으로 사용 */
+  /* 상단 배경과 1px 겹쳐서 흰 선이 생기는 것을 방지 */
+  top: -1px; 
+  /* 렌더링 오차를 덮기 위해 크기를 1px 키움 */
+  width: 41px; 
+  height: 41px;
   background-color: var(--tab-color); 
   pointer-events: none;
   z-index: 1;
@@ -32,14 +33,16 @@ body {
 
 /* 왼쪽 탭(전통혼례) 활성화 시 오른쪽 하단 역곡선 */
 .curve-center-right::after {
-  right: -40px;
+  /* 미세한 틈을 없애기 위해 0.5px 안쪽으로 당김 */
+  right: -39.5px; 
   mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
 }
 
 /* 오른쪽 탭(돌잔치) 활성화 시 왼쪽 하단 역곡선 */
 .curve-center-left::before {
-  left: -40px;
+  /* 미세한 틈을 없애기 위해 0.5px 안쪽으로 당김 */
+  left: -39.5px; 
   mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
 }
