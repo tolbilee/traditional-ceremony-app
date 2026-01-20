@@ -30,8 +30,8 @@ body {
   
   /* 초기 상태: 완전 투명 */
   opacity: 0;
-  /* 배경 슬라이딩이 거의 끝날 때(0.5s 지연) 부드럽게 페이드 인 */
-  transition: opacity 0.7s ease 0.9s; 
+/* 0.5초 대기 후 0.2초 동안 부드럽게 나타남 */
+transition: opacity 0.2s ease 0.5s;
 }
 
 /* 활성화된 탭에서만 마스크가 보임 */
@@ -41,13 +41,13 @@ body {
 }
 
 .curve-center-right::after {
-  right: -39.5px;
+  right: -38.5px;
   mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
 }
 
 .curve-center-left::before {
-  left: -39.5px;
+  left: -38.5px;
   mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
 }
