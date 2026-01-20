@@ -89,11 +89,17 @@ export default function MainScreen() {
         </div>
       </div>
 
-      {/* 하단 메뉴 영역 (30%) */}
-      <div className="relative h-[30vh] w-full bg-white">
-        {/* 탭 버튼들 - 메뉴 영역 상단에 겹쳐서 배치 */}
-        <div className="relative -mt-8 flex justify-center z-10">
-          <div className="flex shadow-lg" style={{ borderRadius: '1rem 1rem 0 0' }}>
+      {/* 하단 메뉴 영역 - 화이트 카드로 묶기 */}
+      <div 
+        className="relative w-full bg-white rounded-t-3xl z-20"
+        style={{
+          marginTop: '-20px',
+          boxShadow: '0 -10px 20px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        {/* 탭 버튼들 */}
+        <div className="flex justify-center pt-6">
+          <div className="flex" style={{ borderRadius: '1rem 1rem 0 0' }}>
             <button
               onClick={() => handleTabClick('wedding')}
               className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
@@ -102,7 +108,7 @@ export default function MainScreen() {
                   : 'text-gray-800'
               }`}
               style={{
-                backgroundColor: activeTab === 'wedding' ? '#2E5BB6' : 'white',
+                backgroundColor: activeTab === 'wedding' ? '#2E5BB6' : 'transparent',
                 fontFamily: 'Pretendard, sans-serif',
                 borderTopLeftRadius: '1rem',
                 borderTopRightRadius: activeTab === 'wedding' ? '0' : '1rem',
@@ -120,7 +126,7 @@ export default function MainScreen() {
                   : 'text-gray-800'
               }`}
               style={{
-                backgroundColor: activeTab === 'doljanchi' ? '#D4AF37' : 'white',
+                backgroundColor: activeTab === 'doljanchi' ? '#D4AF37' : 'transparent',
                 fontFamily: 'Pretendard, sans-serif',
                 borderTopLeftRadius: activeTab === 'doljanchi' ? '0' : '1rem',
                 borderTopRightRadius: '1rem',
@@ -133,17 +139,20 @@ export default function MainScreen() {
           </div>
         </div>
 
-        {/* 버튼 영역 */}
-        <div className="flex flex-col items-center justify-center h-full px-6 pb-6">
-          <div className="flex gap-4 w-full max-w-md">
+        {/* 버튼 영역 - 여백을 넉넉하게 */}
+        <div className="flex flex-col items-center justify-center px-5 py-8 pb-12">
+          <div className="flex gap-4 w-[90%] max-w-md">
             {/* 온라인 신청하기 버튼 */}
             <Link
               href={activeTab === 'wedding' ? '/apply/wedding' : '/apply/doljanchi'}
-              className="flex-1 rounded-xl px-6 py-4 text-center text-base font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+              className="flex-1 rounded-xl px-6 text-center text-base font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: '#FF4B3A',
                 fontFamily: 'Pretendard, sans-serif',
                 boxShadow: '0 4px 12px rgba(255, 75, 58, 0.3)',
+                paddingTop: '1.25rem',
+                paddingBottom: '1.25rem',
+                minHeight: '56px',
               }}
             >
               온라인 신청하기
@@ -152,11 +161,14 @@ export default function MainScreen() {
             {/* 맛보기 버튼 */}
             <Link
               href={activeTab === 'wedding' ? '/wedding/program' : '/doljanchi/program'}
-              className="flex-1 rounded-xl px-6 py-4 text-center text-base font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+              className="flex-1 rounded-xl px-6 text-center text-base font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: '#4DA9FF',
                 fontFamily: 'Pretendard, sans-serif',
                 boxShadow: '0 4px 12px rgba(77, 169, 255, 0.3)',
+                paddingTop: '1.25rem',
+                paddingBottom: '1.25rem',
+                minHeight: '56px',
               }}
             >
               {activeTab === 'wedding' ? '전통혼례 맛보기' : '돌잔치 맛보기'}
