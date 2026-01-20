@@ -1,6 +1,5 @@
 /* app/globals.css */
 @import "tailwindcss";
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
 
 :root {
   --background: #ffffff;
@@ -30,8 +29,8 @@ body {
   
   /* [핵심] 항상 존재하되 초기값은 투명하게 */
   opacity: 0;
-  /* 색상과 투명도 모두 0.5초 뒤에 변화 시작 */
-  transition: opacity 0.2s ease 0.5s, background-color 0.2s ease 0.5s;
+  /* 색상과 투명도 모두 0.2초 뒤에 변화 시작 */
+  transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 
 /* 탭이 활성화(active) 되었을 때만 마스크가 나타남 */
@@ -40,7 +39,7 @@ body {
   opacity: 1;
 }
 
-/* S자 곡선 형태 정의 */
+/* 곡선 형태 정의는 유지 */
 .curve-center-right::after {
   right: -39.5px;
   mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);

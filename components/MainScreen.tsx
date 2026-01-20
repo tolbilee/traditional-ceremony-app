@@ -20,10 +20,10 @@ export default function MainScreen() {
       
 {/* 1. 배경 (Background): 즉시 슬라이딩 시작 */}
 <div className="relative h-[60%] w-full overflow-hidden">
+        {/* 부드러우면서도 일정한 속도로 이동하도록 베지어 곡선 사용 */}
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: activeTab === 'wedding' ? '0%' : '-50%' }}
-          /* 부드러우면서도 일정한 속도로 이동하도록 베지어 곡선 사용 */
           transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} 
         >
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.wedding }}>
@@ -63,7 +63,7 @@ export default function MainScreen() {
       zIndex: activeTab === 'wedding' ? 30 : 10,
       '--tab-color': colors.wedding,
       /* 탭 본체 색상 변화 지연 (0.5s) */
-      transition: 'background-color 0.2s ease 0.5s, color 0.2s ease 0.5s'
+      transition: 'background-color 0.2s ease, color 0.2s ease'
     } as any}
     /* curve-center-right는 항상 유지, tab-active만 조건부 추가 */
     className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-right overflow-visible
@@ -82,7 +82,7 @@ export default function MainScreen() {
       zIndex: activeTab === 'doljanchi' ? 30 : 10,
       '--tab-color': colors.doljanchi,
       /* 탭 본체 색상 변화 지연 (0.5s) */
-      transition: 'background-color 0.2s ease 0.5s, color 0.2s ease 0.5s'
+      transition: 'background-color 0.2s ease, color 0.2s ease'
     } as any}
     /* curve-center-left는 항상 유지, tab-active만 조건부 추가 */
     className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-left overflow-visible
