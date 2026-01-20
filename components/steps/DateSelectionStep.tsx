@@ -192,27 +192,27 @@ export default function DateSelectionStep({
     
     if (formData.type === 'doljanchi') {
       if (doljanchiSubType === 'doljanchi') {
-        // 돌잔치는 월요일만
-        return isMonday(date);
+        // 돌잔치는 일요일만
+        return isSunday(date);
       } else {
         // 찾아가는 돌잔치는 모든 요일
         return true;
       }
     } else {
-      // 전통혼례는 일요일과 월요일만
-      return isSunday(date) || isMonday(date);
+      // 전통혼례는 일요일만
+      return isSunday(date);
     }
   };
 
   const getDateSelectionDescription = () => {
     if (formData.type === 'doljanchi') {
       if (doljanchiSubType === 'doljanchi') {
-        return '2026년 월요일만 선택 가능합니다.';
+        return '2026년 일요일만 선택 가능합니다.';
       } else {
         return '2026년 모든 요일을 선택할 수 있습니다.';
       }
     }
-    return '2026년 일요일과 월요일만 선택 가능합니다.';
+    return '2026년 일요일만 선택 가능합니다.';
   };
 
   return (
@@ -277,10 +277,10 @@ export default function DateSelectionStep({
             const isCurrent = isCurrentMonth(date);
             const isValid = isDateSelectable(date);
             
-            // 전통혼례는 일요일과 월요일, 돌잔치는 월요일을 녹색으로 표시
+            // 전통혼례와 돌잔치는 일요일을 녹색으로 표시, 찾아가는 돌잔치는 모든 요일
             const isHighlighted = formData.type === 'doljanchi' 
-              ? (doljanchiSubType === 'doljanchi' ? isMon : true)
-              : (isSun || isMon);
+              ? (doljanchiSubType === 'doljanchi' ? isSun : true)
+              : isSun;
 
             return (
               <button

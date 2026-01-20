@@ -450,62 +450,234 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                 </>
               ) : (
                 <>
-                  {appData.parent && (
-                    <div>
-                      <h3 className="font-semibold text-gray-700">부모 정보</h3>
-                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {/* 찾아가는 돌잔치인지 확인 (facility 또는 targets/target이 있으면 찾아가는 돌잔치) */}
+                  {appData.facility || appData.targets || appData.target ? (
+                    <>
+                      {/* 대상자 정보 (7-4-1: 여러 팀과 여러명 지원) */}
+                      {(appData.targets && Array.isArray(appData.targets) && appData.targets.length > 0) || appData.target ? (
                         <div>
-                          <span className="text-sm text-gray-500">이름:</span>{' '}
-                          <span className="text-gray-900">{appData.parent.name || '-'}</span>
+                          <h3 className="mb-4 font-semibold text-gray-700">대상자 정보</h3>
+                          <div className="space-y-6">
+                            {/* targets 배열이 있으면 사용, 없으면 target을 배열로 변환 */}
+                            {(() => {
+                              const targetsArray = appData.targets && Array.isArray(appData.targets) 
+                                ? appData.targets 
+                                : appData.target 
+                                  ? [appData.target] 
+                                  : [];
+                              
+                              return targetsArray.map((target: any, teamIndex: number) => {
+                                // 콤마로 구분된 문자열을 배열로 파싱
+                                const parseCommaSeparated = (value: string) => {
+                                  return value ? value.split(',').map((item: string) => item.trim()).filter((item: string) => item.length > 0) : [];
+                                };
+                                
+                                const names = parseCommaSeparated(target.name || '');
+                                const birthDates = parseCommaSeparated(target.birthDate || '');
+                                const genders = parseCommaSeparated(target.gender || '');
+                                
+                                // 여러명이 있는 경우와 단일명인 경우 모두 처리
+                                const personCount = Math.max(names.length, birthDates.length, genders.length, 1);
+                                
+                                return (
+                                  <div key={teamIndex} className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
+                                    <h4 className="mb-3 text-lg font-semibold text-gray-800">
+                                      대상자 {teamIndex + 1}팀
+                                    </h4>
+                                    
+                                    {/* 여러명이 있는 경우 테이블로 표시 */}
+                                    {personCount > 1 ? (
+                                      <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                          <thead className="bg-gray-100">
+                                            <tr>
+                                              <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                                번호
+                                              </th>
+                                              <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                                이름
+                                              </th>
+                                              <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                                생년월일
+                                              </th>
+                                              <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                                성별
+                                              </th>
+                                            </tr>
+                                          </thead>
+                                          <tbody className="divide-y divide-gray-200 bg-white">
+                                            {Array.from({ length: personCount }).map((_, personIndex) => (
+                                              <tr key={personIndex}>
+                                                <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                                  {personIndex + 1}
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                                  {names[personIndex] || '-'}
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                                  {birthDates[personIndex] || '-'}
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                                  {(() => {
+                                                    const gender = genders[personIndex] || '';
+                                                    if (gender === 'male' || gender === '남' || gender === '남성') return '남';
+                                                    if (gender === 'female' || gender === '여' || gender === '여성') return '여';
+                                                    return gender || '-';
+                                                  })()}
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    ) : (
+                                      /* 단일명인 경우 일반 레이아웃 */
+                                      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                                        <div>
+                                          <span className="text-sm text-gray-500">이름:</span>{' '}
+                                          <span className="text-gray-900">{names[0] || target.name || '-'}</span>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm text-gray-500">생년월일:</span>{' '}
+                                          <span className="text-gray-900">{birthDates[0] || target.birthDate || '-'}</span>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm text-gray-500">성별:</span>{' '}
+                                          <span className="text-gray-900">
+                                            {(() => {
+                                              const gender = genders[0] || target.gender || '';
+                                              if (gender === 'male' || gender === '남' || gender === '남성') return '남';
+                                              if (gender === 'female' || gender === '여' || gender === '여성') return '여';
+                                              return gender || '-';
+                                            })()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* 대상유형과 추가유형 */}
+                                    <div className="mt-3 rounded-lg bg-blue-50 p-3">
+                                      <div className="text-sm">
+                                        <span className="font-semibold text-gray-700">대상유형:</span>{' '}
+                                        <span className="text-gray-900">{target.targetType || '-'}</span>
+                                      </div>
+                                      {target.additionalTypes && (
+                                        <div className="mt-1 text-sm">
+                                          <span className="font-semibold text-gray-700">추가유형:</span>{' '}
+                                          <span className="text-gray-900">{target.additionalTypes}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
                         </div>
+                      ) : null}
+                      
+                      {/* 복지시설 정보 */}
+                      {appData.facility && (
                         <div>
-                          <span className="text-sm text-gray-500">생년월일:</span>{' '}
-                          <span className="text-gray-900">{appData.parent.birthDate || '-'}</span>
+                          <h3 className="mb-4 font-semibold text-gray-700">복지시설 정보</h3>
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                              <span className="text-sm text-gray-500">시설명:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.name || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">대표자:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.representative || '-'}</span>
+                            </div>
+                            <div className="md:col-span-2">
+                              <span className="text-sm text-gray-500">주소:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.address || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">사업자번호:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.businessNumber || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">홈페이지:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.website || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">담당자:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.manager || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">전화번호:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.phone || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">이메일:</span>{' '}
+                              <span className="text-gray-900">{appData.facility.email || '-'}</span>
+                            </div>
+                          </div>
                         </div>
+                      )}
+                    </>
+                  ) : (
+                    /* 일반 돌잔치 */
+                    <>
+                      {appData.parent && (
                         <div>
-                          <span className="text-sm text-gray-500">성별:</span>{' '}
-                          <span className="text-gray-900">
-                            {appData.parent.gender === 'male' ? '남' : appData.parent.gender === 'female' ? '여' : '-'}
-                          </span>
+                          <h3 className="font-semibold text-gray-700">부모 정보</h3>
+                          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                            <div>
+                              <span className="text-sm text-gray-500">이름:</span>{' '}
+                              <span className="text-gray-900">{appData.parent.name || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">생년월일:</span>{' '}
+                              <span className="text-gray-900">{appData.parent.birthDate || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">성별:</span>{' '}
+                              <span className="text-gray-900">
+                                {appData.parent.gender === 'male' ? '남' : appData.parent.gender === 'female' ? '여' : '-'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  {appData.parentMarried !== undefined && (
-                    <div>
-                      <h3 className="font-semibold text-gray-700">대상 확인</h3>
-                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                      )}
+                      {appData.parentMarried !== undefined && (
                         <div>
-                          <span className="text-sm text-gray-500">부/모(신청자 본인)의 혼인 여부:</span>{' '}
-                          <span className="text-gray-900">
-                            {appData.parentMarried === 'yes' ? '예' : appData.parentMarried === 'no' ? '아니오' : '-'}
-                          </span>
+                          <h3 className="font-semibold text-gray-700">대상 확인</h3>
+                          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                            <div>
+                              <span className="text-sm text-gray-500">부/모(신청자 본인)의 혼인 여부:</span>{' '}
+                              <span className="text-gray-900">
+                                {appData.parentMarried === 'yes' ? '예' : appData.parentMarried === 'no' ? '아니오' : '-'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">부/모(신청자 본인)의 자녀 양육여부:</span>{' '}
+                              <span className="text-gray-900">
+                                {appData.parentRaisingChild === 'yes' ? '예' : appData.parentRaisingChild === 'no' ? '아니오' : '-'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
+                      )}
+                      {appData.child && (
                         <div>
-                          <span className="text-sm text-gray-500">부/모(신청자 본인)의 자녀 양육여부:</span>{' '}
-                          <span className="text-gray-900">
-                            {appData.parentRaisingChild === 'yes' ? '예' : appData.parentRaisingChild === 'no' ? '아니오' : '-'}
-                          </span>
+                          <h3 className="font-semibold text-gray-700">아이 정보</h3>
+                          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                            <div>
+                              <span className="text-sm text-gray-500">이름:</span>{' '}
+                              <span className="text-gray-900">{appData.child.name || '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-500">생년월일:</span>{' '}
+                              <span className="text-gray-900">
+                                {appData.child.birthDate || '-'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  {appData.child && (
-                    <div>
-                      <h3 className="font-semibold text-gray-700">아이 정보</h3>
-                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-                        <div>
-                          <span className="text-sm text-gray-500">이름:</span>{' '}
-                          <span className="text-gray-900">{appData.child.name || '-'}</span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">생년월일:</span>{' '}
-                          <span className="text-gray-900">
-                            {appData.child.birthDate || '-'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
