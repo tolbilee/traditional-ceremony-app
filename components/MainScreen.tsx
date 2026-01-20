@@ -15,8 +15,35 @@ export default function MainScreen() {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-white">
-      {/* 상단 비주얼 영역 (70%) */}
+      {/* 상단 비주얼 영역 (70%) - 활성 탭과 연결되는 부분 */}
       <div className="relative h-[70vh] w-full overflow-hidden">
+        {/* 활성 탭과 연결되는 확장 영역 - 물방울 효과 */}
+        <div 
+          className="absolute bottom-0 z-30 transition-all duration-300 ease-in-out"
+          style={{
+            left: activeTab === 'wedding' ? 'calc(50% - 160px)' : 'calc(50% - 80px)',
+            width: '160px',
+            height: '60px',
+          }}
+        >
+          <svg
+            className="w-full h-full"
+            viewBox="0 0 160 60"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M 0 0 
+                 L 160 0 
+                 L 160 40 
+                 Q 140 50 120 55 
+                 Q 100 58 80 60 
+                 Q 60 58 40 55 
+                 Q 20 50 0 40 Z"
+              fill={activeTab === 'wedding' ? '#2E5BB6' : '#D4AF37'}
+            />
+          </svg>
+        </div>
+        
         {/* 슬라이딩 컨테이너 */}
         <div
           className="flex h-full transition-transform duration-500 ease-in-out"
@@ -97,15 +124,16 @@ export default function MainScreen() {
           boxShadow: '0 -10px 20px rgba(0, 0, 0, 0.05)',
         }}
       >
-        {/* 탭 버튼들 */}
-        <div className="flex justify-center pt-6">
-          <div className="flex" style={{ borderRadius: '1rem 1rem 0 0' }}>
+        {/* 탭 버튼들 - 물방울형 연결 효과 */}
+        <div className="flex justify-center pt-6 relative">
+          <div className="flex relative">
+            {/* 전통혼례 탭 */}
             <button
               onClick={() => handleTabClick('wedding')}
-              className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
+              className={`relative px-8 py-3 text-lg font-semibold transition-all duration-300 overflow-visible ${
                 activeTab === 'wedding'
-                  ? 'text-white'
-                  : 'text-gray-800'
+                  ? 'text-white z-10'
+                  : 'text-gray-800 z-0'
               }`}
               style={{
                 backgroundColor: activeTab === 'wedding' ? '#2E5BB6' : 'transparent',
@@ -116,14 +144,38 @@ export default function MainScreen() {
                 borderBottomRightRadius: '0',
               }}
             >
-              전통혼례
+              <span className="relative z-10">전통혼례</span>
+              {/* 활성 탭일 때 하단 물방울 곡선 효과 */}
+              {activeTab === 'wedding' && (
+                <svg
+                  className="absolute bottom-0 left-0 w-full pointer-events-none"
+                  style={{ 
+                    height: '24px',
+                    transform: 'translateY(100%)',
+                  }}
+                  viewBox="0 0 160 24"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M 0 0 
+                       L 160 0 
+                       Q 140 8 120 12 
+                       Q 100 16 80 18 
+                       Q 60 16 40 12 
+                       Q 20 8 0 0 Z"
+                    fill="#2E5BB6"
+                  />
+                </svg>
+              )}
             </button>
+            
+            {/* 돌잔치 탭 */}
             <button
               onClick={() => handleTabClick('doljanchi')}
-              className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
+              className={`relative px-8 py-3 text-lg font-semibold transition-all duration-300 overflow-visible ${
                 activeTab === 'doljanchi'
-                  ? 'text-white'
-                  : 'text-gray-800'
+                  ? 'text-white z-10'
+                  : 'text-gray-800 z-0'
               }`}
               style={{
                 backgroundColor: activeTab === 'doljanchi' ? '#D4AF37' : 'transparent',
@@ -134,7 +186,29 @@ export default function MainScreen() {
                 borderBottomRightRadius: '0',
               }}
             >
-              돌잔치
+              <span className="relative z-10">돌잔치</span>
+              {/* 활성 탭일 때 하단 물방울 곡선 효과 */}
+              {activeTab === 'doljanchi' && (
+                <svg
+                  className="absolute bottom-0 left-0 w-full pointer-events-none"
+                  style={{ 
+                    height: '24px',
+                    transform: 'translateY(100%)',
+                  }}
+                  viewBox="0 0 160 24"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M 0 0 
+                       L 160 0 
+                       Q 140 8 120 12 
+                       Q 100 16 80 18 
+                       Q 60 16 40 12 
+                       Q 20 8 0 0 Z"
+                    fill="#D4AF37"
+                  />
+                </svg>
+              )}
             </button>
           </div>
         </div>
