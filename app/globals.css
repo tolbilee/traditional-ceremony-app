@@ -31,7 +31,7 @@ body {
   /* 초기 상태: 완전 투명 */
   opacity: 0;
   /* 배경 슬라이딩이 거의 끝날 때(0.5s 지연) 부드럽게 페이드 인 */
-  transition: opacity 0.2s ease 0.5s; 
+  transition: opacity 0.5s ease 0.7s; 
 }
 
 /* 활성화된 탭에서만 마스크가 보임 */
