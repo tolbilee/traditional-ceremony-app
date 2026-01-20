@@ -1,7 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ApplicationFormData, CeremonyType, WeddingApplicationData, DoljanchiApplicationData, VisitingDoljanchiApplicationData } from '@/types';
+
+// KAKAO 주소 API 타입 선언 (공식 매뉴얼 기준)
+declare global {
+  interface Window {
+    daum: {
+      Postcode: new (options: {
+        oncomplete: (data: {
+          zonecode: string; // 우편번호
+          address: string; // 기본 주소
+          roadAddress: string; // 도로명 주소
+          jibunAddress: string; // 지번 주소
+          addressType: string; // 'R'(도로명) 또는 'J'(지번)
+          userSelectedType: string; // 사용자가 선택한 타입
+          bname: string; // 법정동명
+          buildingName: string; // 건물명
+          apartment: string; // 아파트 여부 ('Y' 또는 'N')
+        }) => void;
+      }) => {
+        open: () => void;
+      };
+    };
+  }
+}
 
 interface ApplicationDataStepProps {
   formData: Partial<ApplicationFormData>;
@@ -25,6 +48,108 @@ export default function ApplicationDataStep({
   doljanchiSubType,
 }: ApplicationDataStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDaumPostcodeLoaded, setIsDaumPostcodeLoaded] = useState(false);
+
+  // KAKAO 주소 API 동적 로드 및 확인
+  useEffect(() => {
+    const loadDaumPostcode = () => {
+      if (typeof window === 'undefined') return;
+      
+      // 이미 로드되어 있으면 확인만
+      if (window.daum && window.daum.Postcode) {
+        setIsDaumPostcodeLoaded(true);
+        return;
+      }
+
+      // 스크립트가 이미 추가되어 있는지 확인
+      const existingScript = document.querySelector('script[src*="postcode.v2.js"]');
+      if (existingScript) {
+        // 스크립트가 있으면 로드 대기
+        const checkInterval = setInterval(() => {
+          if (window.daum && window.daum.Postcode) {
+            setIsDaumPostcodeLoaded(true);
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        
+        // 5초 후 타임아웃
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 5000);
+        return;
+      }
+
+      // 스크립트 동적 로드
+      const script = document.createElement('script');
+      script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+      script.async = true;
+      script.onload = () => {
+        // 스크립트 로드 후 약간의 지연을 두고 확인
+        setTimeout(() => {
+          if (window.daum && window.daum.Postcode) {
+            setIsDaumPostcodeLoaded(true);
+          }
+        }, 100);
+      };
+      document.head.appendChild(script);
+    };
+
+    loadDaumPostcode();
+  }, []);
+
+  // 주소 검색 함수
+  const handleAddressSearch = (onComplete: (address: string) => void) => {
+    // API가 로드되지 않았으면 동적으로 로드 시도
+    if (!window.daum || !window.daum.Postcode) {
+      const script = document.createElement('script');
+      script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+      script.async = true;
+      script.onload = () => {
+        setTimeout(() => {
+          if (window.daum && window.daum.Postcode) {
+            openPostcodePopup(onComplete);
+          } else {
+            alert('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+          }
+        }, 100);
+      };
+      script.onerror = () => {
+        alert('주소 검색 서비스를 불러올 수 없습니다. 네트워크 연결을 확인해주세요.');
+      };
+      document.head.appendChild(script);
+      return;
+    }
+
+    openPostcodePopup(onComplete);
+  };
+
+  // 주소 검색 팝업 열기 (카카오 주소검색 API 공식 매뉴얼 기준)
+  const openPostcodePopup = (onComplete: (address: string) => void) => {
+    if (!window.daum || !window.daum.Postcode) {
+      alert('주소 검색 서비스를 사용할 수 없습니다.');
+      return;
+    }
+
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        // 사용자가 선택한 타입에 따라 도로명 주소 또는 지번 주소 선택
+        const isRoad = data.userSelectedType === 'R';
+        let fullAddress = isRoad ? data.roadAddress : data.jibunAddress;
+
+        // 법정동명(bname)이 있고 동/로/가로 끝나면 추가
+        if (data.bname && /[동|로|가]$/g.test(data.bname)) {
+          fullAddress += ' ' + data.bname;
+        }
+
+        // 건물명이 있고 아파트/오피스텔 등 다세대 주택인 경우 추가
+        if (data.buildingName && data.apartment === 'Y') {
+          fullAddress += (fullAddress ? ', ' : '') + data.buildingName;
+        }
+
+        onComplete(fullAddress);
+      },
+    }).open();
+  };
 
   // 전통혼례 신청서
   if (type === 'wedding') {
@@ -297,10 +422,14 @@ export default function ApplicationDataStep({
                 name="representative.address"
                 value={weddingData.representative?.address || ''}
                 onChange={(e) => handleWeddingChange('representative', { ...weddingData.representative, address: e.target.value })}
-                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                onClick={() => handleAddressSearch((address) => {
+                  handleWeddingChange('representative', { ...weddingData.representative, address });
+                })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg cursor-pointer ${
                   errors['representative.address'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('representative.address') ? 'text-red-600' : ''}`}
-                placeholder="서울시 강남구 테헤란로 123"
+                placeholder="주소를 검색하려면 클릭하세요"
+                readOnly
               />
               {errors['representative.address'] && (
                 <p className="mt-1 text-sm text-red-500">{errors['representative.address']}</p>
@@ -711,10 +840,14 @@ export default function ApplicationDataStep({
                 name="facility.address"
                 value={visitingData.facility?.address || ''}
                 onChange={(e) => handleVisitingChange('facility', { ...visitingData.facility, address: e.target.value })}
-                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                onClick={() => handleAddressSearch((address) => {
+                  handleVisitingChange('facility', { ...visitingData.facility, address });
+                })}
+                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg cursor-pointer ${
                   errors['facility.address'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('facility.address') ? 'text-red-600' : ''}`}
-                placeholder="서울시 강남구..."
+                placeholder="주소를 검색하려면 클릭하세요"
+                readOnly
               />
               {errors['facility.address'] && (
                 <p className="mt-1 text-sm text-red-500">{errors['facility.address']}</p>
@@ -1144,10 +1277,14 @@ export default function ApplicationDataStep({
               name="representative.address"
               value={doljanchiData.representative?.address || ''}
               onChange={(e) => handleDoljanchiChange('representative', { ...doljanchiData.representative, address: e.target.value })}
-              className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+              onClick={() => handleAddressSearch((address) => {
+                handleDoljanchiChange('representative', { ...doljanchiData.representative, address });
+              })}
+              className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg cursor-pointer ${
                 errors['representative.address'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('representative.address') ? 'text-red-600' : ''}`}
-              placeholder="서울시 강남구 테헤란로 123"
+              placeholder="주소를 검색하려면 클릭하세요"
+              readOnly
             />
             {errors['representative.address'] && (
               <p className="mt-1 text-sm text-red-500">{errors['representative.address']}</p>
