@@ -44,7 +44,7 @@ export default function MainScreen() {
               <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
-               <img src="/images/doljanchi_baby.png" alt="Doljanchi" className="object-contain max-h-full" />
+               <img src="/images/doljanchi_baby.png" alt="Doljanchi" className="object-contain max-h-full scale-[0.7]" />
             </div>
           </div>
         </motion.div>
