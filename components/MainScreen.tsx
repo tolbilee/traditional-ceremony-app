@@ -53,43 +53,45 @@ export default function MainScreen() {
       <div className="relative flex-1 bg-white">
         <div className="absolute -top-[1px] left-0 w-full flex h-[60px] z-30">
           
-          {/* 왼쪽 탭: 전통혼례 */}
-          <button
-            onClick={() => setActiveTab('wedding')}
-            style={{ 
-              backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
-              color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
-              zIndex: activeTab === 'wedding' ? 20 : 10,
-              // [추가] CSS 클래스에 컬러 값을 전달하기 위한 커스텀 변수
-              '--tab-color': activeTab === 'wedding' ? colors.wedding : 'transparent'
-            } as any}
-            className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
-              ${activeTab === 'wedding' 
-                ? 'curve-center-right rounded-br-[30px] overflow-visible' 
-                : 'overflow-hidden'}
-            `}
-          >
-            전통혼례
-          </button>
+  {/* 왼쪽 탭: 전통혼례 */}
+<button
+  onClick={() => setActiveTab('wedding')}
+  style={{ 
+    backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
+    color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
+    zIndex: activeTab === 'wedding' ? 20 : 10,
+    '--tab-color': activeTab === 'wedding' ? colors.wedding : 'transparent',
+    // [추가] 배경색과 글자색이 바뀌는 타이밍을 슬라이딩과 맞춤
+    transition: 'background-color 0.3s ease 0.15s, color 0.3s ease 0.15s'
+  } as any}
+  className={`relative flex-1 flex items-center justify-center font-bold text-lg
+    ${activeTab === 'wedding' 
+      ? 'curve-center-right curve-active rounded-br-[30px] overflow-visible' 
+      : 'overflow-hidden'}
+  `}
+>
+  전통혼례
+</button>
 
-          {/* 오른쪽 탭: 돌잔치 */}
-          <button
-            onClick={() => setActiveTab('doljanchi')}
-            style={{ 
-              backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
-              color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
-              zIndex: activeTab === 'doljanchi' ? 20 : 10,
-              // [추가] CSS 클래스에 컬러 값을 전달하기 위한 커스텀 변수
-              '--tab-color': activeTab === 'doljanchi' ? colors.doljanchi : 'transparent'
-            } as any}
-            className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
-              ${activeTab === 'doljanchi' 
-                ? 'curve-center-left rounded-bl-[30px] overflow-visible' 
-                : 'overflow-hidden'}
-            `}
-          >
-            돌잔치
-          </button>
+{/* 오른쪽 탭: 돌잔치 */}
+<button
+  onClick={() => setActiveTab('doljanchi')}
+  style={{ 
+    backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
+    color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
+    zIndex: activeTab === 'doljanchi' ? 20 : 10,
+    '--tab-color': activeTab === 'doljanchi' ? colors.doljanchi : 'transparent',
+    // [추가] 배경색과 글자색이 바뀌는 타이밍을 슬라이딩과 맞춤
+    transition: 'background-color 0.3s ease 0.15s, color 0.3s ease 0.15s'
+  } as any}
+  className={`relative flex-1 flex items-center justify-center font-bold text-lg
+    ${activeTab === 'doljanchi' 
+      ? 'curve-center-left curve-active rounded-bl-[30px] overflow-visible' 
+      : 'overflow-hidden'}
+  `}
+>
+  돌잔치
+</button>
 
         </div>
 

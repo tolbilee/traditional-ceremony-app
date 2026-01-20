@@ -16,34 +16,38 @@ body {
 
 /* --- 물방울 슬라이딩 탭 전용 S자 곡선 (이 부분만 정확히 있으면 됩니다) --- */
 
-/* [R값 수정] 물방울 S자 곡선 정밀 정렬 버전 (R=30px) */
+/* [최종 정밀 수정] 물방울 S자 곡선 (애니메이션 지연 추가) */
 .curve-center-right::after,
 .curve-center-left::before {
   content: "";
   position: absolute;
-  top: -1px; /* 상단 배경과 살짝 겹치게 유지 */
-  /* R값 30px에 맞춘 크기 설정 */
-  width: 31px; 
-  height: 31px;
-  background-color: var(--tab-color); 
+  top: -1px;
+  width: 41px;
+  height: 41px;
+  background-color: var(--tab-color);
   pointer-events: none;
   z-index: 1;
+  
+  /* [추가] 초기 상태는 투명하게 */
+  opacity: 0;
+  /* [추가] 배경이 슬라이딩될 시간을 벌어주기 위한 지연(0.18s)과 페이드(0.2s) */
+  transition: opacity 0.2s ease 0.18s;
 }
 
-/* 왼쪽 탭 활성화 시 오른쪽 역곡선 */
+/* 활성화된 탭 뒤의 가상 요소만 보이게 설정 */
+.curve-active::after,
+.curve-active::before {
+  opacity: 1;
+}
+
 .curve-center-right::after {
-  /* 틈새를 없애기 위해 0.5px 안쪽으로 겹침 */
-  right: -30px; 
-  /* 마스크 반지름을 30px로 축소 */
+  right: -39.5px;
   mask-image: radial-gradient(circle at 30px 30px, transparent 30px, black 30px);
   -webkit-mask-image: radial-gradient(circle at 30px 30px, transparent 30px, black 30px);
 }
 
-/* 오른쪽 탭 활성화 시 왼쪽 역곡선 */
 .curve-center-left::before {
-  /* 틈새를 없애기 위해 0.5px 안쪽으로 겹침 */
-  left: -30px; 
-  /* 마스크 반지름을 30px로 축소 */
+  left: -39.5px;
   mask-image: radial-gradient(circle at 0px 30px, transparent 30px, black 30px);
   -webkit-mask-image: radial-gradient(circle at 0px 30px, transparent 30px, black 30px);
 }
