@@ -29,6 +29,12 @@ export default function DocumentUploadStep({
   const [originalFileUrls, setOriginalFileUrls] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // 순차 업로드를 위한 현재 단계 인덱스 (0부터 시작)
+  const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
+  
+  // 각 단계별로 업로드한 파일 URL을 저장 (지원유형별로 구분)
+  const [uploadedFilesByStep, setUploadedFilesByStep] = useState<Record<number, string[]>>({});
+  
   // 초기 로드 시 originalFileUrls 설정 (한 번만)
   useEffect(() => {
     if (!isInitialized && formData.fileUrls && formData.fileUrls.length > 0) {
@@ -36,6 +42,12 @@ export default function DocumentUploadStep({
       setIsInitialized(true);
     }
   }, [formData.fileUrls, isInitialized]);
+  
+  // 순차 업로드: 선택된 지원유형이 변경되면 현재 단계 인덱스 초기화
+  useEffect(() => {
+    setCurrentDocumentIndex(0);
+    setUploadedFilesByStep({});
+  }, [formData.applicationData?.supportType, formData.type, doljanchiSubType]);
   
   // 새로 업로드한 파일의 URL 목록 (originalFileUrls에 없는 것들)
   const newlyUploadedUrls = formData.fileUrls?.filter(url => !originalFileUrls.includes(url)) || [];
@@ -103,82 +115,68 @@ export default function DocumentUploadStep({
   const doljanchiSelectedSupportTypes = getDoljanchiSelectedSupportTypes();
   console.log('[DocumentUploadStep] 최종 돌잔치 지원유형:', doljanchiSelectedSupportTypes);
   
-  // 선택된 모든 지원유형의 증빙서류 목록 가져오기
-  const getAllRequiredDocuments = () => {
+  // 선택된 지원유형을 순서대로 정렬하여 증빙서류 목록 생성
+  const getOrderedSupportTypes = (): SupportType[] => {
     if (formData.type === 'doljanchi') {
       if (doljanchiSubType === 'doljanchi') {
-        // 4-6-1) 돌잔치: 4-3-1)에서 선택한 지원유형에 따라 증빙서류 목록 모두 표시
-        // 한부모가족은 필수이므로 항상 포함
-        const documents: RequiredDocument[] = [REQUIRED_DOCUMENTS.doljanchi];
-        const addedTypes = new Set<SupportType>(['doljanchi']); // 이미 추가된 타입 추적
-        
-        console.log('[DocumentUploadStep] 돌잔치 - 선택된 지원유형:', doljanchiSelectedSupportTypes);
-        
-        // 추가로 선택된 지원유형의 증빙서류 (중복 방지)
+        // 돌잔치: 한부모가족은 항상 첫 번째, 그 다음 선택한 순서대로
+        const orderedTypes: SupportType[] = ['doljanchi'];
         doljanchiSelectedSupportTypes.forEach(type => {
-          console.log('[DocumentUploadStep] 돌잔치 - 처리 중인 타입:', type, '이미 추가됨:', addedTypes.has(type));
-          // 'doljanchi'는 이미 추가되었으므로 제외하고, 중복 방지
-          if (type !== 'doljanchi' && !addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
-            console.log('[DocumentUploadStep] 돌잔치 - 증빙서류 추가:', type, REQUIRED_DOCUMENTS[type]);
-            documents.push(REQUIRED_DOCUMENTS[type]);
-            addedTypes.add(type);
+          if (type !== 'doljanchi' && !orderedTypes.includes(type)) {
+            orderedTypes.push(type);
           }
         });
-        
-        console.log('[DocumentUploadStep] 돌잔치 - 최종 증빙서류 목록:', documents);
-        return documents;
+        return orderedTypes;
       } else {
-        // 4-6-2) 찾아가는 돌잔치: 복수 선택된 지원유형에 따라 증빙서류 목록 모두 표시
-        const documents: RequiredDocument[] = [];
-        const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
-        
-        // 선택된 지원유형에서 복지시설 또는 영아원 찾기
+        // 찾아가는 돌잔치: 복지시설 또는 영아원이 첫 번째, 그 다음 선택한 순서대로
+        const orderedTypes: SupportType[] = [];
         const hasWelfareFacility = doljanchiSelectedSupportTypes.includes('doljanchi_welfare_facility');
         const hasOrphanage = doljanchiSelectedSupportTypes.includes('doljanchi_orphanage');
         
-        // 기본 증빙서류 (복지시설 또는 영아원)
         if (hasWelfareFacility) {
-          documents.push(REQUIRED_DOCUMENTS.doljanchi_welfare_facility);
-          addedTypes.add('doljanchi_welfare_facility');
+          orderedTypes.push('doljanchi_welfare_facility');
         }
         if (hasOrphanage) {
-          documents.push(REQUIRED_DOCUMENTS.doljanchi_orphanage);
-          addedTypes.add('doljanchi_orphanage');
+          orderedTypes.push('doljanchi_orphanage');
         }
         
-        // 추가로 선택된 지원유형의 증빙서류 (중복 방지)
         doljanchiSelectedSupportTypes.forEach(type => {
-          // 기본 타입과 중복되지 않도록 확인
-          if (type !== 'doljanchi_welfare_facility' && type !== 'doljanchi_orphanage' && !addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
-            documents.push(REQUIRED_DOCUMENTS[type]);
-            addedTypes.add(type);
+          if (type !== 'doljanchi_welfare_facility' && type !== 'doljanchi_orphanage' && !orderedTypes.includes(type)) {
+            orderedTypes.push(type);
           }
         });
-        
-        return documents;
+        return orderedTypes;
       }
     } else {
-      // 전통혼례: 복수 선택된 모든 지원유형의 증빙서류 (중복 방지)
-      const documents: RequiredDocument[] = [];
-      const addedTypes = new Set<SupportType>(); // 이미 추가된 타입 추적
-      
-      console.log('[DocumentUploadStep] 전통혼례 - 선택된 지원유형:', selectedSupportTypes);
-      
-      selectedSupportTypes.forEach(type => {
-        console.log('[DocumentUploadStep] 전통혼례 - 처리 중인 타입:', type, '이미 추가됨:', addedTypes.has(type), '증빙서류 존재:', !!REQUIRED_DOCUMENTS[type]);
-        if (!addedTypes.has(type) && REQUIRED_DOCUMENTS[type]) {
-          console.log('[DocumentUploadStep] 전통혼례 - 증빙서류 추가:', type, REQUIRED_DOCUMENTS[type]);
-          documents.push(REQUIRED_DOCUMENTS[type]);
-          addedTypes.add(type);
-        }
-      });
-      
-      console.log('[DocumentUploadStep] 전통혼례 - 최종 증빙서류 목록:', documents);
-      return documents;
+      // 전통혼례: 선택한 순서대로
+      return selectedSupportTypes;
     }
   };
   
+  const orderedSupportTypes = getOrderedSupportTypes();
+  
+  // 순서대로 정렬된 증빙서류 목록 생성
+  const getAllRequiredDocuments = (): RequiredDocument[] => {
+    const documents: RequiredDocument[] = [];
+    orderedSupportTypes.forEach(type => {
+      if (REQUIRED_DOCUMENTS[type]) {
+        documents.push(REQUIRED_DOCUMENTS[type]);
+      }
+    });
+    return documents;
+  };
+  
   const allRequiredDocuments = getAllRequiredDocuments();
+  
+  // 현재 단계의 증빙서류만 가져오기
+  const getCurrentDocument = (): RequiredDocument | null => {
+    if (allRequiredDocuments.length === 0) return null;
+    if (currentDocumentIndex >= allRequiredDocuments.length) return null;
+    return allRequiredDocuments[currentDocumentIndex];
+  };
+  
+  const currentDocument = getCurrentDocument();
+  const isLastDocument = currentDocumentIndex >= allRequiredDocuments.length - 1;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -214,14 +212,30 @@ export default function DocumentUploadStep({
       }
     }
 
-    // 새로 업로드된 URL만 추가 (기존 URL은 유지)
-    // originalFileUrls는 수정 모드에서 DB에 저장된 원본 파일들
-    // uploadedUrls는 방금 업로드한 새 파일들
-    const newFileUrls = [...originalFileUrls, ...uploadedUrls];
+    // 현재 단계에 업로드한 파일 URL 저장
+    const currentStepUrls = uploadedFilesByStep[currentDocumentIndex] || [];
+    const updatedStepUrls = [...currentStepUrls, ...uploadedUrls];
+    setUploadedFilesByStep(prev => ({
+      ...prev,
+      [currentDocumentIndex]: updatedStepUrls,
+    }));
+
+    // 전체 파일 URL 목록 업데이트 (모든 단계의 파일 URL 합치기)
+    const allStepUrls: string[] = [];
+    for (let i = 0; i <= currentDocumentIndex; i++) {
+      if (uploadedFilesByStep[i]) {
+        allStepUrls.push(...uploadedFilesByStep[i]);
+      }
+    }
+    // 현재 단계의 새로 업로드한 파일 추가
+    allStepUrls.push(...uploadedUrls);
+    
+    // 기존 파일 URL과 합치기
+    const newFileUrls = [...originalFileUrls, ...allStepUrls];
     
     console.log('=== File upload completed ===');
-    console.log('Original file URLs (from DB):', originalFileUrls);
-    console.log('Newly uploaded URLs:', uploadedUrls);
+    console.log('Current step index:', currentDocumentIndex);
+    console.log('Uploaded URLs for current step:', uploadedUrls);
     console.log('Total file URLs:', newFileUrls.length);
     
     // formData 업데이트
@@ -282,26 +296,53 @@ export default function DocumentUploadStep({
   };
 
   const handleNext = () => {
-    // 파일 첨부는 선택사항으로 변경 (필수 아님)
-    // if (uploadedFiles.length === 0) {
-    //   alert('증빙서류를 최소 1개 이상 첨부해주세요.');
-    //   return;
-    // }
+    // 순차 업로드: 현재 단계가 마지막이 아니면 다음 지원유형으로 이동
+    if (!isLastDocument) {
+      setCurrentDocumentIndex(prev => prev + 1);
+      // 현재 단계의 파일 목록 초기화 (다음 단계로 넘어가므로)
+      setUploadedFiles([]);
+      return;
+    }
+    
+    // 마지막 단계이면 실제 다음 단계로 이동
     onNext();
   };
+  
+  const handlePrev = () => {
+    // 순차 업로드: 현재 단계가 첫 번째가 아니면 이전 지원유형으로 이동
+    if (currentDocumentIndex > 0) {
+      setCurrentDocumentIndex(prev => prev - 1);
+      // 이전 단계의 파일 목록 표시를 위해 업데이트
+      const prevStepUrls = uploadedFilesByStep[currentDocumentIndex - 1] || [];
+      setUploadedFiles([]);
+      return;
+    }
+    
+    // 첫 번째 단계이면 실제 이전 단계로 이동
+    onPrev();
+  };
 
+  // 현재 단계에서 업로드한 파일 URL
+  const currentStepUrls = uploadedFilesByStep[currentDocumentIndex] || [];
+  
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">증빙서류 첨부</h2>
 
-      {allRequiredDocuments.length > 0 ? (
-        <div className="space-y-3">
-          {allRequiredDocuments.map((doc, index) => (
-            <div key={index} className="rounded-lg bg-blue-50 p-4">
-              <p className="font-semibold text-gray-800">{doc.documentName}</p>
-              <p className="mt-1 text-sm text-gray-600">{doc.description}</p>
-            </div>
-          ))}
+      {/* 진행 상황 표시 */}
+      {allRequiredDocuments.length > 1 && (
+        <div className="rounded-lg bg-gray-100 p-3">
+          <p className="text-sm text-gray-600">
+            {currentDocumentIndex + 1} / {allRequiredDocuments.length} 번째 증빙서류
+          </p>
+        </div>
+      )}
+
+      {/* 현재 단계의 증빙서류만 표시 */}
+      {currentDocument ? (
+        <div className="rounded-lg bg-blue-50 p-4">
+          <p className="font-semibold text-gray-800">{currentDocument.documentName}</p>
+          <p className="mt-1 text-sm text-gray-600">{currentDocument.description}</p>
         </div>
       ) : null}
 
@@ -377,25 +418,39 @@ export default function DocumentUploadStep({
           </div>
         )}
 
-        {/* 새로 추가된 파일 표시 (방금 업로드한 파일들) */}
-        {newlyUploadedUrls.length > 0 && (
+        {/* 현재 단계에서 업로드한 파일 표시 */}
+        {currentStepUrls.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-gray-700">새로 추가된 파일 ({newlyUploadedUrls.length}개)</p>
-            {newlyUploadedUrls.map((url, index) => {
+            <p className="font-semibold text-gray-700">업로드된 파일 ({currentStepUrls.length}개)</p>
+            {currentStepUrls.map((url, index) => {
               const fileName = url.split('/').pop() || `파일 ${index + 1}`;
               return (
                 <div
-                  key={`new-${index}`}
+                  key={`step-${currentDocumentIndex}-${index}`}
                   className="flex items-center justify-between rounded-lg border-2 border-gray-200 bg-white p-4"
                 >
                   <span className="text-gray-700">{fileName}</span>
                   <button
                     onClick={() => {
-                      // newlyUploadedUrls에서 제거
-                      const updatedNewUrls = newlyUploadedUrls.filter((_, i) => i !== index);
-                      // 전체 fileUrls 업데이트 (originalFileUrls + updatedNewUrls)
-                      const updatedAllUrls = [...originalFileUrls, ...updatedNewUrls];
+                      // 현재 단계의 파일 URL에서 제거
+                      const updatedStepUrls = currentStepUrls.filter((_, i) => i !== index);
+                      setUploadedFilesByStep(prev => ({
+                        ...prev,
+                        [currentDocumentIndex]: updatedStepUrls,
+                      }));
+                      
+                      // 전체 파일 URL 목록 재구성
+                      const allStepUrls: string[] = [];
+                      for (let i = 0; i < allRequiredDocuments.length; i++) {
+                        if (i === currentDocumentIndex) {
+                          allStepUrls.push(...updatedStepUrls);
+                        } else if (uploadedFilesByStep[i]) {
+                          allStepUrls.push(...uploadedFilesByStep[i]);
+                        }
+                      }
+                      const updatedAllUrls = [...originalFileUrls, ...allStepUrls];
                       updateFormData({ fileUrls: updatedAllUrls });
+                      
                       // DB에도 저장
                       if (onFileUploaded) {
                         onFileUploaded(updatedAllUrls);
@@ -414,7 +469,7 @@ export default function DocumentUploadStep({
 
       <div className="flex justify-between pt-6 pb-32">
         <button
-          onClick={onPrev}
+          onClick={handlePrev}
           className="rounded-full bg-gray-200 px-8 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-300 active:scale-95"
         >
           이전
@@ -423,7 +478,7 @@ export default function DocumentUploadStep({
           onClick={handleNext}
           className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
         >
-          다음 단계
+          {isLastDocument ? '다음 단계' : '다음'}
         </button>
       </div>
     </div>
