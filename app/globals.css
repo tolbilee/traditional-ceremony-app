@@ -1,3 +1,4 @@
+/* app/globals.css */
 @import "tailwindcss";
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
 
@@ -6,29 +7,36 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-noto-serif-kr);
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: 'Pretendard', sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 모바일 최적화 */
-* {
-  -webkit-tap-highlight-color: transparent;
+/* 역곡률(Negative Border Radius) 구현을 위한 핵심 클래스 */
+.inverted-radius-left::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -20px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-right-radius: 20px;
+  /* 부모의 배경색과 반드시 일치해야 함 */
+  box-shadow: 5px -5px 0 5px currentColor; 
 }
 
-/* 접근성 개선 - 큰 터치 영역 */
-button, a {
-  min-height: 44px;
-  min-width: 44px;
+.inverted-radius-right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -20px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-left-radius: 20px;
+  /* 부모의 배경색과 반드시 일치해야 함 */
+  box-shadow: -5px -5px 0 5px currentColor;
 }
