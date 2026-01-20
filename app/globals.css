@@ -16,29 +16,31 @@ body {
 
 /* --- 물방울 슬라이딩 탭 전용 S자 곡선 (이 부분만 정확히 있으면 됩니다) --- */
 
-/* 1. 왼쪽 탭(전통혼례) 활성화 시 중앙 경계선 곡선 */
+/* 1. 왼쪽 탭(전통혼례) 활성 시 오른쪽 경계선 역곡선 */
 .curve-center-right::after {
   content: "";
   position: absolute;
   top: 0;
-  right: -40px; /* 곡선의 너비 (MainScreen의 rounded-br 값과 맞춤) */
+  right: -40px; /* 버튼 밖으로 40px 튀어나감 */
   width: 40px;
   height: 40px;
-  background-color: currentColor; /* 부모 버튼의 배경색을 자동으로 따라감 */
-  /* 역곡률을 만드는 고정밀 마스크 효과 */
+  background-color: currentColor; /* 활성 탭 색상(blue/gold)을 그대로 가져옴 */
+  pointer-events: none;
+  /* 마스크로 부드러운 역곡선(물방울) 구현 */
   mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
 }
 
-/* 2. 오른쪽 탭(돌잔치) 활성화 시 중앙 경계선 곡선 */
+/* 2. 오른쪽 탭(돌잔치) 활성 시 왼쪽 경계선 역곡선 */
 .curve-center-left::before {
   content: "";
   position: absolute;
   top: 0;
-  left: -40px;
+  left: -40px; /* 버튼 밖으로 40px 튀어나감 */
   width: 40px;
   height: 40px;
   background-color: currentColor;
+  pointer-events: none;
   mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
 }
