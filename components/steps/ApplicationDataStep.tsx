@@ -723,6 +723,55 @@ export default function ApplicationDataStep({
   if (type === 'doljanchi' && doljanchiSubType === 'visiting') {
     const visitingData = (formData.applicationData as Partial<VisitingDoljanchiApplicationData>) || {};
     
+    // targets 배열 초기화 (기존 target이 있으면 배열로 변환, 없으면 빈 배열)
+    const [targets, setTargets] = useState<Array<{
+      name: string;
+      birthDate: string;
+      gender: string;
+      targetType: string;
+      additionalTypes: string;
+    }>>(() => {
+      if (visitingData.targets && Array.isArray(visitingData.targets)) {
+        return visitingData.targets;
+      } else if (visitingData.target) {
+        // 기존 target을 targets 배열로 변환 (하위 호환성)
+        return [{
+          name: visitingData.target.name || '',
+          birthDate: visitingData.target.birthDate || '',
+          gender: visitingData.target.gender || '',
+          targetType: visitingData.target.targetType || '',
+          additionalTypes: visitingData.target.additionalTypes || '',
+        }];
+      }
+      // 기본값: 1팀 추가
+      return [{
+        name: '',
+        birthDate: '',
+        gender: '',
+        targetType: '',
+        additionalTypes: '',
+      }];
+    });
+
+    // 편집 모드에서 기존 데이터 로드 시 targets 업데이트
+    useEffect(() => {
+      if (isEditMode && originalData && originalData.application_data) {
+        const appData = originalData.application_data as any;
+        if (appData.targets && Array.isArray(appData.targets)) {
+          setTargets(appData.targets);
+        } else if (appData.target) {
+          // 기존 target을 targets 배열로 변환
+          setTargets([{
+            name: appData.target.name || '',
+            birthDate: appData.target.birthDate || '',
+            gender: appData.target.gender || '',
+            targetType: appData.target.targetType || '',
+            additionalTypes: appData.target.additionalTypes || '',
+          }]);
+        }
+      }
+    }, [isEditMode, originalData]);
+    
     const handleVisitingChange = (field: string, value: any) => {
       const newData = {
         ...visitingData,
@@ -740,15 +789,100 @@ export default function ApplicationDataStep({
       }
     };
 
+    // 콤마로 구분된 문자열을 배열로 파싱
+    const parseCommaSeparated = (value: string): string[] => {
+      return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+    };
+
+    // 대상자 팀 추가
+    const addTargetTeam = () => {
+      const supportTypeString = formData.applicationData?.supportType as string || formData.supportType || '';
+      const supportTypes = supportTypeString ? supportTypeString.split(',').map(t => t.trim()) : [];
+      const targetType = supportTypes.find(t => t === 'doljanchi_welfare_facility' || t === 'doljanchi_orphanage') || '';
+      const additionalTypes = supportTypes.filter(t => t !== 'doljanchi_welfare_facility' && t !== 'doljanchi_orphanage').join(',');
+      
+      const newTarget = {
+        name: '',
+        birthDate: '',
+        gender: '',
+        targetType: targetType,
+        additionalTypes: additionalTypes,
+      };
+      const updatedTargets = [...targets, newTarget];
+      setTargets(updatedTargets);
+      handleVisitingChange('targets', updatedTargets);
+    };
+
+    // 대상자 팀 삭제
+    const removeTargetTeam = (index: number) => {
+      if (targets.length <= 1) return; // 최소 1팀은 유지
+      const updatedTargets = targets.filter((_, i) => i !== index);
+      setTargets(updatedTargets);
+      handleVisitingChange('targets', updatedTargets);
+    };
+
+    // 대상자 필드 업데이트
+    const updateTargetField = (teamIndex: number, field: 'name' | 'birthDate' | 'gender', value: string) => {
+      const updatedTargets = [...targets];
+      updatedTargets[teamIndex] = {
+        ...updatedTargets[teamIndex],
+        [field]: value,
+      };
+      setTargets(updatedTargets);
+      handleVisitingChange('targets', updatedTargets);
+      
+      // 첫 번째 팀의 이름을 userName으로 설정 (로그인용)
+      if (teamIndex === 0 && field === 'name') {
+        updateFormData({ userName: value.split(',')[0].trim() });
+      }
+      // 첫 번째 팀의 생년월일을 birthDate로 설정 (로그인용)
+      if (teamIndex === 0 && field === 'birthDate') {
+        const firstBirthDate = parseCommaSeparated(value)[0] || '';
+        updateFormData({ birthDate: firstBirthDate });
+      }
+    };
+
     const validateVisiting = () => {
       const newErrors: Record<string, string> = {};
       
-      // 대상자 정보
-      if (!visitingData.target?.name) newErrors['target.name'] = '이름을 입력해주세요.';
-      if (!visitingData.target?.birthDate || visitingData.target.birthDate.length !== 6) {
-        newErrors['target.birthDate'] = '생년월일 6자리를 입력해주세요.';
-      }
-      if (!visitingData.target?.gender) newErrors['target.gender'] = '성별을 선택해주세요.';
+      // 대상자 정보 검증 (각 팀별)
+      targets.forEach((target, teamIndex) => {
+        if (!target.name || target.name.trim() === '') {
+          newErrors[`targets.${teamIndex}.name`] = '이름을 입력해주세요.';
+        }
+        
+        if (!target.birthDate || target.birthDate.trim() === '') {
+          newErrors[`targets.${teamIndex}.birthDate`] = '생년월일을 입력해주세요.';
+        } else {
+          // 콤마로 구분된 생년월일 검증
+          const birthDates = parseCommaSeparated(target.birthDate);
+          const invalidDates = birthDates.filter(bd => bd.length !== 6 || !/^\d{6}$/.test(bd));
+          if (invalidDates.length > 0) {
+            newErrors[`targets.${teamIndex}.birthDate`] = '생년월일은 6자리 숫자로 입력해주세요.';
+          }
+        }
+        
+        if (!target.gender || target.gender.trim() === '') {
+          newErrors[`targets.${teamIndex}.gender`] = '성별을 입력해주세요.';
+        } else {
+          // 콤마로 구분된 성별 검증
+          const genders = parseCommaSeparated(target.gender);
+          const validGenders = ['남', '여', 'male', 'female', '남성', '여성'];
+          const invalidGenders = genders.filter(g => !validGenders.includes(g.trim()));
+          if (invalidGenders.length > 0) {
+            newErrors[`targets.${teamIndex}.gender`] = '성별은 "남" 또는 "여"로 입력해주세요.';
+          }
+        }
+        
+        // 이름, 생년월일, 성별 개수 일치 확인
+        const names = parseCommaSeparated(target.name);
+        const birthDates = parseCommaSeparated(target.birthDate);
+        const genders = parseCommaSeparated(target.gender);
+        
+        if (names.length !== birthDates.length || names.length !== genders.length) {
+          newErrors[`targets.${teamIndex}.name`] = '이름, 생년월일, 성별의 개수가 일치해야 합니다.';
+        }
+      });
       
       // 복지시설 정보
       if (!visitingData.facility?.name) newErrors['facility.name'] = '시설명을 입력해주세요.';
@@ -782,23 +916,29 @@ export default function ApplicationDataStep({
         const targetType = supportTypes.find(t => t === 'doljanchi_welfare_facility' || t === 'doljanchi_orphanage') || '';
         const additionalTypes = supportTypes.filter(t => t !== 'doljanchi_welfare_facility' && t !== 'doljanchi_orphanage').join(',');
         
+        // targets 배열에 대상유형과 추가유형 자동 입력
+        const updatedTargets = targets.map(target => ({
+          ...target,
+          targetType: targetType || target.targetType,
+          additionalTypes: additionalTypes || target.additionalTypes,
+        }));
+        
         const finalData: VisitingDoljanchiApplicationData = {
           ...visitingData as VisitingDoljanchiApplicationData,
+          targets: updatedTargets,
           supportType: existingSupportType || formData.supportType || '',
           documentSubmitted: (formData.files?.length || 0) > 0,
           preferredDateTime: formData.schedule1 
             ? `${formData.schedule1.date} ${formData.schedule1.time}`
             : '',
-          target: {
-            ...visitingData.target,
-            targetType: targetType || visitingData.target?.targetType || '',
-            additionalTypes: additionalTypes || visitingData.target?.additionalTypes || '',
-          } as any,
         };
         
-        // userName과 birthDate를 명시적으로 설정 (로그인용 - 대상자 이름 사용)
-        const userName = visitingData.target?.name || formData.userName || '';
-        const birthDate = visitingData.target?.birthDate || formData.birthDate || '';
+        // userName과 birthDate를 명시적으로 설정 (로그인용 - 첫 번째 팀의 첫 번째 대상자 사용)
+        const firstTarget = updatedTargets[0];
+        const firstNames = parseCommaSeparated(firstTarget?.name || '');
+        const firstBirthDates = parseCommaSeparated(firstTarget?.birthDate || '');
+        const userName = firstNames[0] || formData.userName || '';
+        const birthDate = firstBirthDates[0] || formData.birthDate || '';
         
         updateFormData({ 
           applicationData: finalData,
@@ -821,7 +961,12 @@ export default function ApplicationDataStep({
       const keys = field.split('.');
       let value: any = originalData;
       for (const key of keys) {
-        value = value?.[key];
+        if (key.match(/^\d+$/)) {
+          // 배열 인덱스
+          value = value?.[parseInt(key)];
+        } else {
+          value = value?.[key];
+        }
       }
       return value || '';
     };
@@ -845,83 +990,104 @@ export default function ApplicationDataStep({
         <div className="space-y-6 rounded-lg border-2 border-gray-200 bg-white p-6">
           <h3 className="text-xl font-semibold text-gray-800">참가자 정보</h3>
           
-          {/* 대상자 정보 */}
-          <div className="space-y-4 border-b border-gray-200 pb-4">
-            <h4 className="font-semibold text-gray-700">대상자 (1팀)</h4>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">
-                이름 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="target.name"
-                value={visitingData.target?.name || ''}
-                onChange={(e) => {
-                  handleVisitingChange('target', { ...visitingData.target, name: e.target.value });
-                  updateFormData({ userName: e.target.value });
-                }}
-                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
-                  errors['target.name'] ? 'border-red-500' : 'border-gray-300'
-                } ${isEditMode && getOriginalValue('target.name') ? 'text-red-600' : ''}`}
-                placeholder="홍길동"
-              />
-              {errors['target.name'] && (
-                <p className="mt-1 text-sm text-red-500">{errors['target.name']}</p>
-              )}
+          {/* 대상자 정보 (7-4-1: 팀 추가 기능 및 콤마 구분 입력) */}
+          {targets.map((target, teamIndex) => (
+            <div key={teamIndex} className="space-y-4 border-b border-gray-200 pb-4 mb-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-gray-700">대상자 ({teamIndex + 1}팀)</h4>
+                <div className="flex gap-2">
+                  {teamIndex === 0 && (
+                    <button
+                      type="button"
+                      onClick={addTargetTeam}
+                      className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-blue-600 active:scale-95"
+                    >
+                      팀 추가하기
+                    </button>
+                  )}
+                  {targets.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeTargetTeam(teamIndex)}
+                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600 active:scale-95"
+                    >
+                      팀 삭제하기
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">
+                  이름 <span className="text-red-500">*</span>
+                  <span className="ml-2 text-xs font-normal text-gray-500">(여러명 입력 시 콤마로 구분)</span>
+                </label>
+                <input
+                  type="text"
+                  name={`targets.${teamIndex}.name`}
+                  value={target.name}
+                  onChange={(e) => updateTargetField(teamIndex, 'name', e.target.value)}
+                  className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                    errors[`targets.${teamIndex}.name`] ? 'border-red-500' : 'border-gray-300'
+                  } ${isEditMode && getOriginalValue(`targets.${teamIndex}.name`) ? 'text-red-600' : ''}`}
+                  placeholder="김철수, 이영희, 박순희"
+                />
+                {errors[`targets.${teamIndex}.name`] && (
+                  <p className="mt-1 text-sm text-red-500">{errors[`targets.${teamIndex}.name`]}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">
+                  생년월일 (6자리) <span className="text-red-500">*</span>
+                  <span className="ml-2 text-xs font-normal text-gray-500">(여러명 입력 시 콤마로 구분)</span>
+                </label>
+                <input
+                  type="text"
+                  name={`targets.${teamIndex}.birthDate`}
+                  value={target.birthDate}
+                  onChange={(e) => {
+                    // 숫자와 콤마, 공백만 허용
+                    const value = e.target.value.replace(/[^\d, ]/g, '');
+                    updateTargetField(teamIndex, 'birthDate', value);
+                  }}
+                  className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                    errors[`targets.${teamIndex}.birthDate`] ? 'border-red-500' : 'border-gray-300'
+                  } ${isEditMode && getOriginalValue(`targets.${teamIndex}.birthDate`) ? 'text-red-600' : ''}`}
+                  placeholder="240101, 240307, 240528"
+                />
+                {errors[`targets.${teamIndex}.birthDate`] && (
+                  <p className="mt-1 text-sm text-red-500">{errors[`targets.${teamIndex}.birthDate`]}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">
+                  성별 <span className="text-red-500">*</span>
+                  <span className="ml-2 text-xs font-normal text-gray-500">(여러명 입력 시 콤마로 구분: 남, 여)</span>
+                </label>
+                <input
+                  type="text"
+                  name={`targets.${teamIndex}.gender`}
+                  value={target.gender}
+                  onChange={(e) => updateTargetField(teamIndex, 'gender', e.target.value)}
+                  className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
+                    errors[`targets.${teamIndex}.gender`] ? 'border-red-500' : 'border-gray-300'
+                  } ${isEditMode && getOriginalValue(`targets.${teamIndex}.gender`) ? 'text-red-600' : ''}`}
+                  placeholder="남, 여, 여"
+                />
+                {errors[`targets.${teamIndex}.gender`] && (
+                  <p className="mt-1 text-sm text-red-500">{errors[`targets.${teamIndex}.gender`]}</p>
+                )}
+              </div>
+              {/* 대상유형과 추가유형은 자동 입력이므로 표시만 */}
+              <div className="rounded-lg bg-gray-50 p-3">
+                <p className="text-sm text-gray-600">
+                  <strong>대상유형:</strong> {target.targetType || '자동 입력'}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">
+                  <strong>추가유형:</strong> {target.additionalTypes || '자동 입력'}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">
-                생년월일 (6자리) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="target.birthDate"
-                value={visitingData.target?.birthDate || ''}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  handleVisitingChange('target', { ...visitingData.target, birthDate: value });
-                  updateFormData({ birthDate: value });
-                }}
-                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
-                  errors['target.birthDate'] ? 'border-red-500' : 'border-gray-300'
-                } ${isEditMode && getOriginalValue('target.birthDate') ? 'text-red-600' : ''}`}
-                placeholder="900101"
-                maxLength={6}
-              />
-              {errors['target.birthDate'] && (
-                <p className="mt-1 text-sm text-red-500">{errors['target.birthDate']}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">
-                성별 <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="target.gender"
-                value={visitingData.target?.gender || ''}
-                onChange={(e) => handleVisitingChange('target', { ...visitingData.target, gender: e.target.value as 'male' | 'female' })}
-                className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
-                  errors['target.gender'] ? 'border-red-500' : 'border-gray-300'
-                } ${isEditMode && getOriginalValue('target.gender') ? 'text-red-600' : ''}`}
-              >
-                <option value="">선택해주세요</option>
-                <option value="male">남성</option>
-                <option value="female">여성</option>
-              </select>
-              {errors['target.gender'] && (
-                <p className="mt-1 text-sm text-red-500">{errors['target.gender']}</p>
-              )}
-            </div>
-            {/* 대상유형과 추가유형은 자동 입력이므로 표시만 */}
-            <div className="rounded-lg bg-gray-50 p-3">
-              <p className="text-sm text-gray-600">
-                <strong>대상유형:</strong> {visitingData.target?.targetType || '자동 입력'}
-              </p>
-              <p className="mt-1 text-sm text-gray-600">
-                <strong>추가유형:</strong> {visitingData.target?.additionalTypes || '자동 입력'}
-              </p>
-            </div>
-          </div>
+          ))}
 
           {/* 복지시설 정보 */}
           <div className="space-y-4 pt-4">

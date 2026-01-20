@@ -78,14 +78,14 @@ export interface DoljanchiApplicationData {
 // 찾아가는 돌잔치 신청서 데이터 (7-4)
 export interface VisitingDoljanchiApplicationData {
   // 참가자 정보
-  // 대상자
-  target: {
-    name: string;
-    birthDate: string; // YYMMDD
-    gender: 'male' | 'female';
+  // 대상자 (7-4-1: 팀 추가 기능 및 콤마 구분 입력 지원)
+  targets: Array<{
+    name: string; // 콤마로 구분된 여러명 또는 단일명 (예: "김철수, 이영희, 박순희")
+    birthDate: string; // 콤마로 구분된 여러명 또는 단일명 (예: "240101, 240307, 240528")
+    gender: string; // 콤마로 구분된 여러명 또는 단일명 (예: "남, 여, 여")
     targetType: string; // 대상유형 (한부모가족 복지시설, 영아원) - 자동 입력
     additionalTypes: string; // 추가유형 (기초생활수급자, 차상위계층, 장애인, 유공자, 새터민) - 자동 입력
-  };
+  }>;
   // 복지시설
   facility: {
     name: string; // 시설명
