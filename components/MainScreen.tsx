@@ -94,7 +94,7 @@ export default function MainScreen() {
         </div>
 
         {/* 3. 하단 신청 버튼 영역 (여백 넉넉히): 동일 유지 */}
-        <div className="flex flex-col items-center justify-center h-full pt-16 px-6">
+        <div className="flex flex-col items-center justify-center h-full pt-16 px-6" style={{ marginTop: '-50px' }}>
           <div className="flex w-full gap-4 max-w-md">
             <Link
               href={activeTab === 'wedding' ? '/apply/wedding' : '/apply/doljanchi'}
