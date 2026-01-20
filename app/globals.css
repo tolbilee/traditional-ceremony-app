@@ -16,40 +16,38 @@ body {
 
 /* --- 물방울 슬라이딩 탭 전용 S자 곡선 (이 부분만 정확히 있으면 됩니다) --- */
 
-/* [최종 픽스] 물방울 곡선 형태 복구 및 지연 애니메이션 */
+/* [최종 박자 수정] 물방울 마스크 (배경 70% 이동 후 등장) */
 .curve-center-right::after,
 .curve-center-left::before {
   content: "";
   position: absolute;
-  top: -1px; /* 상단 경계선 실금 방지 */
-  width: 40px;
-  height: 40px;
+  top: -1px;
+  width: 41px;
+  height: 41px;
   background-color: var(--tab-color);
   pointer-events: none;
   z-index: 10;
   
-  /* 초기 상태: 투명 */
+  /* 초기 상태: 완전 투명 */
   opacity: 0;
-  /* 배경 슬라이딩이 70% 이상 진행된 후(0.2s 지연) 부드럽게 등장 */
-  transition: opacity 0.25s ease 0.2s;
+  /* 배경 슬라이딩이 거의 끝날 때(0.3s 지연) 부드럽게 페이드 인 */
+  transition: opacity 0.2s ease 0.3s; 
 }
 
-/* 활성화된 탭에서만 곡선이 나타남 */
+/* 활성화된 탭에서만 마스크가 보임 */
 .curve-active::after,
 .curve-active::before {
   opacity: 1;
 }
 
-/* 왼쪽 탭 활성화 시 오른쪽 S자 곡선 */
 .curve-center-right::after {
-  right: -39.5px; /* 0.5px 겹쳐서 수직 빈틈 제거 */
+  right: -39.5px;
   mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 40px 40px, transparent 40px, black 40px);
 }
 
-/* 오른쪽 탭 활성화 시 왼쪽 S자 곡선 */
 .curve-center-left::before {
-  left: -39.5px; /* 0.5px 겹쳐서 수직 빈틈 제거 */
+  left: -39.5px;
   mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
   -webkit-mask-image: radial-gradient(circle at 0px 40px, transparent 40px, black 40px);
 }

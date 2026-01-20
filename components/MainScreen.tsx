@@ -18,15 +18,16 @@ export default function MainScreen() {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-white flex flex-col">
       
-      {/* 1. 상단 슬라이딩 배경 영역: 동일 유지 */}
-      <div className="relative h-[60%] w-full overflow-hidden">
+{/* 1. 배경 (Background): 즉시 슬라이딩 시작 */}
+<div className="relative h-[60%] w-full overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: activeTab === 'wedding' ? '0%' : '-50%' }}
-          transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+          /* 부드러우면서도 일정한 속도로 이동하도록 베지어 곡선 사용 */
+          transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} 
         >
-          {/* 전통혼례 배경 */}
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.wedding }}>
+            {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
               <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
@@ -36,8 +37,8 @@ export default function MainScreen() {
             </div>
           </div>
 
-          {/* 돌잔치 배경 */}
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.doljanchi }}>
+            {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
               <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
@@ -49,48 +50,48 @@ export default function MainScreen() {
         </motion.div>
       </div>
 
-      {/* 2. 탭 메뉴 영역 (S자 곡선 완벽 수정 버전) */}
-      <div className="relative flex-1 bg-white">
+{/* 2. 탭 (Tab) & 물방울 마스크 (Liquid Mask): 0.3초 지연 후 변화 */}
+<div className="relative flex-1 bg-white">
         <div className="absolute -top-[1px] left-0 w-full flex h-[60px] z-30">
           
-{/* 왼쪽 탭: 전통혼례 */}
-<button
-  onClick={() => setActiveTab('wedding')}
-  style={{ 
-    backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
-    color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
-    zIndex: activeTab === 'wedding' ? 30 : 10,
-    '--tab-color': colors.wedding, // 항상 고유 색상 유지
-    // 배경 슬라이딩 시작 후 0.2초 뒤에 색상 변경 시작
-    transition: 'background-color 0.3s ease 0.2s, color 0.3s ease 0.2s'
-  } as any}
-  className={`relative flex-1 flex items-center justify-center font-bold text-lg
-    ${activeTab === 'wedding' 
-      ? 'curve-center-right curve-active rounded-br-[40px] overflow-visible' 
-      : 'overflow-hidden'}
-  `}
->
-  전통혼례
-</button>
+          {/* 왼쪽 탭 */}
+          <button
+            onClick={() => setActiveTab('wedding')}
+            style={{ 
+              backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
+              color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
+              zIndex: activeTab === 'wedding' ? 30 : 10,
+              '--tab-color': colors.wedding,
+              /* 탭 본체의 색상 변화도 마스크와 동일하게 0.3s 지연 */
+              transition: 'background-color 0.25s ease 0.3s, color 0.25s ease 0.3s'
+            } as any}
+            className={`relative flex-1 flex items-center justify-center font-bold text-lg
+              ${activeTab === 'wedding' 
+                ? 'curve-center-right curve-active rounded-br-[40px] overflow-visible' 
+                : 'overflow-hidden'}
+            `}
+          >
+            전통혼례
+          </button>
 
-{/* 오른쪽 탭: 돌잔치 */}
-<button
-  onClick={() => setActiveTab('doljanchi')}
-  style={{ 
-    backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
-    color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
-    zIndex: activeTab === 'doljanchi' ? 30 : 10,
-    '--tab-color': colors.doljanchi, // 항상 고유 색상 유지
-    transition: 'background-color 0.3s ease 0.2s, color 0.3s ease 0.2s'
-  } as any}
-  className={`relative flex-1 flex items-center justify-center font-bold text-lg
-    ${activeTab === 'doljanchi' 
-      ? 'curve-center-left curve-active rounded-bl-[40px] overflow-visible' 
-      : 'overflow-hidden'}
-  `}
->
-  돌잔치
-</button>
+          {/* 오른쪽 탭 */}
+          <button
+            onClick={() => setActiveTab('doljanchi')}
+            style={{ 
+              backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
+              color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
+              zIndex: activeTab === 'doljanchi' ? 30 : 10,
+              '--tab-color': colors.doljanchi,
+              transition: 'background-color 0.25s ease 0.3s, color 0.25s ease 0.3s'
+            } as any}
+            className={`relative flex-1 flex items-center justify-center font-bold text-lg
+              ${activeTab === 'doljanchi' 
+                ? 'curve-center-left curve-active rounded-bl-[40px] overflow-visible' 
+                : 'overflow-hidden'}
+            `}
+          >
+            돌잔치
+          </button>
 
         </div>
 
