@@ -65,7 +65,7 @@ export default function MainScreen() {
             } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
               ${activeTab === 'wedding' 
-                ? 'curve-center-right rounded-br-[40px] overflow-visible' 
+                ? 'curve-center-right rounded-br-[30px] overflow-visible' 
                 : 'overflow-hidden'}
             `}
           >
@@ -84,7 +84,7 @@ export default function MainScreen() {
             } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
               ${activeTab === 'doljanchi' 
-                ? 'curve-center-left rounded-bl-[40px] overflow-visible' 
+                ? 'curve-center-left rounded-bl-[30px] overflow-visible' 
                 : 'overflow-hidden'}
             `}
           >
