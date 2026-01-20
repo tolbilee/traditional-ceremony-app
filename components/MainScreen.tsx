@@ -18,7 +18,7 @@ export default function MainScreen() {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-white flex flex-col">
       
-      {/* 1. 상단 슬라이딩 배경 영역 (배경이 밀려나는 느낌) */}
+      {/* 1. 상단 슬라이딩 배경 영역: 동일 유지 */}
       <div className="relative h-[60%] w-full overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
@@ -49,17 +49,20 @@ export default function MainScreen() {
         </motion.div>
       </div>
 
-      {/* 2. 탭 메뉴 영역 (중앙 경계선만 물방울 트릭) */}
+      {/* 2. 탭 메뉴 영역 (S자 곡선 완벽 수정 버전) */}
       <div className="relative flex-1 bg-white">
         <div className="absolute -top-[1px] left-0 w-full flex h-[60px] z-30">
+          
           {/* 왼쪽 탭: 전통혼례 */}
           <button
             onClick={() => setActiveTab('wedding')}
             style={{ 
               backgroundColor: activeTab === 'wedding' ? colors.wedding : 'white',
               color: activeTab === 'wedding' ? 'white' : colors.inactiveText,
-              zIndex: activeTab === 'wedding' ? 20 : 10 // 활성 탭이 위로
-            }}
+              zIndex: activeTab === 'wedding' ? 20 : 10,
+              // [추가] CSS 클래스에 컬러 값을 전달하기 위한 커스텀 변수
+              '--tab-color': activeTab === 'wedding' ? colors.wedding : 'transparent'
+            } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
               ${activeTab === 'wedding' 
                 ? 'curve-center-right rounded-br-[40px] overflow-visible' 
@@ -75,8 +78,10 @@ export default function MainScreen() {
             style={{ 
               backgroundColor: activeTab === 'doljanchi' ? colors.doljanchi : 'white',
               color: activeTab === 'doljanchi' ? 'white' : colors.inactiveText,
-              zIndex: activeTab === 'doljanchi' ? 20 : 10 // 활성 탭이 위로
-            }}
+              zIndex: activeTab === 'doljanchi' ? 20 : 10,
+              // [추가] CSS 클래스에 컬러 값을 전달하기 위한 커스텀 변수
+              '--tab-color': activeTab === 'doljanchi' ? colors.doljanchi : 'transparent'
+            } as any}
             className={`relative flex-1 flex items-center justify-center font-bold text-lg transition-all duration-300
               ${activeTab === 'doljanchi' 
                 ? 'curve-center-left rounded-bl-[40px] overflow-visible' 
@@ -85,9 +90,10 @@ export default function MainScreen() {
           >
             돌잔치
           </button>
+
         </div>
 
-        {/* 3. 하단 신청 버튼 영역 (여백 넉넉히) */}
+        {/* 3. 하단 신청 버튼 영역 (여백 넉넉히): 동일 유지 */}
         <div className="flex flex-col items-center justify-center h-full pt-16 px-6">
           <div className="flex w-full gap-4 max-w-md">
             <Link
