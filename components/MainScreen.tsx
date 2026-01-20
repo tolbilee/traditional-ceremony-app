@@ -102,7 +102,7 @@ export default function MainScreen() {
               className="flex-1 py-5 rounded-2xl text-white text-center font-bold text-lg shadow-lg active:scale-95 transition-transform"
               style={{ backgroundColor: '#FF4B3A' }}
             >
-              온라인 신청하기
+              {activeTab === 'wedding' ? '전통혼례 신청하기' : '돌잔치 신청하기'}
             </Link>
             
             <Link

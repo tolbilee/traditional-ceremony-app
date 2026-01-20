@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { ApplicationFormData, CeremonyType, WeddingApplicationData, DoljanchiApplicationData, VisitingDoljanchiApplicationData } from '@/types';
 
 // KAKAO 주소 API 타입 선언 (공식 매뉴얼 기준)
@@ -47,8 +48,11 @@ export default function ApplicationDataStep({
   originalData,
   doljanchiSubType,
 }: ApplicationDataStepProps) {
+  const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDaumPostcodeLoaded, setIsDaumPostcodeLoaded] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const duplicateCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // KAKAO 주소 API 동적 로드 및 확인
   useEffect(() => {
@@ -149,6 +153,101 @@ export default function ApplicationDataStep({
         onComplete(fullAddress);
       },
     }).open();
+  };
+
+  // 전화번호 포맷팅 함수 (000-0000-0000 형식)
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  // 중복 신청 확인 함수
+  const checkDuplicate = async (checkType: 'wedding' | 'doljanchi' | 'visiting_doljanchi', data: any) => {
+    // 편집 모드에서는 중복 확인하지 않음
+    if (isEditMode) return;
+
+    try {
+      let requestBody: any = { type: checkType };
+
+      if (checkType === 'wedding') {
+        // 신랑 또는 신부 중 한명이라도 이름과 생년월일이 있으면 확인
+        const groomName = data.groom?.name?.trim();
+        const groomBirth = data.groom?.birthDate;
+        const brideName = data.bride?.name?.trim();
+        const brideBirth = data.bride?.birthDate;
+
+        // 신랑 정보로 확인
+        if (groomName && groomBirth && groomBirth.length === 6) {
+          requestBody.name = groomName;
+          requestBody.birthDate = groomBirth;
+        }
+        // 신부 정보로 확인
+        else if (brideName && brideBirth && brideBirth.length === 6) {
+          requestBody.name = brideName;
+          requestBody.birthDate = brideBirth;
+        } else {
+          return; // 둘 다 없으면 확인하지 않음
+        }
+      } else if (checkType === 'doljanchi') {
+        const parentName = data.parent?.name?.trim();
+        const parentBirth = data.parent?.birthDate;
+        
+        if (parentName && parentBirth && parentBirth.length === 6) {
+          requestBody.name = parentName;
+          requestBody.birthDate = parentBirth;
+        } else {
+          return;
+        }
+      } else if (checkType === 'visiting_doljanchi') {
+        const repName = data.facility?.representative?.trim();
+        const businessNum = data.facility?.businessNumber?.replace(/\D/g, '');
+        
+        if (repName && businessNum && businessNum.length === 10) {
+          requestBody.representativeName = repName;
+          requestBody.businessNumber = businessNum;
+        } else {
+          return;
+        }
+      }
+
+      const response = await fetch('/api/applications/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+
+      if (result.exists && result.applications && result.applications.length > 0) {
+        setShowDuplicateModal(true);
+      }
+    } catch (error) {
+      console.error('중복 확인 중 오류:', error);
+      // 오류 발생 시에도 계속 진행 (사용자 경험을 위해)
+    }
+  };
+
+  // Debounce를 사용한 중복 확인
+  const debouncedCheckDuplicate = (checkType: 'wedding' | 'doljanchi' | 'visiting_doljanchi', data: any) => {
+    if (duplicateCheckTimeoutRef.current) {
+      clearTimeout(duplicateCheckTimeoutRef.current);
+    }
+    
+    duplicateCheckTimeoutRef.current = setTimeout(() => {
+      checkDuplicate(checkType, data);
+    }, 1000); // 1초 후 확인
+  };
+
+  // 모달 핸들러
+  const handleDuplicateModalYes = () => {
+    setShowDuplicateModal(false);
+    router.push('/my-applications');
+  };
+
+  const handleDuplicateModalNo = () => {
+    setShowDuplicateModal(false);
   };
 
   // 전통혼례 신청서
@@ -305,6 +404,11 @@ export default function ApplicationDataStep({
                   // 신랑 생년월일을 formData.birthDate로도 설정 (로그인용)
                   updateFormData({ birthDate: value });
                 }}
+                onBlur={() => {
+                  if (weddingData.groom?.name && weddingData.groom?.birthDate && weddingData.groom.birthDate.length === 6) {
+                    debouncedCheckDuplicate('wedding', weddingData);
+                  }
+                }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['groom.birthDate'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('groom.birthDate') ? 'text-red-600' : ''}`}
@@ -380,6 +484,11 @@ export default function ApplicationDataStep({
                     updateFormData({ birthDate: value });
                   }
                 }}
+                onBlur={() => {
+                  if (weddingData.bride?.name && weddingData.bride?.birthDate && weddingData.bride.birthDate.length === 6) {
+                    debouncedCheckDuplicate('wedding', weddingData);
+                  }
+                }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['bride.birthDate'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('bride.birthDate') ? 'text-red-600' : ''}`}
@@ -444,13 +553,15 @@ export default function ApplicationDataStep({
                 name="representative.phone"
                 value={weddingData.representative?.phone || ''}
                 onChange={(e) => {
-                  handleWeddingChange('representative', { ...weddingData.representative, phone: e.target.value });
+                  const formatted = formatPhoneNumber(e.target.value);
+                  handleWeddingChange('representative', { ...weddingData.representative, phone: formatted });
                   // 전화번호는 userName이 아님 (userName은 신랑 이름 사용)
                 }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['representative.phone'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('representative.phone') ? 'text-red-600' : ''}`}
                 placeholder="010-1234-5678"
+                maxLength={13}
               />
               {errors['representative.phone'] && (
                 <p className="mt-1 text-sm text-red-500">{errors['representative.phone']}</p>
@@ -552,7 +663,7 @@ export default function ApplicationDataStep({
                 errors['applicationReason'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('applicationReason') ? 'text-red-600' : ''}`}
               rows={6}
-              placeholder="신청동기를 입력해주세요."
+              placeholder="신청동기를 입력해주세요. 정성어린 신청동기는 최종 선정에 중요한 참고 자료입니다"
               maxLength={1000}
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -578,6 +689,32 @@ export default function ApplicationDataStep({
             다음 단계
           </button>
         </div>
+
+        {/* 중복 신청 확인 모달 */}
+        {showDuplicateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-sm rounded-lg bg-white p-6">
+              <h3 className="mb-4 text-xl font-bold text-gray-800">중복 신청 확인</h3>
+              <p className="mb-6 text-gray-600">
+                기존에 이미 신청하신 정보가 있습니다. 나의 신청내역을 확인하시겠습니까?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDuplicateModalYes}
+                  className="flex-1 rounded-lg bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition-all hover:bg-blue-700"
+                >
+                  예
+                </button>
+                <button
+                  onClick={handleDuplicateModalNo}
+                  className="flex-1 rounded-lg bg-gray-300 px-6 py-3 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-400"
+                >
+                  아니오
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -697,13 +834,7 @@ export default function ApplicationDataStep({
       return `${numbers.slice(0, 3)}-${numbers.slice(3, 5)}-${numbers.slice(5)}`;
     };
 
-    // 전화번호 포맷팅 함수
-    const formatPhone = (value: string) => {
-      const numbers = value.replace(/\D/g, '');
-      if (numbers.length <= 3) return numbers;
-      if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
-      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
-    };
+    // 전화번호 포맷팅 함수는 상단의 formatPhoneNumber 사용
 
     return (
       <div className="space-y-6">
@@ -865,6 +996,12 @@ export default function ApplicationDataStep({
                   const formatted = formatBusinessNumber(e.target.value);
                   handleVisitingChange('facility', { ...visitingData.facility, businessNumber: formatted });
                 }}
+                onBlur={() => {
+                  const businessNum = visitingData.facility?.businessNumber?.replace(/\D/g, '');
+                  if (visitingData.facility?.representative && businessNum && businessNum.length === 10) {
+                    debouncedCheckDuplicate('visiting_doljanchi', visitingData);
+                  }
+                }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['facility.businessNumber'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('facility.businessNumber') ? 'text-red-600' : ''}`}
@@ -913,17 +1050,17 @@ export default function ApplicationDataStep({
                 전화번호 <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="tel"
                 name="facility.phone"
                 value={visitingData.facility?.phone || ''}
                 onChange={(e) => {
-                  const formatted = formatPhone(e.target.value);
+                  const formatted = formatPhoneNumber(e.target.value);
                   handleVisitingChange('facility', { ...visitingData.facility, phone: formatted });
                 }}
                 className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                   errors['facility.phone'] ? 'border-red-500' : 'border-gray-300'
                 } ${isEditMode && getOriginalValue('facility.phone') ? 'text-red-600' : ''}`}
-                placeholder="010-0000-0000"
+                placeholder="010-1234-5678"
                 maxLength={13}
               />
               {errors['facility.phone'] && (
@@ -992,7 +1129,7 @@ export default function ApplicationDataStep({
                 errors['applicationReason'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('applicationReason') ? 'text-red-600' : ''}`}
               rows={6}
-              placeholder="신청동기를 입력해주세요."
+              placeholder="신청동기를 입력해주세요. 정성어린 신청동기는 최종 선정에 중요한 참고 자료입니다"
               maxLength={1000}
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -1018,6 +1155,32 @@ export default function ApplicationDataStep({
             다음 단계
           </button>
         </div>
+
+        {/* 중복 신청 확인 모달 */}
+        {showDuplicateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-sm rounded-lg bg-white p-6">
+              <h3 className="mb-4 text-xl font-bold text-gray-800">중복 신청 확인</h3>
+              <p className="mb-6 text-gray-600">
+                기존에 이미 신청하신 정보가 있습니다. 나의 신청내역을 확인하시겠습니까?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDuplicateModalYes}
+                  className="flex-1 rounded-lg bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition-all hover:bg-blue-700"
+                >
+                  예
+                </button>
+                <button
+                  onClick={handleDuplicateModalNo}
+                  className="flex-1 rounded-lg bg-gray-300 px-6 py-3 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-400"
+                >
+                  아니오
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1168,6 +1331,11 @@ export default function ApplicationDataStep({
                 // 부모 생년월일을 formData.birthDate로도 설정 (로그인용)
                 updateFormData({ birthDate: value });
               }}
+              onBlur={() => {
+                if (doljanchiData.parent?.name && doljanchiData.parent?.birthDate && doljanchiData.parent.birthDate.length === 6) {
+                  debouncedCheckDuplicate('doljanchi', doljanchiData);
+                }
+              }}
               className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                 errors['parent.birthDate'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('parent.birthDate') ? 'text-red-600' : ''}`}
@@ -1299,13 +1467,15 @@ export default function ApplicationDataStep({
               name="representative.phone"
               value={doljanchiData.representative?.phone || ''}
                 onChange={(e) => {
-                  handleDoljanchiChange('representative', { ...doljanchiData.representative, phone: e.target.value });
+                  const formatted = formatPhoneNumber(e.target.value);
+                  handleDoljanchiChange('representative', { ...doljanchiData.representative, phone: formatted });
                   // 전화번호는 userName이 아님 (userName은 부/모 이름 사용)
                 }}
               className={`mt-1 w-full rounded-lg border-2 px-4 py-3 text-lg ${
                 errors['representative.phone'] ? 'border-red-500' : 'border-gray-300'
               } ${isEditMode && getOriginalValue('representative.phone') ? 'text-red-600' : ''}`}
               placeholder="010-1234-5678"
+              maxLength={13}
             />
             {errors['representative.phone'] && (
               <p className="mt-1 text-sm text-red-500">{errors['representative.phone']}</p>
@@ -1426,7 +1596,7 @@ export default function ApplicationDataStep({
               errors['applicationReason'] ? 'border-red-500' : 'border-gray-300'
             } ${isEditMode && getOriginalValue('applicationReason') ? 'text-red-600' : ''}`}
             rows={6}
-            placeholder="신청동기를 입력해주세요."
+            placeholder="신청동기를 입력해주세요. 정성어린 동기 작성은 최종 선정에 중요한 참고 자료입니다."
             maxLength={1000}
           />
           <p className="mt-1 text-xs text-gray-500">
@@ -1452,6 +1622,32 @@ export default function ApplicationDataStep({
           다음 단계
         </button>
       </div>
+
+      {/* 중복 신청 확인 모달 */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6">
+            <h3 className="mb-4 text-xl font-bold text-gray-800">중복 신청 확인</h3>
+            <p className="mb-6 text-gray-600">
+              기존에 이미 신청하신 정보가 있습니다. 나의 신청내역을 확인하시겠습니까?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDuplicateModalYes}
+                className="flex-1 rounded-lg bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition-all hover:bg-blue-700"
+              >
+                예
+              </button>
+              <button
+                onClick={handleDuplicateModalNo}
+                className="flex-1 rounded-lg bg-gray-300 px-6 py-3 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-400"
+              >
+                아니오
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -512,6 +512,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
             onPrev={prevStep}
             onFileUploaded={saveFileUrls}
             doljanchiSubType={doljanchiSubType}
+            isEditMode={isEditMode}
           />
         )}
         {currentStep === 6 && (

@@ -49,6 +49,39 @@ export const REQUIRED_DOCUMENTS: Record<SupportType, RequiredDocument> = {
   },
 };
 
+// 전통혼례 특이 케이스 증빙서류 (targetCategory에 따라)
+export const WEDDING_SPECIAL_DOCUMENTS: Record<string, RequiredDocument> = {
+  marriage_certificate: {
+    supportType: 'basic_livelihood' as SupportType, // 임시 타입 (실제로는 지원유형이 아님)
+    documentName: '혼인관계증명서',
+    description: '혼인관계증명서를 촬영하여 첨부해주세요.',
+  },
+  family_register: {
+    supportType: 'basic_livelihood' as SupportType, // 임시 타입 (실제로는 지원유형이 아님)
+    documentName: '주민등록등본',
+    description: '주민등록등본을 촬영하여 첨부해주세요.',
+  },
+};
+
+// 찾아가는 돌잔치 특이 케이스 증빙서류 (4-6-2 * 주의사항: 각각 개별 업로드)
+export const VISITING_DOLJANCHI_SPECIAL_DOCUMENTS: Record<string, RequiredDocument> = {
+  business_registration: {
+    supportType: 'doljanchi_welfare_facility' as SupportType, // 임시 타입
+    documentName: '사업자등록증',
+    description: '사업자등록증을 촬영하여 첨부해주세요.',
+  },
+  admission_confirmation: {
+    supportType: 'doljanchi_welfare_facility' as SupportType, // 임시 타입
+    documentName: '입소사실확인서',
+    description: '입소사실확인서를 촬영하여 첨부해주세요.',
+  },
+  single_parent_certificate: {
+    supportType: 'doljanchi_welfare_facility' as SupportType, // 임시 타입
+    documentName: '한부모가족증명서',
+    description: '한부모가족증명서를 촬영하여 첨부해주세요.',
+  },
+};
+
 // 지원 유형 한글명 (전통혼례)
 export const SUPPORT_TYPE_LABELS: Record<SupportType, string> = {
   basic_livelihood: '기초생활수급자',

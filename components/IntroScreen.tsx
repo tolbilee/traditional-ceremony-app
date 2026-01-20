@@ -53,7 +53,7 @@ export default function IntroScreen({ onEnter, allowEnter = false }: IntroScreen
           transition={{ delay: 0.7, duration: 0.6 }}
           className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white mb-8 drop-shadow-lg"
         >
-          2026년 1월 22일 09:00에
+          2026년 1월 26일 09:00에
         </motion.p>
         
         <motion.p

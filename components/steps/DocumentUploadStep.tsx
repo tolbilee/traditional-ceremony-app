@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ApplicationFormData, SupportType, RequiredDocument } from '@/types';
-import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
+import { ApplicationFormData, SupportType, RequiredDocument, WeddingApplicationData } from '@/types';
+import { REQUIRED_DOCUMENTS, WEDDING_SPECIAL_DOCUMENTS, VISITING_DOLJANCHI_SPECIAL_DOCUMENTS } from '@/lib/utils/constants';
 
 interface DocumentUploadStepProps {
   formData: Partial<ApplicationFormData>;
@@ -11,6 +11,7 @@ interface DocumentUploadStepProps {
   onPrev: () => void;
   onFileUploaded?: (fileUrls: string[]) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
   doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
+  isEditMode?: boolean; // 편집 모드 여부
 }
 
 export default function DocumentUploadStep({
@@ -20,6 +21,7 @@ export default function DocumentUploadStep({
   onPrev,
   onFileUploaded,
   doljanchiSubType,
+  isEditMode = false,
 }: DocumentUploadStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
@@ -35,13 +37,21 @@ export default function DocumentUploadStep({
   // 각 단계별로 업로드한 파일 URL을 저장 (지원유형별로 구분)
   const [uploadedFilesByStep, setUploadedFilesByStep] = useState<Record<number, string[]>>({});
   
-  // 초기 로드 시 originalFileUrls 설정 (한 번만)
+  // 초기 로드 시 originalFileUrls 설정 (편집 모드일 때만, 한 번만)
   useEffect(() => {
-    if (!isInitialized && formData.fileUrls && formData.fileUrls.length > 0) {
+    // 편집 모드가 아니면 originalFileUrls를 빈 배열로 유지
+    if (!isEditMode) {
+      setOriginalFileUrls([]);
+      setIsInitialized(true);
+      return;
+    }
+    
+    // 편집 모드일 때만 기존 파일 URL 설정
+    if (!isInitialized && isEditMode && formData.fileUrls && formData.fileUrls.length > 0) {
       setOriginalFileUrls([...formData.fileUrls]);
       setIsInitialized(true);
     }
-  }, [formData.fileUrls, isInitialized]);
+  }, [formData.fileUrls, isInitialized, isEditMode]);
   
   // 순차 업로드: 선택된 지원유형이 변경되면 현재 단계 인덱스 초기화
   useEffect(() => {
@@ -158,11 +168,37 @@ export default function DocumentUploadStep({
   // 순서대로 정렬된 증빙서류 목록 생성
   const getAllRequiredDocuments = (): RequiredDocument[] => {
     const documents: RequiredDocument[] = [];
+    
+    // 1. 지원유형별 증빙서류 추가
     orderedSupportTypes.forEach(type => {
-      if (REQUIRED_DOCUMENTS[type]) {
+      // 찾아가는 돌잔치의 경우 한부모가족 복지시설/영아원은 개별 서류로 분리 (4-6-2 * 주의사항)
+      if (formData.type === 'doljanchi' && doljanchiSubType === 'visiting' && 
+          (type === 'doljanchi_welfare_facility' || type === 'doljanchi_orphanage')) {
+        // 한부모가족 복지시설 또는 영아원인 경우 3개의 개별 서류로 분리
+        documents.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.business_registration);
+        documents.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.admission_confirmation);
+        documents.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.single_parent_certificate);
+      } else if (REQUIRED_DOCUMENTS[type]) {
         documents.push(REQUIRED_DOCUMENTS[type]);
       }
     });
+    
+    // 2. 전통혼례 특이 케이스 증빙서류 추가 (3-5 * 표시 항목)
+    if (formData.type === 'wedding' && formData.applicationData) {
+      const weddingData = formData.applicationData as Partial<WeddingApplicationData>;
+      const targetCategory = weddingData.targetCategory;
+      
+      // 예비부부 또는 결혼식 미진행 부부(혼인신고 X) → 혼인관계증명서
+      if (targetCategory === 'pre_marriage' || targetCategory === 'married_no_ceremony_no_registration') {
+        documents.push(WEDDING_SPECIAL_DOCUMENTS.marriage_certificate);
+      }
+      
+      // 결혼식 미진행 부부(혼인신고 O) → 주민등록등본
+      if (targetCategory === 'married_no_ceremony_registered') {
+        documents.push(WEDDING_SPECIAL_DOCUMENTS.family_register);
+      }
+    }
+    
     return documents;
   };
   
@@ -371,8 +407,8 @@ export default function DocumentUploadStep({
           className="hidden"
         />
 
-        {/* 기존에 업로드된 파일 URL 표시 (수정 모드 - DB에 저장된 원본 파일만) */}
-        {originalFileUrls && originalFileUrls.length > 0 && (
+        {/* 기존에 업로드된 파일 URL 표시 (편집 모드일 때만 - DB에 저장된 원본 파일만) */}
+        {isEditMode && originalFileUrls && originalFileUrls.length > 0 && (
           <div className="space-y-2">
             <p className="font-semibold text-gray-700">기존 업로드된 파일 ({originalFileUrls.length}개)</p>
             {originalFileUrls.map((url, index) => {

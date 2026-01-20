@@ -1,12 +1,13 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CeremonyType, SupportType } from '@/types';
 import ApplicationForm from '@/components/ApplicationForm';
 
 export default function ApplyPage() {
   const params = useParams();
+  const router = useRouter();
   const type = (params.type as CeremonyType) || 'wedding';
   const [showDoljanchiTypePicker, setShowDoljanchiTypePicker] = useState(type === 'doljanchi');
   const [selectedDoljanchiType, setSelectedDoljanchiType] = useState<SupportType | null>(null);
@@ -50,6 +51,12 @@ export default function ApplyPage() {
                 className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700"
               >
                 찾아가는 돌잔치
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="w-full rounded-lg bg-gray-300 px-6 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-400"
+              >
+                취소
               </button>
             </div>
           </div>
