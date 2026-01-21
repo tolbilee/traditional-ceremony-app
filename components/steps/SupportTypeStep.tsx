@@ -59,18 +59,31 @@ export default function SupportTypeStep({
       const supportTypeString = formData.applicationData.supportType as string;
       if (supportTypeString && supportTypeString.includes(',')) {
         // 쉼표로 구분된 복수 선택
-        return supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+        const types = supportTypeString.split(',').map(t => t.trim()) as SupportType[];
+        // 돌잔치인 경우 'doljanchi'가 포함되어 있으면 포함
+        if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi' && types.includes('doljanchi')) {
+          return types;
+        }
+        return types;
       } else if (supportTypeString) {
-        return [supportTypeString as SupportType];
+        const types = [supportTypeString as SupportType];
+        // 돌잔치인 경우 'doljanchi'가 포함되어 있으면 포함
+        if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi' && types.includes('doljanchi')) {
+          return types;
+        }
+        return types;
       }
     }
     
     // 기존 supportType이 있으면 배열로 변환
     if (formData.supportType) {
       if (ceremonyType === 'doljanchi') {
-        // 돌잔치: doljanchi, doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
-        const mainType = formData.supportType;
-        if (mainType === 'doljanchi' || mainType === 'doljanchi_welfare_facility' || mainType === 'doljanchi_orphanage') {
+        // 돌잔치: doljanchi는 한부모가족으로 selectedTypes에 포함
+        if (formData.supportType === 'doljanchi' && doljanchiSubType === 'doljanchi') {
+          return ['doljanchi']; // 한부모가족을 기본 선택으로 포함
+        }
+        // doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
+        if (formData.supportType === 'doljanchi_welfare_facility' || formData.supportType === 'doljanchi_orphanage') {
           return [];
         }
         return [formData.supportType];
@@ -79,6 +92,12 @@ export default function SupportTypeStep({
         return [formData.supportType];
       }
     }
+    
+    // 돌잔치인 경우 한부모가족을 기본 선택으로 포함
+    if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi') {
+      return ['doljanchi'];
+    }
+    
     return [];
   });
 
@@ -97,16 +116,16 @@ export default function SupportTypeStep({
     if (ceremonyType === 'doljanchi') {
       // 돌잔치 필수 조건 검증
       if (doljanchiSubType === 'doljanchi') {
-        // 돌잔치: 한부모가족은 필수조건이지만, supportType에는 포함되지 않음
-        // doljanchi 자체가 한부모가족을 의미하므로 selectedTypes만 확인
-        if (selectedTypes.length === 0) {
-          alert('지원 유형을 최소 1개 이상 선택해주세요.');
+        // 돌잔치: 한부모가족은 필수조건
+        if (!selectedTypes.includes('doljanchi')) {
+          alert('한부모가족은 지원 필수조건입니다.');
           return;
         }
-        // 메인 타입은 이미 doljanchi로 설정되어 있음
         // 복수 선택된 타입들을 applicationData에 저장 (한부모가족(doljanchi) 포함)
-        // doljanchi를 맨 앞에 추가하여 한부모가족도 지원유형에 포함
-        const allTypes = ['doljanchi', ...selectedTypes];
+        // doljanchi를 맨 앞에 유지하여 한부모가족도 지원유형에 포함
+        const allTypes = selectedTypes.includes('doljanchi') 
+          ? selectedTypes 
+          : ['doljanchi', ...selectedTypes];
         const allTypesString = allTypes.join(',');
         const currentApplicationData = formData.applicationData;
         if (currentApplicationData && 'parent' in currentApplicationData) {
@@ -223,16 +242,30 @@ export default function SupportTypeStep({
           // 돌잔치 지원 유형 (복수 선택)
           <>
             {doljanchiSubType === 'doljanchi' ? (
-              // 돌잔치: 한부모가족은 이미 선택된 상태 (doljanchi 자체가 한부모가족)
+              // 돌잔치: 한부모가족은 필수이지만 선택 가능
               <>
-                <div className="rounded-lg border-2 border-green-500 bg-green-50 p-4">
-                  <div className="text-lg font-semibold text-gray-800">
-                    한부모가족 (필수)
+                <button
+                  onClick={() => handleSelect('doljanchi')}
+                  className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
+                    isSelected('doljanchi')
+                      ? 'border-green-600 bg-green-100'
+                      : 'border-green-500 bg-green-50 hover:border-green-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xl font-semibold text-gray-800">
+                        {SUPPORT_TYPE_LABELS['doljanchi']} <span className="ml-2 text-sm text-green-600">(필수)</span>
+                      </div>
+                      <div className="mt-1 text-sm text-gray-600">
+                        돌잔치 신청의 필수조건입니다.
+                      </div>
+                    </div>
+                    {isSelected('doljanchi') && (
+                      <span className="text-2xl text-green-600">✓</span>
+                    )}
                   </div>
-                  <div className="mt-1 text-sm text-gray-600">
-                    돌잔치 신청의 필수조건입니다.
-                  </div>
-                </div>
+                </button>
                 {DOLJANCHI_SUPPORT_TYPES.map((type) => (
                   <button
                     key={type}
