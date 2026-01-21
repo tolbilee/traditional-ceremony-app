@@ -387,36 +387,66 @@ export default function DoljanchiProgramPage() {
                   time: '15:00 ~ 17:00',
                   title: '헤어 · 메이크업 · 스냅촬영',
                   desc: '헤어·메이크업을 받고, 돌잔치 복장으로 환복 후 스냅사진 및 영상 촬영이 진행됩니다.',
+                  image: '/images/doljanchi/schedule-01.jpg',
                 },
                 {
                   number: '02',
                   time: '17:00 ~ 17:10',
                   title: '성장 동영상 시청',
                   desc: '1:1 상담을 통해 사전 제작한 아이의 성장 동영상을 모두가 함께 시청합니다.',
+                  image: '/images/doljanchi/schedule-02.jpg',
                 },
                 {
                   number: '03',
                   time: '17:10 ~ 17:40',
                   title: '돌잔치 · 경품 이벤트',
                   desc: '돌잡이 등 이벤트가 포함된 돌잔치 본식이 진행됩니다.',
+                  image: '/images/doljanchi/schedule-03.jpg',
                 },
                 {
                   number: '04',
                   time: '17:40 ~ 18:40',
                   title: '단체사진 · 피로연',
                   desc: '하객들의 축하를 받으며 단체 사진을 촬영하고 피로연을 즐깁니다.',
+                  image: '/images/doljanchi/schedule-04.jpg',
                 },
               ].map((schedule) => (
                 <div key={schedule.number} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
-                  <div className="relative h-40 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex items-center justify-center">
-                    <div className="absolute top-3 left-3 w-8 h-8 bg-[#C9A227] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                  <div className="relative h-40 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex items-center justify-center overflow-hidden">
+                    <div className="absolute top-3 left-3 w-8 h-8 bg-[#C9A227] text-white rounded-full flex items-center justify-center text-xs font-bold z-10">
                       {schedule.number}
                     </div>
-                    <svg className="w-12 h-12 text-[#C9A227] opacity-35" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
+                    {schedule.image ? (
+                      <img
+                        src={schedule.image}
+                        alt={schedule.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 이미지 로드 실패 시 placeholder 표시
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'flex items-center justify-center';
+                            placeholder.innerHTML = `
+                              <svg class="w-12 h-12 text-[#C9A227] opacity-35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                              </svg>
+                            `;
+                            parent.appendChild(placeholder);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <svg className="w-12 h-12 text-[#C9A227] opacity-35" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    )}
                   </div>
                   <div className="p-4.5">
                     <div className="text-xs text-[#C9A227] font-semibold mb-1.5">{schedule.time}</div>
