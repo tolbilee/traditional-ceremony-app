@@ -52,7 +52,7 @@ export default function MainScreen() {
             {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
-              <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
+              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-5px]">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
                <img src="/images/wedding_couple.png" alt="Wedding" className="object-contain max-h-full" />
@@ -63,9 +63,9 @@ export default function MainScreen() {
             {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
-              <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
+              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-5px]">전통혼례 및<br />돌잔치</h1>
             </div>
-            <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
+            <div className="absolute bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4" style={{ right: '-40px' }}>
                <img src="/images/doljanchi_baby.png" alt="Doljanchi" className="object-contain max-h-full scale-[0.7]" />
             </div>
           </div>
