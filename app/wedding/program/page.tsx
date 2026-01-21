@@ -1,10 +1,81 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+
+declare global {
+  interface Window {
+    kakao: any;
+  }
+}
 
 export default function WeddingProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'ceremony' | 'venue' | 'meal'>('overview');
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+
+  // 카카오 지도 API 로드
+  useEffect(() => {
+    if (activeTab !== 'venue' || !mapContainerRef.current) return;
+
+    const loadKakaoMap = () => {
+      if (window.kakao && window.kakao.maps) {
+        initMap();
+        return;
+      }
+
+      // 카카오 지도 API 스크립트 로드
+      const script = document.createElement('script');
+      const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || 'b11a4a12178e39f51ebb2e79a716df21';
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`;
+      script.async = true;
+      script.onload = () => {
+        window.kakao.maps.load(() => {
+          setIsMapLoaded(true);
+          initMap();
+        });
+      };
+      document.head.appendChild(script);
+    };
+
+    const initMap = () => {
+      if (!mapContainerRef.current || !window.kakao?.maps) return;
+
+      // 주소를 좌표로 변환
+      const geocoder = new window.kakao.maps.services.Geocoder();
+      const address = '서울특별시 중구 퇴계로36길 10';
+
+      geocoder.addressSearch(address, (result: any, status: any) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          const coords = new window.kakao.maps.LatLng(result[0].y, result[0].x);
+
+          // 지도 생성
+          const mapOption = {
+            center: coords,
+            level: 3,
+          };
+
+          const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+          mapRef.current = map;
+
+          // 마커 생성
+          const marker = new window.kakao.maps.Marker({
+            position: coords,
+          });
+          marker.setMap(map);
+
+          // 인포윈도우 생성
+          const infowindow = new window.kakao.maps.InfoWindow({
+            content: `<div style="padding:10px;font-size:12px;">한국의집<br/>${address}</div>`,
+          });
+          infowindow.open(map, marker);
+        }
+      });
+    };
+
+    loadKakaoMap();
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
@@ -437,8 +508,24 @@ export default function WeddingProgramPage() {
             </h2>
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)]">
-              <div className="h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex items-center justify-center relative">
-                <span className="text-2xl font-normal text-[#1A56DB] tracking-[6px] opacity-60">한국의집</span>
+              <div className="relative h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex items-center justify-center overflow-hidden">
+                <img
+                  src="/images/wedding/venue.jpg"
+                  alt="한국의집"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('span');
+                      placeholder.className = 'text-2xl font-normal text-[#1A56DB] tracking-[6px] opacity-60';
+                      placeholder.textContent = '한국의집';
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-bold mb-1.5 text-[#1F2937]">한국의집</h3>
@@ -453,6 +540,11 @@ export default function WeddingProgramPage() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* 카카오 지도 */}
+            <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white">
+              <div ref={mapContainerRef} className="w-full h-64"></div>
             </div>
 
             <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(26,86,219,0.12)]">
@@ -476,13 +568,31 @@ export default function WeddingProgramPage() {
             </h2>
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)]">
-              <div className="h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex flex-col items-center justify-center gap-3">
-                <svg className="w-[52px] h-[52px] text-[#1A56DB] opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-                  <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4" />
-                  <path d="M6 16c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2" />
-                </svg>
-                <span className="text-base text-[#1A56DB] font-medium opacity-70">한국의집 특제 갈비탕</span>
+              <div className="relative h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <img
+                  src="/images/wedding/food.jpg"
+                  alt="한국의집 특제 갈비탕"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'flex flex-col items-center justify-center gap-3';
+                      placeholder.innerHTML = `
+                        <svg class="w-[52px] h-[52px] text-[#1A56DB] opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                          <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4" />
+                          <path d="M6 16c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2" />
+                        </svg>
+                        <span class="text-base text-[#1A56DB] font-medium opacity-70">한국의집 특제 갈비탕</span>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-bold mb-1.5 text-[#1F2937]">특제 갈비탕</h3>
