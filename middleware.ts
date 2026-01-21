@@ -4,6 +4,13 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
+  // daum-map.html에 대한 예외 처리
+  if (request.nextUrl.pathname === '/daum-map.html') {
+    const csp = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net http://t1.daumcdn.net; img-src 'self' data: https: blob: http://t1.daumcdn.net http://mts.daumcdn.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https:; frame-src 'self' https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net https://postcode.map.daum.net https://www.youtube.com https://youtube.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
+    response.headers.set('Content-Security-Policy', csp);
+    return response;
+  }
+
   // 개발 환경에서는 CSP를 완화하고, 프로덕션에서는 엄격하게 설정
   const isDevelopment = process.env.NODE_ENV === 'development';
   
@@ -20,6 +27,16 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/:path*',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - daum-map.html (static HTML file for iframe)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|daum-map.html).*)',
+  ],
 };
 
