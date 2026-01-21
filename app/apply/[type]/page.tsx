@@ -53,7 +53,7 @@ export default function ApplyPage() {
                 찾아가는 돌잔치
               </button>
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push('/test')}
                 className="w-full rounded-lg bg-gray-300 px-6 py-4 text-lg font-semibold text-gray-700 transition-all hover:bg-gray-400"
               >
                 취소

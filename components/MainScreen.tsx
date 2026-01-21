@@ -29,7 +29,7 @@ export default function MainScreen() {
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.wedding }}>
             {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
-              <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
+              <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
               <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
@@ -40,7 +40,7 @@ export default function MainScreen() {
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.doljanchi }}>
             {/* 내용 동일 */}
             <div className="absolute left-8 top-12 text-white z-10">
-              <p className="text-sm opacity-80 mb-1">2026 사회적배려대상자</p>
+              <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
               <h1 className="text-4xl font-bold font-serif leading-tight">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">

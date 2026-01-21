@@ -11,15 +11,11 @@ export default function WeddingProgramPage() {
       {/* Header */}
       <header className="relative px-6 pt-7 pb-6 text-center bg-gradient-to-b from-[#1A56DB] to-[#1648B8] overflow-hidden">
         <span className="inline-block text-[11px] tracking-[1px] text-white/70 mb-1.5 font-normal">
-          2026 사회적배려대상자
+          2026년 사회적 배려 대상자
         </span>
         <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1.5 text-white">
           전통혼례
         </h1>
-        <p className="text-[13px] text-white/80 font-light leading-normal">
-          사회적 배려 대상자를 위한<br />
-          무료 전통혼례 지원 프로그램
-        </p>
       </header>
 
       {/* Tab Navigation */}
@@ -360,36 +356,66 @@ export default function WeddingProgramPage() {
                   time: '10:00 ~ 12:00 / 13:00 ~ 15:00',
                   title: '헤어 · 메이크업 · 스냅촬영',
                   desc: '헤어·메이크업을 받고, 전통혼례 복장으로 환복 후 스냅사진 및 영상 촬영이 진행됩니다.',
+                  image: '/images/wedding/schedule-01.jpg',
                 },
                 {
                   number: '02',
                   time: '12:00 ~ 12:10 / 15:00 ~ 15:10',
                   title: '한국전통연희 축하공연',
                   desc: '풍물놀이 공연과 삼현육각 공연이 혼례의 기쁨과 품격을 더해줍니다.',
+                  image: '/images/wedding/schedule-02.jpg',
                 },
                 {
                   number: '03',
                   time: '12:10 ~ 12:40 / 15:10 ~ 15:40',
                   title: '전통혼례 본식',
                   desc: '전안례 - 교배례 - 합근례로 이어지는 전통혼례의 하이라이트가 진행됩니다.',
+                  image: '/images/wedding/schedule-03.jpg',
                 },
                 {
                   number: '04',
                   time: '12:40 ~ 14:00 / 15:40 ~ 17:00',
                   title: '단체사진 · 피로연',
                   desc: '하객들의 축하를 받으며 단체 사진을 촬영하고 피로연을 즐깁니다.',
+                  image: '/images/wedding/schedule-04.jpg',
                 },
               ].map((schedule) => (
                 <div key={schedule.number} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)]">
-                  <div className="relative h-40 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex items-center justify-center">
-                    <div className="absolute top-3 left-3 w-9 h-9 bg-[#1A56DB] text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="relative h-40 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex items-center justify-center overflow-hidden">
+                    <div className="absolute top-3 left-3 w-9 h-9 bg-[#1A56DB] text-white rounded-full flex items-center justify-center text-sm font-bold z-10">
                       {schedule.number}
                     </div>
-                    <svg className="w-[52px] h-[52px] text-[#1A56DB] opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
+                    {schedule.image ? (
+                      <img
+                        src={schedule.image}
+                        alt={schedule.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 이미지 로드 실패 시 placeholder 표시
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'w-full h-full flex items-center justify-center';
+                            placeholder.innerHTML = `
+                              <svg class="w-[52px] h-[52px] text-[#1A56DB] opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                              </svg>
+                            `;
+                            parent.appendChild(placeholder);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <svg className="w-[52px] h-[52px] text-[#1A56DB] opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    )}
                   </div>
                   <div className="p-5">
                     <div className="text-sm text-[#1A56DB] font-semibold mb-1.5">{schedule.time}</div>

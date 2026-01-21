@@ -16,7 +16,7 @@ export default function BottomNavigationBar() {
     >
       <div className="grid grid-cols-3 gap-1 px-2 py-2">
         <Link
-          href="/"
+          href="/test"
           className="flex flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-2 text-base font-medium text-gray-600 transition-all hover:bg-gray-50 active:scale-95"
         >
           <svg
