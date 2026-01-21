@@ -76,19 +76,19 @@ export default function DoljanchiProgramPage() {
               </span>
               <h3 className="text-[17px] font-bold mb-3.5 text-[#1F2937]">돌잔치</h3>
               <div className="space-y-2.5 mb-3">
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">일시</span>
                   <span className="text-[#4B5563]">일요일 17시</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">장소</span>
                   <span className="text-[#4B5563]">한국의집 우금헌</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">모집대상</span>
                   <span className="text-[#4B5563]">배우자 없이 자녀를 양육하고 있는 한부모가족</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">모집인원</span>
                   <span className="text-[#4B5563]">15팀</span>
                 </div>
@@ -97,7 +97,7 @@ export default function DoljanchiProgramPage() {
                 행사일 기준 10~23개월 아이
               </span>
               <ul className="mt-4 space-y-0">
-                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -109,7 +109,7 @@ export default function DoljanchiProgramPage() {
                     의상, 헤어, 메이크업, 장소 및 본식 진행
                   </span>
                 </li>
-                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -121,7 +121,7 @@ export default function DoljanchiProgramPage() {
                     하객 최대 10명 식사 제공
                   </span>
                 </li>
-                <li className="py-3.5 flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -143,19 +143,19 @@ export default function DoljanchiProgramPage() {
               </span>
               <h3 className="text-[17px] font-bold mb-3.5 text-[#1F2937]">찾아가는 돌잔치</h3>
               <div className="space-y-2.5 mb-3">
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">일시</span>
                   <span className="text-[#4B5563]">2026. 4월 ~ 11월</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">장소</span>
                   <span className="text-[#4B5563]">전국 한부모가족 복지시설 및 영아원 등</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">모집대상</span>
                   <span className="text-[#4B5563]">전국 한부모가족 복지시설 및 영아원 등<br />(시설 내 돌잔치 진행공간 보유)</span>
                 </div>
-                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[13px]">
+                <div className="flex py-2.5 border-b border-[rgba(201,162,39,0.15)] text-[15px]">
                   <span className="w-[72px] flex-shrink-0 text-[#9CA3AF] font-medium">선정기관</span>
                   <span className="text-[#4B5563]">참여기관 15곳</span>
                 </div>
@@ -164,7 +164,7 @@ export default function DoljanchiProgramPage() {
                 시설 내 10~23개월 아이 2명 이상
               </span>
               <ul className="mt-4 space-y-0">
-                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -176,7 +176,7 @@ export default function DoljanchiProgramPage() {
                     의상, 헤어, 메이크업, 장소 및 본식 진행
                   </span>
                 </li>
-                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 border-b border-[rgba(201,162,39,0.15)] flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -188,7 +188,7 @@ export default function DoljanchiProgramPage() {
                     30만원 상당의 간단한 다과 지원
                   </span>
                 </li>
-                <li className="py-3.5 flex gap-3 text-sm text-[#4B5563]">
+                <li className="py-3.5 flex gap-3 text-[15px] text-[#4B5563]">
                   <span className="w-[22px] h-[22px] bg-[rgba(201,162,39,0.12)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-[#C9A227]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -211,7 +211,7 @@ export default function DoljanchiProgramPage() {
             <div className="grid grid-cols-3 gap-2.5 mb-8">
               {['한부모가족', '기초생활수급자', '차상위계층', '장애인', '국가유공자', '새터민'].map((item) => (
                 <div key={item} className="bg-white p-3.5 rounded-xl text-center border border-[rgba(201,162,39,0.15)] shadow-sm">
-                  <span className="text-xs text-[#4B5563] font-medium">{item}</span>
+                  <span className="text-sm text-[#4B5563] font-medium">{item}</span>
                 </div>
               ))}
             </div>
@@ -244,19 +244,19 @@ export default function DoljanchiProgramPage() {
             </div>
 
             <div className="mt-5">
-              <div className="text-[13px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)]">
+              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)]">
                 제출 서류
               </div>
               <ul className="space-y-2">
                 {['참여 신청서', '사회적배려대상자 유형별 증빙서류', '개인정보 동의서'].map((doc) => (
-                  <li key={doc} className="text-[13px] text-[#4B5563] flex gap-2 items-start">
+                  <li key={doc} className="text-[15px] text-[#4B5563] flex gap-2 items-start">
                     <span className="text-[#C9A227] font-bold">•</span>
                     {doc}
                   </li>
                 ))}
               </ul>
 
-              <div className="text-[13px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
+              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
                 돌잔치 증빙서류 (필수)
               </div>
               <div className="overflow-x-auto mt-3">
@@ -284,7 +284,7 @@ export default function DoljanchiProgramPage() {
                 </table>
               </div>
 
-              <div className="text-[13px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
+              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
                 찾아가는 돌잔치 증빙서류 (필수)
               </div>
               <div className="overflow-x-auto mt-3">
@@ -312,7 +312,7 @@ export default function DoljanchiProgramPage() {
                 </table>
               </div>
 
-              <div className="text-[13px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
+              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(201,162,39,0.15)] mt-6">
                 추가 제출 서류 (가산점)
               </div>
               <div className="overflow-x-auto mt-3">
@@ -372,7 +372,7 @@ export default function DoljanchiProgramPage() {
               돌잔치 안내
             </h2>
 
-            <div className="inline-flex items-center gap-2 px-4.5 py-3 bg-white rounded-full text-[13px] text-[#1F2937] shadow-sm mb-5 border border-[rgba(201,162,39,0.15)] font-medium">
+            <div className="inline-flex items-center gap-2 px-4.5 py-3 bg-white rounded-full text-[15px] text-[#1F2937] shadow-sm mb-5 border border-[rgba(201,162,39,0.15)] font-medium">
               <svg className="w-[18px] h-[18px] text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
@@ -451,7 +451,7 @@ export default function DoljanchiProgramPage() {
                   <div className="p-4.5">
                     <div className="text-xs text-[#C9A227] font-semibold mb-1.5">{schedule.time}</div>
                     <h3 className="text-base font-bold text-[#1F2937] mb-1.5">{schedule.title}</h3>
-                    <p className="text-[13px] text-[#4B5563] font-normal leading-relaxed">{schedule.desc}</p>
+                    <p className="text-[15px] text-[#4B5563] font-normal leading-relaxed">{schedule.desc}</p>
                   </div>
                 </div>
               ))}
@@ -489,7 +489,7 @@ export default function DoljanchiProgramPage() {
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">한국의집 우금헌</h3>
-                <p className="text-[13px] text-[#4B5563] font-normal mb-3.5">
+                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
                 </p>
                 <div className="flex gap-2 flex-wrap">
@@ -546,11 +546,11 @@ export default function DoljanchiProgramPage() {
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">특제 다과</h3>
-                <p className="text-sm text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
                   돌잔치에 걸맞게 정성껏 준비한<br />
                   한국의집 특제 다과가 제공됩니다.
                 </p>
-                <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[13px] text-[#4B5563]">
+                <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
                   <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
@@ -571,7 +571,7 @@ export default function DoljanchiProgramPage() {
                 </svg>
                 찾아가는 돌잔치
               </div>
-              <p className="text-sm text-[#4B5563] font-normal">30만원 상당의 간단한 다과가 지원됩니다.</p>
+              <p className="text-[15px] text-[#4B5563] font-normal">30만원 상당의 간단한 다과가 지원됩니다.</p>
             </div>
           </div>
         )}
@@ -579,7 +579,7 @@ export default function DoljanchiProgramPage() {
 
       {/* CTA Section */}
       <section className="px-5 py-8 pb-10 text-center bg-white border-t border-[rgba(201,162,39,0.15)]">
-        <p className="text-sm text-[#4B5563] mb-5 font-normal leading-relaxed">
+        <p className="text-[15px] text-[#4B5563] mb-5 font-normal leading-relaxed">
           한국의집에서<br />
           아이의 첫 번째 생일을 축하하세요
         </p>

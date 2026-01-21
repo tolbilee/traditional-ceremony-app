@@ -84,7 +84,7 @@ export default function WeddingProgramPage() {
                 </svg>
                 일시
               </div>
-              <p className="text-[15px] text-[#4B5563] font-normal leading-relaxed">매주 일요일 12시 / 15시</p>
+              <p className="text-base text-[#4B5563] font-normal leading-relaxed">매주 일요일 12시 / 15시</p>
             </div>
 
             <div className="bg-white rounded-2xl p-5 mb-3 shadow-sm border border-[rgba(26,86,219,0.12)]">
@@ -95,7 +95,7 @@ export default function WeddingProgramPage() {
                 </svg>
                 모집 대상
               </div>
-              <p className="text-[15px] text-[#4B5563] font-normal leading-relaxed">
+              <p className="text-base text-[#4B5563] font-normal leading-relaxed">
                 부부 중 1명이 사회적배려대상자인<br />예비 또는 결혼식 미진행 부부
               </p>
             </div>
@@ -109,7 +109,7 @@ export default function WeddingProgramPage() {
                 지원 내용
               </div>
               <ul className="space-y-0">
-                <li className="py-3.5 border-b border-[rgba(26,86,219,0.12)] flex gap-3 text-[15px] text-[#4B5563] leading-relaxed">
+                <li className="py-3.5 border-b border-[rgba(26,86,219,0.12)] flex gap-3 text-base text-[#4B5563] leading-relaxed">
                   <span className="w-6 h-6 bg-[rgba(26,86,219,0.1)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3.5 h-3.5 text-[#1A56DB]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -121,7 +121,7 @@ export default function WeddingProgramPage() {
                     의상, 헤어, 메이크업, 장소 및 본식 진행
                   </span>
                 </li>
-                <li className="py-3.5 border-b border-[rgba(26,86,219,0.12)] flex gap-3 text-[15px] text-[#4B5563] leading-relaxed">
+                <li className="py-3.5 border-b border-[rgba(26,86,219,0.12)] flex gap-3 text-base text-[#4B5563] leading-relaxed">
                   <span className="w-6 h-6 bg-[rgba(26,86,219,0.1)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3.5 h-3.5 text-[#1A56DB]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -133,7 +133,7 @@ export default function WeddingProgramPage() {
                     하객 최대 50명 식사 제공 (혼주 포함)
                   </span>
                 </li>
-                <li className="py-3.5 flex gap-3 text-[15px] text-[#4B5563] leading-relaxed">
+                <li className="py-3.5 flex gap-3 text-base text-[#4B5563] leading-relaxed">
                   <span className="w-6 h-6 bg-[rgba(26,86,219,0.1)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3.5 h-3.5 text-[#1A56DB]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -156,7 +156,7 @@ export default function WeddingProgramPage() {
             <div className="grid grid-cols-3 gap-2.5 mb-8">
               {['기초생활수급자', '차상위계층', '장애인', '다문화가정', '국가유공자', '새터민'].map((item) => (
                 <div key={item} className="bg-white p-4 rounded-xl text-center border border-[rgba(26,86,219,0.12)] shadow-sm">
-                  <span className="text-sm text-[#4B5563] font-medium">{item}</span>
+                  <span className="text-base text-[#4B5563] font-medium">{item}</span>
                 </div>
               ))}
             </div>
@@ -189,19 +189,19 @@ export default function WeddingProgramPage() {
             </div>
 
             <div className="mt-5">
-              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)]">
+              <div className="text-base font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)]">
                 제출 서류
               </div>
               <ul className="space-y-2.5">
                 {['참여 신청서', '사회적배려대상자 유형별 증빙서류', '개인정보 동의서', '혼인사실 증빙서류'].map((doc) => (
-                  <li key={doc} className="text-[15px] text-[#4B5563] flex gap-2 items-start">
+                  <li key={doc} className="text-base text-[#4B5563] flex gap-2 items-start">
                     <span className="text-[#1A56DB] font-bold">•</span>
                     {doc}
                   </li>
                 ))}
               </ul>
 
-              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)] mt-6">
+              <div className="text-base font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)] mt-6">
                 사회적 배려 대상자 유형별 증빙서류
               </div>
               <div className="overflow-x-auto mt-3">
@@ -238,7 +238,7 @@ export default function WeddingProgramPage() {
                 </table>
               </div>
 
-              <div className="text-[15px] font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)] mt-6">
+              <div className="text-base font-semibold text-[#1F2937] mb-2.5 pb-2 border-b border-[rgba(26,86,219,0.12)] mt-6">
                 혼인사실 증빙서류
               </div>
               <div className="overflow-x-auto mt-3">
@@ -279,10 +279,10 @@ export default function WeddingProgramPage() {
                   </svg>
                   가산점 안내
                 </div>
-                <p className="text-[15px] text-[#1F2937] mb-1">
+                <p className="text-base text-[#1F2937] mb-1">
                   사회적배려대상자 유형 <strong className="text-[#EF4444] font-semibold">2개 이상</strong> 해당 시 가산점 부여
                 </p>
-                <p className="text-sm text-[#4B5563] font-normal">유형 1개당 가산점 5점</p>
+                <p className="text-[15px] text-[#4B5563] font-normal">유형 1개당 가산점 5점</p>
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@ export default function WeddingProgramPage() {
               전통혼례 안내
             </h2>
 
-            <p className="text-sm text-[#4B5563] font-light mb-6">
+            <p className="text-[15px] text-[#4B5563] font-light mb-6">
               전통혼례의 12단계 중 핵심 의례인<br />
               <strong className="text-[#1F2937]">전안례, 교배례, 합근례</strong>를 진행합니다.
             </p>
@@ -341,7 +341,7 @@ export default function WeddingProgramPage() {
               진행 순서
             </h2>
 
-            <div className="inline-flex items-center gap-2 px-5 py-3.5 bg-white rounded-full text-[15px] text-[#1F2937] shadow-sm mb-5 border border-[rgba(26,86,219,0.12)] font-medium">
+            <div className="inline-flex items-center gap-2 px-5 py-3.5 bg-white rounded-full text-base text-[#1F2937] shadow-sm mb-5 border border-[rgba(26,86,219,0.12)] font-medium">
               <svg className="w-5 h-5 text-[#1A56DB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
@@ -420,7 +420,7 @@ export default function WeddingProgramPage() {
                   <div className="p-5">
                     <div className="text-sm text-[#1A56DB] font-semibold mb-1.5">{schedule.time}</div>
                     <h3 className="text-lg font-bold text-[#1F2937] mb-2">{schedule.title}</h3>
-                    <p className="text-[15px] text-[#4B5563] font-normal leading-relaxed">{schedule.desc}</p>
+                    <p className="text-base text-[#4B5563] font-normal leading-relaxed">{schedule.desc}</p>
                   </div>
                 </div>
               ))}
@@ -458,7 +458,7 @@ export default function WeddingProgramPage() {
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-bold mb-1.5 text-[#1F2937]">한국의집</h3>
-                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
+                <p className="text-base text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
                 </p>
                 <div className="flex gap-2 flex-wrap">
@@ -483,7 +483,7 @@ export default function WeddingProgramPage() {
             </div>
 
             <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(26,86,219,0.12)]">
-              <p className="text-sm text-[#4B5563] font-light leading-relaxed">
+              <p className="text-[15px] text-[#4B5563] font-light leading-relaxed">
                 전통을 나누는 고품격 복합문화공간 한국의집에서 도심 속 아름다운 한옥의 정취를 간직한 채 인생의 소중한 순간을 남겨보세요.
               </p>
             </div>
@@ -534,10 +534,10 @@ export default function WeddingProgramPage() {
                 <p className="text-base text-[#1A56DB] font-medium mb-3.5 italic">
                   "백년가약의 기쁨을 담은 따스한 한 그릇"
                 </p>
-                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                <p className="text-base text-[#4B5563] font-normal mb-3.5 leading-relaxed">
                   일생의 가장 찬란한 잔칫날, 한국의집이 엄선한 최상급 갈비와 오랜 시간 정성으로 우려낸 진한 육수가 만나 깊은 풍미를 완성했습니다. 귀한 발걸음 해주신 분들을 위해 혼례의 예를 다해 준비한 한국의집 특제 갈비탕을 대접합니다.
                 </p>
-                <div className="flex items-center gap-2.5 px-4 py-3.5 bg-[rgba(26,86,219,0.06)] rounded-xl text-[15px] text-[#4B5563]">
+                <div className="flex items-center gap-2.5 px-4 py-3.5 bg-[rgba(26,86,219,0.06)] rounded-xl text-base text-[#4B5563]">
                   <svg className="w-[18px] h-[18px] text-[#1A56DB] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
