@@ -55,9 +55,9 @@ export default function DateSelectionStep({
     // 돌잔치인 경우
     if (formData.type === 'doljanchi') {
       if (doljanchiSubType === 'doljanchi') {
-        // 돌잔치는 월요일만 선택 가능
-        if (dayOfWeek !== 1) {
-          alert('돌잔치는 월요일만 선택 가능합니다.');
+        // 돌잔치는 일요일만 선택 가능
+        if (dayOfWeek !== 0) {
+          alert('돌잔치는 일요일만 선택 가능합니다.');
           return;
         }
       } else {
@@ -65,9 +65,9 @@ export default function DateSelectionStep({
         // 별도 체크 없음
       }
     } else {
-      // 전통혼례는 일요일과 월요일만 선택 가능
-      if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-        alert('일요일과 월요일만 선택 가능합니다.');
+      // 전통혼례는 일요일만 선택 가능
+      if (dayOfWeek !== 0) {
+        alert('일요일만 선택 가능합니다.');
         return;
       }
     }
