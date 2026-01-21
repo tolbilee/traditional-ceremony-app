@@ -1,81 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-
-declare global {
-  interface Window {
-    kakao: any;
-  }
-}
 
 export default function WeddingProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'ceremony' | 'venue' | 'meal'>('overview');
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-
-  // 카카오 지도 API 로드
-  useEffect(() => {
-    if (activeTab !== 'venue' || !mapContainerRef.current) return;
-
-    const loadKakaoMap = () => {
-      if (window.kakao && window.kakao.maps) {
-        initMap();
-        return;
-      }
-
-      // 카카오 지도 API 스크립트 로드
-      const script = document.createElement('script');
-      const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || 'b11a4a12178e39f51ebb2e79a716df21';
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`;
-      script.async = true;
-      script.onload = () => {
-        window.kakao.maps.load(() => {
-          setIsMapLoaded(true);
-          initMap();
-        });
-      };
-      document.head.appendChild(script);
-    };
-
-    const initMap = () => {
-      if (!mapContainerRef.current || !window.kakao?.maps) return;
-
-      // 주소를 좌표로 변환
-      const geocoder = new window.kakao.maps.services.Geocoder();
-      const address = '서울특별시 중구 퇴계로36길 10';
-
-      geocoder.addressSearch(address, (result: any, status: any) => {
-        if (status === window.kakao.maps.services.Status.OK) {
-          const coords = new window.kakao.maps.LatLng(result[0].y, result[0].x);
-
-          // 지도 생성
-          const mapOption = {
-            center: coords,
-            level: 3,
-          };
-
-          const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-          mapRef.current = map;
-
-          // 마커 생성
-          const marker = new window.kakao.maps.Marker({
-            position: coords,
-          });
-          marker.setMap(map);
-
-          // 인포윈도우 생성
-          const infowindow = new window.kakao.maps.InfoWindow({
-            content: `<div style="padding:10px;font-size:12px;">한국의집<br/>${address}</div>`,
-          });
-          infowindow.open(map, marker);
-        }
-      });
-    };
-
-    loadKakaoMap();
-  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
@@ -542,9 +471,15 @@ export default function WeddingProgramPage() {
               </div>
             </div>
 
-            {/* 카카오 지도 */}
+            {/* 다음 지도 */}
             <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white">
-              <div ref={mapContainerRef} className="w-full h-64"></div>
+              <iframe
+                src="/daum-map.html"
+                className="w-full border-0"
+                style={{ minHeight: '360px', height: '360px' }}
+                title="한국의집 위치 지도"
+                loading="lazy"
+              />
             </div>
 
             <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(26,86,219,0.12)]">
@@ -595,10 +530,12 @@ export default function WeddingProgramPage() {
                 />
               </div>
               <div className="p-5">
-                <h3 className="text-xl font-bold mb-1.5 text-[#1F2937]">특제 갈비탕</h3>
+                <h3 className="text-xl font-bold mb-2 text-[#1F2937]">특제 갈비탕</h3>
+                <p className="text-base text-[#1A56DB] font-medium mb-3.5 italic">
+                  "백년가약의 기쁨을 담은 따스한 한 그릇"
+                </p>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
-                  전통혼례에 걸맞게 정성껏 준비한<br />
-                  한국의집 특제 갈비탕이 제공됩니다.
+                  일생의 가장 찬란한 잔칫날, 한국의집이 엄선한 최상급 갈비와 오랜 시간 정성으로 우려낸 진한 육수가 만나 깊은 풍미를 완성했습니다. 귀한 발걸음 해주신 분들을 위해 혼례의 예를 다해 준비한 한국의집 특제 갈비탕을 대접합니다.
                 </p>
                 <div className="flex items-center gap-2.5 px-4 py-3.5 bg-[rgba(26,86,219,0.06)] rounded-xl text-[15px] text-[#4B5563]">
                   <svg className="w-[18px] h-[18px] text-[#1A56DB] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -1,13 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 type TabType = 'wedding' | 'doljanchi';
 
+const STORAGE_KEY = 'mainScreen_activeTab';
+
 export default function MainScreen() {
+  // Hydration 오류 방지: 초기값은 항상 'wedding'으로 고정
   const [activeTab, setActiveTab] = useState<TabType>('wedding');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 클라이언트에서만 localStorage에서 저장된 탭 상태를 읽어옴
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'wedding' || saved === 'doljanchi') {
+        setActiveTab(saved as TabType);
+      }
+    }
+  }, []);
+
+  // activeTab이 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, activeTab);
+    }
+  }, [activeTab, isMounted]);
 
   const colors = {
     wedding: '#2E5BB6',
