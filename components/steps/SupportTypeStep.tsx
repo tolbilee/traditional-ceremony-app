@@ -78,9 +78,10 @@ export default function SupportTypeStep({
     // 기존 supportType이 있으면 배열로 변환
     if (formData.supportType) {
       if (ceremonyType === 'doljanchi') {
-        // 돌잔치: doljanchi는 한부모가족으로 selectedTypes에 포함
+        // 돌잔치: doljanchi는 한부모가족이지만 기본 선택하지 않음
         if (formData.supportType === 'doljanchi' && doljanchiSubType === 'doljanchi') {
-          return ['doljanchi']; // 한부모가족을 기본 선택으로 포함
+          // 편집 모드에서 이미 선택된 경우에만 포함
+          return ['doljanchi'];
         }
         // doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
         if (formData.supportType === 'doljanchi_welfare_facility' || formData.supportType === 'doljanchi_orphanage') {
@@ -93,11 +94,7 @@ export default function SupportTypeStep({
       }
     }
     
-    // 돌잔치인 경우 한부모가족을 기본 선택으로 포함
-    if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi') {
-      return ['doljanchi'];
-    }
-    
+    // 돌잔치인 경우에도 기본 선택하지 않음 (신청자가 직접 선택해야 함)
     return [];
   });
 
