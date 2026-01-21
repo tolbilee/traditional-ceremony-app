@@ -63,11 +63,12 @@ export default function WeddingProgramPage() {
             <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <iframe
-                  className="absolute top-0 left-0 w-full h-full"
-                  src="https://www.youtube.com/embed/6LeMb6RjH-Y"
+                  className="absolute top-0 left-0 w-full h-full border-0"
+                  src="https://www.youtube.com/embed/6LeMb6RjH-Y?rel=0&modestbranding=1&iv_load_policy=3&fs=1&playsinline=1&cc_load_policy=0&disablekb=0&enablejsapi=0"
                   title="전통혼례 소개 영상"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
+                  loading="lazy"
                 />
               </div>
             </div>

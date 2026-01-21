@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
               "connect-src 'self' https:",
-              "frame-src 'self' https://t1.daumcdn.net https://postcode.map.daum.net",
+              "frame-src 'self' https://t1.daumcdn.net https://postcode.map.daum.net https://www.youtube.com https://youtube.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
