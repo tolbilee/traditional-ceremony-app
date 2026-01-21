@@ -468,8 +468,24 @@ export default function DoljanchiProgramPage() {
             </h2>
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
-              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex items-center justify-center relative">
-                <span className="text-lg font-normal text-[#C9A227] tracking-[4px] opacity-70">한국의집 우금헌</span>
+              <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <img
+                  src="/images/doljanchi/venue.jpg"
+                  alt="한국의집 우금헌"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('span');
+                      placeholder.className = 'text-lg font-normal text-[#C9A227] tracking-[4px] opacity-70';
+                      placeholder.textContent = '한국의집 우금헌';
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">한국의집 우금헌</h3>
@@ -486,7 +502,18 @@ export default function DoljanchiProgramPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 mt-5 shadow-sm border border-[rgba(201,162,39,0.15)]">
+            {/* 다음 지도 */}
+            <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white">
+              <iframe
+                src="/daum-map.html"
+                className="w-full border-0"
+                style={{ minHeight: '360px', height: '360px' }}
+                title="한국의집 우금헌 위치 지도"
+                loading="lazy"
+              />
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(201,162,39,0.15)]">
               <p className="text-sm text-[#4B5563] font-normal leading-relaxed">
                 한국의집 우금헌에서 아이의 첫 번째 생일을 특별하게 기념하세요. 전통적인 분위기 속에서 소중한 추억을 남길 수 있습니다.
               </p>
