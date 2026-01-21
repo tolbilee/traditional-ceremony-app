@@ -55,46 +55,30 @@ export default function SupportTypeStep({
   // 복수 선택을 위한 상태 (전통혼례와 돌잔치 모두 복수 선택 가능)
   const [selectedTypes, setSelectedTypes] = useState<SupportType[]>(() => {
     // applicationData에서 복수 선택된 지원유형 확인 (편집 모드)
-    if (formData.applicationData && 'supportType' in formData.applicationData) {
+    // 편집 모드인지 확인: applicationData에 실제 데이터가 있는지 확인 (빈 값이 아닌 경우)
+    const isEditMode = formData.applicationData && (
+      ('parent' in formData.applicationData && formData.applicationData.parent && 
+       (formData.applicationData.parent as any)?.name) ||
+      ('groom' in formData.applicationData && formData.applicationData.groom && 
+       (formData.applicationData.groom as any)?.name) ||
+      ('facility' in formData.applicationData && formData.applicationData.facility && 
+       (formData.applicationData.facility as any)?.name)
+    );
+    
+    // 편집 모드인 경우에만 기존 선택값 불러오기
+    if (isEditMode && formData.applicationData && 'supportType' in formData.applicationData) {
       const supportTypeString = formData.applicationData.supportType as string;
       if (supportTypeString && supportTypeString.includes(',')) {
         // 쉼표로 구분된 복수 선택
         const types = supportTypeString.split(',').map(t => t.trim()) as SupportType[];
-        // 돌잔치인 경우 'doljanchi'가 포함되어 있으면 포함
-        if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi' && types.includes('doljanchi')) {
-          return types;
-        }
         return types;
       } else if (supportTypeString) {
-        const types = [supportTypeString as SupportType];
-        // 돌잔치인 경우 'doljanchi'가 포함되어 있으면 포함
-        if (ceremonyType === 'doljanchi' && doljanchiSubType === 'doljanchi' && types.includes('doljanchi')) {
-          return types;
-        }
-        return types;
+        return [supportTypeString as SupportType];
       }
     }
     
-    // 기존 supportType이 있으면 배열로 변환
-    if (formData.supportType) {
-      if (ceremonyType === 'doljanchi') {
-        // 돌잔치: doljanchi는 한부모가족이지만 기본 선택하지 않음
-        if (formData.supportType === 'doljanchi' && doljanchiSubType === 'doljanchi') {
-          // 편집 모드에서 이미 선택된 경우에만 포함
-          return ['doljanchi'];
-        }
-        // doljanchi_welfare_facility, doljanchi_orphanage는 메인 타입이므로 제외
-        if (formData.supportType === 'doljanchi_welfare_facility' || formData.supportType === 'doljanchi_orphanage') {
-          return [];
-        }
-        return [formData.supportType];
-      } else {
-        // 전통혼례: 단일 값이었던 것을 배열로 변환
-        return [formData.supportType];
-      }
-    }
-    
-    // 돌잔치인 경우에도 기본 선택하지 않음 (신청자가 직접 선택해야 함)
+    // 새로운 신청의 경우: 항상 빈 배열로 시작 (신청자가 직접 선택해야 함)
+    // formData.supportType이 설정되어 있어도 selectedTypes에는 포함하지 않음
     return [];
   });
 
@@ -245,8 +229,8 @@ export default function SupportTypeStep({
                   onClick={() => handleSelect('doljanchi')}
                   className={`w-full rounded-lg border-2 p-6 text-left transition-all ${
                     isSelected('doljanchi')
-                      ? 'border-green-600 bg-green-100'
-                      : 'border-green-500 bg-green-50 hover:border-green-600'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-green-300 bg-green-50 hover:border-green-400'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -259,7 +243,7 @@ export default function SupportTypeStep({
                       </div>
                     </div>
                     {isSelected('doljanchi') && (
-                      <span className="text-2xl text-green-600">✓</span>
+                      <span className="text-2xl">✓</span>
                     )}
                   </div>
                 </button>
