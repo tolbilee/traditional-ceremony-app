@@ -1,0 +1,48 @@
+다음 문제를 해결해주세요:
+
+## 문제
+Next.js 16.1.1 + Supabase 앱에서 file_metadata가 빈 객체 {}로 저장되고 있습니다.
+
+## 증상
+- 파일 업로드 시 file_metadata가 빈 객체로 저장됨
+- 관리자 모드에서 UUID 파일명만 표시됨 (예: 1769093575636_cbb686a9e854.jpg)
+- 예상: 한글 파일명 (예: 이석_기초수급증명서_20260122224222.jpg)
+
+## 데이터 플로우
+1. DocumentUploadStep.tsx: 파일 선택 → generateAutoFileName() → FormData에 fileName 추가 → /api/upload POST
+2. /api/upload: formData.get('fileName') 받음 → UUID로 Storage 저장 → { url, originalFileName } 반환
+3. DocumentUploadStep: newFileMetadata[result.url] = result.originalFileName → mergedFileMetadata 생성
+4. onFileUploaded(newFileUrls, mergedFileMetadata) 호출
+5. ApplicationForm.saveFileUrls: fileMetadata를 API에 전달
+6. POST /api/applications 또는 PUT /api/applications/[id]: file_metadata: fileMetadata 저장
+7. Supabase JSONB 컬럼에 저장되어야 함
+
+## 핵심 코드 위치
+
+### 1. DocumentUploadStep.tsx (라인 319-458)
+- handleFileSelect: newFileMetadata 수집 및 mergedFileMetadata 생성
+- onFileUploaded(newFileUrls, mergedFileMetadata) 호출
+
+### 2. app/api/upload/route.ts (라인 54-159)
+- formData.get('fileName') 받아서 originalFileName로 사용
+- { url, originalFileName } 반환
+
+### 3. ApplicationForm.tsx (라인 119-231)
+- saveFileUrls(fileUrls, fileMetadata) 함수
+- fileMetadata || formData.fileMetadata || {}를 API에 전달
+
+### 4. app/api/applications/route.ts (라인 44-85)
+- fileMetadata: Record<string, string> = formData.fileMetadata || {}
+- file_metadata: fileMetadata로 저장
+
+### 5. app/api/applications/[id]/route.ts (라인 85-104)
+- newFileMetadata 병합 후 file_metadata: newFileMetadata로 저장
+
+## 확인 사항
+- fileMetadata가 올바르게 전달되는가?
+- Supabase JSONB 저장 시 형식이 올바른가?
+- 비동기 타이밍 문제는 없는가?
+- 타입 변환 문제는 없는가?
+
+## 요청
+위 파일들을 검토하여 file_metadata가 저장되지 않는 원인을 찾아주세요.
