@@ -19,7 +19,7 @@ export default function DateSelectionStep({
   onNext,
   doljanchiSubType,
 }: DateSelectionStepProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1)); // 2026년 1월
+  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 3, 1)); // 2026년 4월
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showSecondScheduleAlert, setShowSecondScheduleAlert] = useState(false);
@@ -27,8 +27,8 @@ export default function DateSelectionStep({
   const [selectedPriority, setSelectedPriority] = useState<'1' | '2' | null>(null);
 
   const currentYear = 2026;
-  const minDate = new Date(currentYear, 0, 1); // 2026년 1월 1일
-  const maxDate = new Date(currentYear, 11, 31); // 2026년 12월 31일
+  const minDate = new Date(currentYear, 3, 1); // 2026년 4월 1일
+  const maxDate = new Date(currentYear, 10, 29); // 2026년 11월 29일
 
   // 달력의 모든 날짜 생성
   const monthStart = startOfMonth(currentMonth);
@@ -156,25 +156,25 @@ export default function DateSelectionStep({
 
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentMonth, 1);
-    // 2026년 1월 이상이면 이동 가능
-    if (prevMonth.getFullYear() >= currentYear && prevMonth.getMonth() >= 0) {
+    // 2026년 4월 이상이면 이동 가능 (month는 0-based이므로 3이 4월)
+    if (prevMonth.getFullYear() >= currentYear && prevMonth.getMonth() >= 3) {
       setCurrentMonth(prevMonth);
     }
   };
 
   const goToNextMonth = () => {
     const nextMonth = addMonths(currentMonth, 1);
-    // 2026년 12월 이하이면 이동 가능
-    if (nextMonth.getFullYear() <= currentYear && nextMonth.getMonth() <= 11) {
+    // 2026년 11월 이하이면 이동 가능 (month는 0-based이므로 10이 11월)
+    if (nextMonth.getFullYear() <= currentYear && nextMonth.getMonth() <= 10) {
       setCurrentMonth(nextMonth);
     }
   };
 
-  // 이전 달 버튼 비활성화 여부
-  const isPrevDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 0;
+  // 이전 달 버튼 비활성화 여부 (4월일 때 비활성화)
+  const isPrevDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 3;
   
-  // 다음 달 버튼 비활성화 여부
-  const isNextDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 11;
+  // 다음 달 버튼 비활성화 여부 (11월일 때 비활성화)
+  const isNextDisabled = currentMonth.getFullYear() === currentYear && currentMonth.getMonth() === 10;
 
   const isDateSelected = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
