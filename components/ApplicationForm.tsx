@@ -115,8 +115,8 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
   // fileUrls 변경 추적을 위한 ref
   const previousFileUrlsRef = useRef<string[]>([]);
 
-  // 파일 URL을 직접 받아서 저장하는 함수
-  const saveFileUrls = async (fileUrls: string[]) => {
+  // 파일 URL과 메타데이터를 직접 받아서 저장하는 함수
+  const saveFileUrls = async (fileUrls: string[], fileMetadata?: Record<string, string>) => {
     try {
       console.log('=== Saving file URLs directly ===');
       console.log('File URLs to save:', fileUrls);
@@ -142,7 +142,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
           body: JSON.stringify({
             ...formData,
             fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
-            fileMetadata: formData.fileMetadata || {}, // fileMetadata도 함께 전달
+            fileMetadata: fileMetadata || formData.fileMetadata || {}, // 전달받은 fileMetadata 우선 사용
           }, null, 0), // JSON.stringify에 공백 없이 인코딩
         });
         
@@ -198,7 +198,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
           applicationData: formData.applicationData || undefined,
           consentStatus: formData.consentStatus || false,
           fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
-          fileMetadata: formData.fileMetadata || {}, // fileMetadata도 함께 저장
+          fileMetadata: fileMetadata || formData.fileMetadata || {}, // 전달받은 fileMetadata 우선 사용
         };
         
         const response = await fetch('/api/applications', {

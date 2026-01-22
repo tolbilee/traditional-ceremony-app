@@ -307,28 +307,44 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   if (!url) return null;
                   
                   // file_metadata에서 원본 파일명 가져오기
-                  const fileMetadata = application.file_metadata || {};
+                  // JSONB 타입이므로 객체로 변환 필요할 수 있음
+                  let fileMetadata: Record<string, string> = {};
+                  if (application.file_metadata) {
+                    if (typeof application.file_metadata === 'string') {
+                      try {
+                        fileMetadata = JSON.parse(application.file_metadata);
+                      } catch (e) {
+                        console.error('Failed to parse file_metadata:', e);
+                        fileMetadata = {};
+                      }
+                    } else if (typeof application.file_metadata === 'object') {
+                      fileMetadata = application.file_metadata as Record<string, string>;
+                    }
+                  }
                   
                   // 디버깅: file_metadata 조회
                   console.log(`File ${index}: URL =`, url);
+                  console.log(`File ${index}: fileMetadata type =`, typeof application.file_metadata);
                   console.log(`File ${index}: fileMetadata[url] =`, fileMetadata[url]);
                   console.log(`File ${index}: All fileMetadata keys:`, Object.keys(fileMetadata));
                   
-                  // URL이 정확히 일치하는지 확인 (공백이나 인코딩 차이 가능)
+                  // URL이 정확히 일치하는지 확인
                   let originalFileName = fileMetadata[url];
                   
-                  // 정확히 일치하지 않으면 부분 매칭 시도
+                  // 정확히 일치하지 않으면 부분 매칭 시도 (파일명으로)
                   if (!originalFileName) {
-                    const urlKey = Object.keys(fileMetadata).find(key => 
-                      key.includes(url.split('/').pop() || '') || url.includes(key.split('/').pop() || '')
-                    );
+                    const fileNameFromUrl = url.split('/').pop() || '';
+                    const urlKey = Object.keys(fileMetadata).find(key => {
+                      const keyFileName = key.split('/').pop() || '';
+                      return keyFileName === fileNameFromUrl || key === url;
+                    });
                     if (urlKey) {
                       originalFileName = fileMetadata[urlKey];
                       console.log(`File ${index}: Found by partial match:`, urlKey, '->', originalFileName);
                     }
                   }
                   
-                  // 여전히 없으면 URL에서 파일명 추출
+                  // 여전히 없으면 URL에서 파일명 추출 (UUID 형식)
                   if (!originalFileName) {
                     originalFileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
                     console.warn(`File ${index}: originalFileName not found in file_metadata, using URL:`, originalFileName);

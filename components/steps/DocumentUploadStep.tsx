@@ -9,7 +9,7 @@ interface DocumentUploadStepProps {
   updateFormData: (updates: Partial<ApplicationFormData>) => void;
   onNext: () => void;
   onPrev: () => void;
-  onFileUploaded?: (fileUrls: string[]) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
+  onFileUploaded?: (fileUrls: string[], fileMetadata?: Record<string, string>) => Promise<void>; // 파일 업로드 후 저장을 위한 콜백
   doljanchiSubType?: 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting';
   isEditMode?: boolean; // 편집 모드 여부
 }
@@ -440,15 +440,16 @@ export default function DocumentUploadStep({
     // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)
     setUploadedFiles((prev) => [...prev, ...files]);
     
-    // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
-    // fileMetadata는 formData에 저장되어 있으므로 별도 전달 불필요
+    // 파일 업로드 후 즉시 저장 (fileUrls와 fileMetadata 함께 전달)
     if (uploadedUrls.length > 0 && onFileUploaded) {
       console.log('Triggering immediate save after file upload...');
+      console.log('Merged fileMetadata to save:', mergedFileMetadata);
       // 약간의 지연을 두어 formData 업데이트가 완료되도록 함
       setTimeout(async () => {
         try {
-          await onFileUploaded(newFileUrls);
-          console.log('File URLs saved successfully');
+          // fileMetadata도 함께 전달 (mergedFileMetadata 사용)
+          await onFileUploaded(newFileUrls, mergedFileMetadata);
+          console.log('File URLs and metadata saved successfully');
         } catch (error) {
           console.error('Failed to save file URLs:', error);
         }
