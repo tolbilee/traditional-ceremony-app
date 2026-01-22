@@ -30,10 +30,10 @@ export default function DoljanchiProgramPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 min-w-fit px-4 py-4 text-[14px] whitespace-nowrap relative transition-colors font-normal ${
+              className={`flex-1 min-w-fit px-4 py-4 text-[16px] whitespace-nowrap relative transition-colors font-normal ${
                 activeTab === tab.id
                   ? 'text-[#C9A227] font-semibold'
-                  : 'text-[#9CA3AF]'
+                  : 'text-[#6B7280]'
               }`}
             >
               {tab.label}
