@@ -322,6 +322,8 @@ export default function DocumentUploadStep({
     
     // 파일 선택 시 즉시 업로드
     const uploadedUrls: string[] = [];
+    const newFileMetadata: Record<string, string> = {}; // 업로드된 파일의 메타데이터를 직접 수집
+    
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
@@ -358,17 +360,25 @@ export default function DocumentUploadStep({
         if (response.ok) {
           const result = await response.json();
           uploadedUrls.push(result.url);
-          // 원본 파일명 저장 (file_metadata에 매핑)
+          
+          // 원본 파일명을 직접 수집 (state 업데이트와 별도로)
+          if (result.originalFileName && result.url) {
+            newFileMetadata[result.url] = result.originalFileName;
+            console.log('Added to newFileMetadata:', result.url, '->', result.originalFileName);
+          }
+          
+          // state도 업데이트 (UI 동기화용)
           if (result.originalFileName) {
             setFileMetadata(prev => {
               const updated = {
                 ...prev,
                 [result.url]: result.originalFileName
               };
-              console.log('Updated fileMetadata:', updated);
+              console.log('Updated fileMetadata state:', updated);
               return updated;
             });
           }
+          
           console.log('File uploaded:', result.url);
           console.log('Original file name:', result.originalFileName);
           console.log('Storage file name:', result.storageFileName);
@@ -423,14 +433,19 @@ export default function DocumentUploadStep({
     
     // formData 업데이트 (fileUrls와 fileMetadata 함께)
     // 기존 fileMetadata와 새로 업로드한 fileMetadata 병합
+    // newFileMetadata를 우선 사용 (업로드 응답에서 직접 수집한 데이터)
     const mergedFileMetadata = {
       ...(formData.fileMetadata as Record<string, string> || {}),
-      ...fileMetadata
+      ...newFileMetadata, // 업로드 응답에서 직접 수집한 메타데이터 우선 사용
+      ...fileMetadata // state의 메타데이터도 포함
     };
     
     console.log('=== Updating formData with fileMetadata ===');
-    console.log('New fileMetadata:', fileMetadata);
+    console.log('New fileMetadata from upload responses:', newFileMetadata);
+    console.log('fileMetadata state:', fileMetadata);
     console.log('Merged fileMetadata:', mergedFileMetadata);
+    console.log('Merged fileMetadata keys:', Object.keys(mergedFileMetadata));
+    console.log('Merged fileMetadata values:', Object.values(mergedFileMetadata));
     
     updateFormData({ 
       fileUrls: newFileUrls,
@@ -574,7 +589,10 @@ export default function DocumentUploadStep({
           <div className="space-y-2">
             <p className="font-semibold text-gray-700">기존 업로드된 파일 ({originalFileUrls.length}개)</p>
             {originalFileUrls.map((url, index) => {
-              const fileName = url.split('/').pop() || `파일 ${index + 1}`;
+              // file_metadata에서 원본 파일명 가져오기
+              const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
+              const originalFileName = currentFileMetadata[url] || url.split('/').pop() || `파일 ${index + 1}`;
+              
               return (
                 <div
                   key={`existing-${index}`}
@@ -586,8 +604,9 @@ export default function DocumentUploadStep({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 hover:underline"
+                      title={originalFileName}
                     >
-                      {fileName}
+                      {originalFileName}
                     </a>
                     <span className="text-xs text-gray-500">(기존 파일)</span>
                   </div>
@@ -596,14 +615,24 @@ export default function DocumentUploadStep({
                       // originalFileUrls에서 제거
                       const newOriginalUrls = originalFileUrls.filter((_, i) => i !== index);
                       setOriginalFileUrls(newOriginalUrls);
+                      
                       // formData의 fileUrls도 업데이트 (전체 목록에서 해당 URL 제거)
                       const currentUrls = formData.fileUrls || [];
                       const urlToRemove = originalFileUrls[index];
                       const updatedUrls = currentUrls.filter(u => u !== urlToRemove);
-                      updateFormData({ fileUrls: updatedUrls });
-                      // DB에도 저장
+                      
+                      // file_metadata에서도 해당 URL 제거
+                      const updatedFileMetadata = { ...currentFileMetadata };
+                      delete updatedFileMetadata[urlToRemove];
+                      
+                      updateFormData({ 
+                        fileUrls: updatedUrls,
+                        fileMetadata: updatedFileMetadata
+                      });
+                      
+                      // DB에도 저장 (fileMetadata도 함께 전달)
                       if (onFileUploaded) {
-                        onFileUploaded(updatedUrls);
+                        onFileUploaded(updatedUrls, updatedFileMetadata);
                       }
                     }}
                     className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"

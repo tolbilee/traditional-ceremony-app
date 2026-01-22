@@ -47,10 +47,40 @@ export async function PUT(
     // 한글 데이터 정규화는 helpers.ts에서 import한 함수 사용
 
     // 기존 file_metadata 가져오기
-    const existingFileMetadata = (existingApp as { file_metadata?: Record<string, string> } | null)?.file_metadata || {};
+    let existingFileMetadata: Record<string, string> = {};
+    if (existingApp?.file_metadata) {
+      if (typeof existingApp.file_metadata === 'string') {
+        try {
+          existingFileMetadata = JSON.parse(existingApp.file_metadata);
+        } catch (e) {
+          console.error('Failed to parse existing file_metadata:', e);
+          existingFileMetadata = {};
+        }
+      } else if (typeof existingApp.file_metadata === 'object') {
+        existingFileMetadata = existingApp.file_metadata as Record<string, string>;
+      }
+    }
+    
+    console.log('Existing file_metadata:', existingFileMetadata);
+    console.log('New file_metadata from formData:', formData.fileMetadata);
     
     // 새로운 file_metadata 병합 (formData에서 온 것과 기존 것)
-    const newFileMetadata = { ...existingFileMetadata, ...(formData.fileMetadata || {}) };
+    // 삭제된 파일의 메타데이터는 제거 (allFileUrls에 없는 URL은 제거)
+    const filteredExistingMetadata: Record<string, string> = {};
+    Object.keys(existingFileMetadata).forEach(key => {
+      if (allFileUrls.includes(key)) {
+        filteredExistingMetadata[key] = existingFileMetadata[key];
+      }
+    });
+    
+    // 새로운 메타데이터와 병합
+    const newFileMetadata = { 
+      ...filteredExistingMetadata, 
+      ...(formData.fileMetadata || {}) 
+    };
+    
+    console.log('Filtered existing file_metadata (only URLs in allFileUrls):', filteredExistingMetadata);
+    console.log('Final merged file_metadata:', newFileMetadata);
     
     // 데이터베이스 업데이트
     const updateData = {

@@ -177,8 +177,16 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
   const appData = application.application_data || {};
 
   // 디버깅: file_urls 및 file_metadata 확인
+  console.log('=== ApplicationDetail Debug ===');
   console.log('Application file_urls:', application.file_urls);
   console.log('Application file_metadata:', application.file_metadata);
+  console.log('Application file_metadata type:', typeof application.file_metadata);
+  console.log('Application file_metadata is null?:', application.file_metadata === null);
+  console.log('Application file_metadata is undefined?:', application.file_metadata === undefined);
+  if (application.file_metadata && typeof application.file_metadata === 'object') {
+    console.log('Application file_metadata keys:', Object.keys(application.file_metadata));
+    console.log('Application file_metadata entries:', Object.entries(application.file_metadata));
+  }
   console.log('Application data:', application);
 
   return (
