@@ -295,15 +295,14 @@ export default function DocumentUploadStep({
       console.warn('generateAutoFileName: documentName is empty, currentDocument:', currentDocument);
     }
     
-    // 3. 날짜시간 (YYYYMMDDHHmmss 형식)
+    // 3. 날짜시간 (YYYYMMDDHHmm 형식 - 초 제외)
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const dateTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
+    const dateTime = `${year}${month}${day}${hours}${minutes}`;
     parts.push(dateTime);
     
     // 여러 파일인 경우 번호 추가
