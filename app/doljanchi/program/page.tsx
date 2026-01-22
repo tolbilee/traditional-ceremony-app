@@ -519,6 +519,42 @@ export default function DoljanchiProgramPage() {
               </p>
             </div>
 
+            {/* 찾아가는 돌잔치 */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
+              <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <img
+                  src="/images/doljanchi/visiting-venue.jpg"
+                  alt="찾아가는 돌잔치"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('span');
+                      placeholder.className = 'text-lg font-normal text-[#C9A227] tracking-[4px] opacity-70';
+                      placeholder.textContent = '찾아가는 돌잔치';
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
+              </div>
+              <div className="p-5">
+                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">찾아가는 돌잔치</h3>
+                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
+                  복지시설 또는 영아원 등 신청자 지정 장소
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {['복지시설', '영아원', '신청자 지정 장소'].map((tag) => (
+                    <span key={tag} className="px-3 py-1.5 bg-[rgba(201,162,39,0.1)] rounded-2xl text-xs text-[#C9A227] font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             <div className="bg-[rgba(201,162,39,0.06)] rounded-xl p-4 mt-4 text-xs text-[#4B5563] leading-relaxed border border-[rgba(201,162,39,0.15)]">
               <strong className="text-[#EF4444] font-semibold">※</strong> 행사 일시는 신청하신 희망일자를 토대로 개별 상담을 진행하여 확정합니다.
             </div>
