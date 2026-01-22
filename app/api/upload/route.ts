@@ -148,6 +148,8 @@ export async function POST(request: NextRequest) {
     console.log('Public URL:', urlData.publicUrl);
     console.log('Storage file name:', storageFileName);
     console.log('Original file name:', originalFileName);
+    console.log('Custom fileName from formData:', customFileName);
+    console.log('File name from file object:', file.name);
 
     return NextResponse.json({ 
       url: urlData.publicUrl,

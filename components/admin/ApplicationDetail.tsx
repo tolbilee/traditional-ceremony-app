@@ -176,8 +176,9 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
   const appData = application.application_data || {};
 
-  // 디버깅: file_urls 확인
+  // 디버깅: file_urls 및 file_metadata 확인
   console.log('Application file_urls:', application.file_urls);
+  console.log('Application file_metadata:', application.file_metadata);
   console.log('Application data:', application);
 
   return (
@@ -307,7 +308,32 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   
                   // file_metadata에서 원본 파일명 가져오기
                   const fileMetadata = application.file_metadata || {};
-                  const originalFileName = fileMetadata[url] || url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
+                  
+                  // 디버깅: file_metadata 조회
+                  console.log(`File ${index}: URL =`, url);
+                  console.log(`File ${index}: fileMetadata[url] =`, fileMetadata[url]);
+                  console.log(`File ${index}: All fileMetadata keys:`, Object.keys(fileMetadata));
+                  
+                  // URL이 정확히 일치하는지 확인 (공백이나 인코딩 차이 가능)
+                  let originalFileName = fileMetadata[url];
+                  
+                  // 정확히 일치하지 않으면 부분 매칭 시도
+                  if (!originalFileName) {
+                    const urlKey = Object.keys(fileMetadata).find(key => 
+                      key.includes(url.split('/').pop() || '') || url.includes(key.split('/').pop() || '')
+                    );
+                    if (urlKey) {
+                      originalFileName = fileMetadata[urlKey];
+                      console.log(`File ${index}: Found by partial match:`, urlKey, '->', originalFileName);
+                    }
+                  }
+                  
+                  // 여전히 없으면 URL에서 파일명 추출
+                  if (!originalFileName) {
+                    originalFileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
+                    console.warn(`File ${index}: originalFileName not found in file_metadata, using URL:`, originalFileName);
+                  }
+                  
                   const storageFileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
                   
                   const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(originalFileName) || url.includes('image') || url.includes('photo');

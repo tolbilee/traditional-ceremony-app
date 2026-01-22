@@ -126,6 +126,7 @@ export interface Application {
   application_data: ApplicationData;
   consent_status: boolean; // 개인정보/민감정보 동의 여부
   file_urls: string[]; // 증빙서류 스토리지 주소 배열
+  file_metadata?: Record<string, string>; // 파일 메타데이터: { storageUrl: originalFileName }
   created_at?: string;
   updated_at?: string;
 }

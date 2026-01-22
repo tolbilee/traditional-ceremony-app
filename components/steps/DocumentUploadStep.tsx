@@ -279,6 +279,8 @@ export default function DocumentUploadStep({
       if (cleanedName) {
         parts.push(cleanedName);
       }
+    } else {
+      console.warn('generateAutoFileName: userName is empty');
     }
     
     // 2. 증빙서류명 (한글 유지, 특수문자만 제거)
@@ -289,6 +291,8 @@ export default function DocumentUploadStep({
       if (cleanedName) {
         parts.push(cleanedName);
       }
+    } else {
+      console.warn('generateAutoFileName: documentName is empty, currentDocument:', currentDocument);
     }
     
     // 3. 날짜시간 (YYYYMMDDHHmmss 형식)
@@ -307,7 +311,9 @@ export default function DocumentUploadStep({
       parts.push(String(index + 1));
     }
     
-    return parts.join('_');
+    const result = parts.join('_');
+    console.log('generateAutoFileName result:', result, 'parts:', parts);
+    return result;
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,9 +334,20 @@ export default function DocumentUploadStep({
         const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
         const originalFileName = `${customFileName}.${fileExt}`;
         
+        console.log('=== File Upload Debug ===');
+        console.log('File index:', i);
+        console.log('Generated customFileName:', customFileName);
+        console.log('File extension:', fileExt);
+        console.log('Final originalFileName:', originalFileName);
+        console.log('formData.userName:', formData.userName);
+        console.log('currentDocument:', currentDocument);
+        
         // 원본 파일명(한글 포함)을 API에 전달
         if (originalFileName && originalFileName.trim()) {
           formDataToUpload.append('fileName', originalFileName);
+          console.log('fileName appended to FormData:', originalFileName);
+        } else {
+          console.warn('originalFileName is empty, not appending to FormData');
         }
         
         const response = await fetch('/api/upload', {
@@ -343,13 +360,18 @@ export default function DocumentUploadStep({
           uploadedUrls.push(result.url);
           // 원본 파일명 저장 (file_metadata에 매핑)
           if (result.originalFileName) {
-            setFileMetadata(prev => ({
-              ...prev,
-              [result.url]: result.originalFileName
-            }));
+            setFileMetadata(prev => {
+              const updated = {
+                ...prev,
+                [result.url]: result.originalFileName
+              };
+              console.log('Updated fileMetadata:', updated);
+              return updated;
+            });
           }
           console.log('File uploaded:', result.url);
           console.log('Original file name:', result.originalFileName);
+          console.log('Storage file name:', result.storageFileName);
         } else {
           const errorData = await response.json().catch(() => ({}));
           console.error('Upload failed:', errorData);
@@ -400,9 +422,19 @@ export default function DocumentUploadStep({
     console.log('Total file URLs:', newFileUrls.length);
     
     // formData 업데이트 (fileUrls와 fileMetadata 함께)
+    // 기존 fileMetadata와 새로 업로드한 fileMetadata 병합
+    const mergedFileMetadata = {
+      ...(formData.fileMetadata as Record<string, string> || {}),
+      ...fileMetadata
+    };
+    
+    console.log('=== Updating formData with fileMetadata ===');
+    console.log('New fileMetadata:', fileMetadata);
+    console.log('Merged fileMetadata:', mergedFileMetadata);
+    
     updateFormData({ 
       fileUrls: newFileUrls,
-      fileMetadata: fileMetadata
+      fileMetadata: mergedFileMetadata
     });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)

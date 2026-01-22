@@ -41,7 +41,9 @@ export async function POST(request: NextRequest) {
 
     // 파일은 별도로 처리하지 않음 (이미 file_urls에 URL이 있을 수 있음)
     const fileUrls: string[] = formData.fileUrls || [];
+    const fileMetadata: Record<string, string> = formData.fileMetadata || {};
     console.log('File URLs:', fileUrls);
+    console.log('File Metadata:', fileMetadata);
 
     // 필수 필드 검증
     if (!formData.type) {
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
       application_data: normalizeApplicationData(formData.applicationData || {}),
       consent_status: formData.consentStatus || false,
       file_urls: fileUrls,
-      file_metadata: formData.fileMetadata || {},
+      file_metadata: fileMetadata,
     };
 
     console.log('Inserting data:', JSON.stringify(insertData, null, 2));
