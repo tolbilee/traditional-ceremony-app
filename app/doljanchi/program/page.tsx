@@ -535,15 +535,17 @@ export default function DoljanchiProgramPage() {
 
             {/* 떡케이크 */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
-              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3">
-                <svg className="w-12 h-12 text-[#C9A227] opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                  <line x1="6" y1="1" x2="6" y2="4" />
-                  <line x1="10" y1="1" x2="10" y2="4" />
-                  <line x1="14" y1="1" x2="14" y2="4" />
-                </svg>
-                <span className="text-sm text-[#C9A227] font-medium opacity-80">떡케이크</span>
+              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+                <img 
+                  src="/images/doljanchi/tteok-cake.jpg" 
+                  alt="떡케이크" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 배경 그라데이션만 표시
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <span className="absolute bottom-3 text-sm text-[#C9A227] font-medium opacity-90 bg-white/80 px-3 py-1 rounded-full">떡케이크</span>
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">떡케이크</h3>
@@ -565,15 +567,17 @@ export default function DoljanchiProgramPage() {
 
             {/* 답례떡 */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
-              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3">
-                <svg className="w-12 h-12 text-[#C9A227] opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                  <line x1="6" y1="1" x2="6" y2="4" />
-                  <line x1="10" y1="1" x2="10" y2="4" />
-                  <line x1="14" y1="1" x2="14" y2="4" />
-                </svg>
-                <span className="text-sm text-[#C9A227] font-medium opacity-80">답례떡</span>
+              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+                <img 
+                  src="/images/doljanchi/gift-tteok.jpg" 
+                  alt="답례떡" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 배경 그라데이션만 표시
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <span className="absolute bottom-3 text-sm text-[#C9A227] font-medium opacity-90 bg-white/80 px-3 py-1 rounded-full">답례떡</span>
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">답례떡</h3>
