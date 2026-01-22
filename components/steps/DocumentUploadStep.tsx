@@ -219,10 +219,28 @@ export default function DocumentUploadStep({
   const currentDocument = getCurrentDocument();
   const isLastDocument = currentDocumentIndex >= allRequiredDocuments.length - 1;
 
-  // 파일명에 사용할 수 없는 문자 제거 함수
+  // 파일명에 사용할 수 없는 문자 제거 및 URL-safe하게 변환 함수
   const sanitizeFileName = (fileName: string): string => {
-    // Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
-    return fileName.replace(/[<>:"/\\|?*]/g, '').trim();
+    // 1. Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
+    let sanitized = fileName.replace(/[<>:"/\\|?*]/g, '');
+    
+    // 2. 공백을 언더스코어로 변환 (Supabase Storage 키에서 공백은 문제가 될 수 있음)
+    sanitized = sanitized.replace(/\s+/g, '_');
+    
+    // 3. 연속된 언더스코어를 하나로 통합
+    sanitized = sanitized.replace(/_+/g, '_');
+    
+    // 4. 앞뒤 언더스코어 제거
+    sanitized = sanitized.replace(/^_+|_+$/g, '');
+    
+    // 5. 한글과 특수문자가 포함된 경우, URL-safe하게 인코딩
+    // 하지만 Supabase Storage는 한글을 직접 지원하지 않을 수 있으므로
+    // 한글을 제거하거나 영문/숫자/언더스코어/하이픈만 허용
+    // 한글 유니코드 범위: \uAC00-\uD7A3
+    // 영문, 숫자, 언더스코어, 하이픈, 점만 허용
+    sanitized = sanitized.replace(/[^\w\-.]/g, '');
+    
+    return sanitized.trim();
   };
 
   // 자동 파일명 생성 함수

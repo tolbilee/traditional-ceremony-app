@@ -57,17 +57,40 @@ export async function POST(request: NextRequest) {
     // 파일 확장자 추출
     const fileExt = originalFileName.split('.').pop()?.toLowerCase() || 'jpg';
     
+    // 파일명을 URL-safe하게 정리하는 함수
+    const sanitizeFileName = (name: string): string => {
+      // 1. Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
+      let sanitized = name.replace(/[<>:"/\\|?*]/g, '');
+      
+      // 2. 공백을 언더스코어로 변환
+      sanitized = sanitized.replace(/\s+/g, '_');
+      
+      // 3. 연속된 언더스코어를 하나로 통합
+      sanitized = sanitized.replace(/_+/g, '_');
+      
+      // 4. 앞뒤 언더스코어 제거
+      sanitized = sanitized.replace(/^_+|_+$/g, '');
+      
+      // 5. 영문, 숫자, 언더스코어, 하이픈, 점만 허용 (한글 및 특수문자 제거)
+      sanitized = sanitized.replace(/[^\w\-.]/g, '');
+      
+      return sanitized.trim();
+    };
+    
     // 파일명 생성: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
     // 중복 방지를 위해 타임스탬프를 앞에 추가
     let baseFileName: string;
     if (customFileName && customFileName.trim()) {
       // 사용자 지정 파일명 사용 (확장자 제거 후 다시 추가)
       const nameWithoutExt = customFileName.replace(/\.[^/.]+$/, '');
-      baseFileName = `${nameWithoutExt}.${fileExt}`;
+      const sanitizedName = sanitizeFileName(nameWithoutExt);
+      // 파일명이 비어있으면 타임스탬프만 사용
+      baseFileName = sanitizedName ? `${sanitizedName}.${fileExt}` : `file.${fileExt}`;
     } else {
       // 원본 파일명 사용 (확장자 제거 후 다시 추가)
       const nameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '');
-      baseFileName = `${nameWithoutExt}.${fileExt}`;
+      const sanitizedName = sanitizeFileName(nameWithoutExt);
+      baseFileName = sanitizedName ? `${sanitizedName}.${fileExt}` : `file.${fileExt}`;
     }
     
     // 중복 방지를 위해 타임스탬프 추가 (파일명 앞에)
