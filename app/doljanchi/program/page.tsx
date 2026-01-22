@@ -1,11 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function DoljanchiProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'program' | 'venue' | 'meal'>('overview');
   const [showMap, setShowMap] = useState(false);
+
+  // 스크롤 기반 섹션 애니메이션
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('scroll-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    // 모든 scroll-section 요소 관찰
+    const sections = document.querySelectorAll('.scroll-section');
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+    };
+  }, [activeTab]); // 탭이 변경될 때마다 다시 관찰
 
   return (
     <div className="min-h-screen bg-[#FFFDF7]">
@@ -51,13 +77,13 @@ export default function DoljanchiProgramPage() {
         {/* 1. 모집개요 */}
         {activeTab === 'overview' && (
           <div className="animate-fadeIn">
-            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
               모집 개요
             </h2>
 
             {/* 유튜브 영상 */}
-            <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white">
+            <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white scroll-section">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <iframe
                   className="absolute top-0 left-0 w-full h-full border-0"
@@ -71,7 +97,7 @@ export default function DoljanchiProgramPage() {
             </div>
 
             {/* TYPE 1: 돌잔치 */}
-            <div className="bg-white rounded-2xl p-5 mb-3 shadow-sm border border-[rgba(201,162,39,0.15)] border-l-4 border-l-[#C9A227]">
+            <div className="bg-white rounded-2xl p-5 mb-3 shadow-sm border border-[rgba(201,162,39,0.15)] border-l-4 border-l-[#C9A227] scroll-section">
               <span className="inline-block px-2.5 py-1 bg-[rgba(201,162,39,0.1)] rounded-[10px] text-[11px] font-semibold text-[#C9A227] mb-2.5">
                 TYPE 1
               </span>
@@ -138,7 +164,7 @@ export default function DoljanchiProgramPage() {
             </div>
 
             {/* TYPE 2: 찾아가는 돌잔치 */}
-            <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-[rgba(201,162,39,0.15)] border-l-4 border-l-[#E07B4C]">
+            <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-[rgba(201,162,39,0.15)] border-l-4 border-l-[#E07B4C] scroll-section">
               <span className="inline-block px-2.5 py-1 bg-[rgba(224,123,76,0.1)] rounded-[10px] text-[11px] font-semibold text-[#E07B4C] mb-2.5">
                 TYPE 2
               </span>
@@ -204,12 +230,12 @@ export default function DoljanchiProgramPage() {
               </ul>
             </div>
 
-            <h2 className="text-lg font-semibold mb-5 mt-8 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-lg font-semibold mb-5 mt-8 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
               사회적 배려 대상자
             </h2>
 
-            <div className="grid grid-cols-3 gap-2.5 mb-8">
+            <div className="grid grid-cols-3 gap-2.5 mb-8 scroll-section">
               {['한부모가족', '기초생활수급자', '차상위계층', '장애인', '국가유공자', '새터민'].map((item) => (
                 <div key={item} className="bg-white p-3.5 rounded-xl text-center border border-[rgba(201,162,39,0.15)] shadow-sm">
                   <span className="text-sm text-[#4B5563] font-medium">{item}</span>
@@ -217,12 +243,12 @@ export default function DoljanchiProgramPage() {
               ))}
             </div>
 
-            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
               모집 일정
             </h2>
 
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(201,162,39,0.15)]">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
               <div className="relative pl-6">
                 <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-[rgba(201,162,39,0.25)] rounded"></div>
                 <div className="relative pb-6">
@@ -373,7 +399,7 @@ export default function DoljanchiProgramPage() {
               돌잔치 안내
             </h2>
 
-            <div className="inline-flex items-center gap-2 px-4.5 py-3 bg-white rounded-full text-[15px] text-[#1F2937] shadow-sm mb-5 border border-[rgba(201,162,39,0.15)] font-medium">
+            <div className="inline-flex items-center gap-2 px-4.5 py-3 bg-white rounded-full text-[15px] text-[#1F2937] shadow-sm mb-5 border border-[rgba(201,162,39,0.15)] font-medium scroll-section">
               <svg className="w-[18px] h-[18px] text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
@@ -412,7 +438,7 @@ export default function DoljanchiProgramPage() {
                   image: '/images/doljanchi/schedule-04.jpg',
                 },
               ].map((schedule) => (
-                <div key={schedule.number} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
+                <div key={schedule.number} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
                   <div className="relative h-40 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex items-center justify-center overflow-hidden">
                     <div className="absolute top-3 left-3 w-8 h-8 bg-[#C9A227] text-white rounded-full flex items-center justify-center text-xs font-bold z-10">
                       {schedule.number}
@@ -468,7 +494,7 @@ export default function DoljanchiProgramPage() {
               장소 안내
             </h2>
 
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
               <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <img
                   src="/images/doljanchi/venue.jpg"
@@ -510,7 +536,7 @@ export default function DoljanchiProgramPage() {
             </div>
 
             {/* 지도보기 버튼 */}
-            <div className="mt-5 flex justify-center">
+            <div className="mt-5 flex justify-center scroll-section">
               <button
                 onClick={() => setShowMap(!showMap)}
                 className="px-6 py-3 bg-[#C9A227] text-white text-[15px] font-semibold rounded-xl transition-all hover:bg-[#B89220] active:scale-[0.98] shadow-lg flex items-center gap-2"
@@ -548,7 +574,7 @@ export default function DoljanchiProgramPage() {
             )}
 
             {/* 찾아가는 돌잔치 */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5 scroll-section">
               <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <img
                   src="/images/doljanchi/visiting-venue.jpg"
@@ -601,7 +627,7 @@ export default function DoljanchiProgramPage() {
             </h2>
 
             {/* 떡케이크 */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
               <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 relative overflow-hidden">
                 <img 
                   src="/images/doljanchi/tteok-cake.jpg" 
@@ -623,7 +649,7 @@ export default function DoljanchiProgramPage() {
             </div>
 
             {/* 답례떡 */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5 scroll-section">
               <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 relative overflow-hidden">
                 <img 
                   src="/images/doljanchi/gift-tteok.jpg" 
@@ -709,6 +735,16 @@ export default function DoljanchiProgramPage() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        /* 스크롤 기반 섹션 애니메이션 */
+        .scroll-section {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .scroll-section.scroll-visible {
+          opacity: 1;
+          transform: translateY(0);
         }
       `}</style>
     </div>

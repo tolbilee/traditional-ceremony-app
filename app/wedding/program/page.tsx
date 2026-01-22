@@ -78,6 +78,32 @@ export default function WeddingProgramPage() {
     }
   }, [activeTab]);
 
+  // 스크롤 기반 섹션 애니메이션
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('scroll-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    // 모든 scroll-section 요소 관찰
+    const sections = document.querySelectorAll('.scroll-section');
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+    };
+  }, [activeTab]); // 탭이 변경될 때마다 다시 관찰
+
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
       {/* Header */}
@@ -122,13 +148,13 @@ export default function WeddingProgramPage() {
         {/* 1. 모집개요 */}
         {activeTab === 'overview' && (
           <div className="animate-fadeIn">
-            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               모집 개요
             </h2>
 
             {/* 유튜브 영상 */}
-            <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white">
+            <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white scroll-section">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <iframe
                   className="absolute top-0 left-0 w-full h-full border-0"
@@ -141,12 +167,12 @@ export default function WeddingProgramPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#1A56DB] to-[#3B6FE8] rounded-2xl p-6 mb-5 text-white">
+            <div className="bg-gradient-to-br from-[#1A56DB] to-[#3B6FE8] rounded-2xl p-6 mb-5 text-white scroll-section">
               <h3 className="text-sm font-normal tracking-[1px] mb-1.5 opacity-80">모집 인원</h3>
               <p className="text-[26px] font-bold">60팀 선정</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 mb-3 shadow-sm border border-[rgba(26,86,219,0.12)]">
+            <div className="bg-white rounded-2xl p-5 mb-3 shadow-sm border border-[rgba(26,86,219,0.12)] scroll-section">
               <div className="text-base font-semibold text-[#1F2937] mb-2.5 flex items-center gap-2">
                 <svg className="w-5 h-5 text-[#1A56DB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -220,12 +246,12 @@ export default function WeddingProgramPage() {
               </ul>
             </div>
 
-            <h2 className="text-xl font-semibold mb-5 mt-8 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 mt-8 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               사회적 배려 대상자
             </h2>
 
-            <div className="grid grid-cols-3 gap-2.5 mb-8">
+            <div className="grid grid-cols-3 gap-2.5 mb-8 scroll-section">
               {['기초생활수급자', '차상위계층', '장애인', '다문화가정', '국가유공자', '새터민'].map((item) => (
                 <div key={item} className="bg-white p-4 rounded-xl text-center border border-[rgba(26,86,219,0.12)] shadow-sm">
                   <span className="text-base text-[#4B5563] font-medium">{item}</span>
@@ -233,12 +259,12 @@ export default function WeddingProgramPage() {
               ))}
             </div>
 
-            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               모집 일정
             </h2>
 
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(26,86,219,0.12)]">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(26,86,219,0.12)] scroll-section">
               <div className="relative pl-7">
                 <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-[rgba(26,86,219,0.2)] rounded"></div>
                 <div className="relative pb-6">
@@ -363,12 +389,12 @@ export default function WeddingProgramPage() {
         {/* 2. 전통혼례 안내 */}
         {activeTab === 'ceremony' && (
           <div className="animate-fadeIn">
-            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               전통혼례 안내
             </h2>
 
-            <p className="text-[15px] text-[#4B5563] font-light mb-6">
+            <p className="text-[15px] text-[#4B5563] font-light mb-6 scroll-section">
               전통혼례의 12단계 중 핵심 의례인<br />
               <strong className="text-[#1F2937]">전안례, 교배례, 합근례</strong>를 진행합니다.
             </p>
@@ -414,12 +440,12 @@ export default function WeddingProgramPage() {
             
             {/* 자동 스크롤은 useEffect에서 처리됨 */}
 
-            <h2 className="text-xl font-semibold mb-5 mt-10 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 mt-10 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               진행 순서
             </h2>
 
-            <div className="inline-flex items-center gap-2 px-5 py-3.5 bg-white rounded-full text-base text-[#1F2937] shadow-sm mb-5 border border-[rgba(26,86,219,0.12)] font-medium">
+            <div className="inline-flex items-center gap-2 px-5 py-3.5 bg-white rounded-full text-base text-[#1F2937] shadow-sm mb-5 border border-[rgba(26,86,219,0.12)] font-medium scroll-section">
               <svg className="w-5 h-5 text-[#1A56DB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
@@ -509,12 +535,12 @@ export default function WeddingProgramPage() {
         {/* 3. 장소안내 */}
         {activeTab === 'venue' && (
           <div className="animate-fadeIn">
-            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               장소 안내
             </h2>
 
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)]">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] scroll-section">
               <div className="relative h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex items-center justify-center overflow-hidden">
                 <img
                   src="/images/wedding/venue.jpg"
@@ -552,12 +578,12 @@ export default function WeddingProgramPage() {
               </div>
             </div>
 
-            <div className="bg-[rgba(26,86,219,0.04)] rounded-xl p-4 mt-5 text-sm text-[#4B5563] leading-relaxed border border-[rgba(26,86,219,0.12)]">
+            <div className="bg-[rgba(26,86,219,0.04)] rounded-xl p-4 mt-5 text-sm text-[#4B5563] leading-relaxed border border-[rgba(26,86,219,0.12)] scroll-section">
               <strong className="text-[#EF4444] font-semibold">※</strong> 행사 일시는 신청하신 희망일자를 토대로 개별 상담을 진행하여 확정합니다.
             </div>
 
             {/* 다음 지도 */}
-            <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white">
+            <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white scroll-section">
               <iframe
                 src="/daum-map.html"
                 className="w-full border-0"
@@ -572,12 +598,12 @@ export default function WeddingProgramPage() {
         {/* 4. 식사안내 */}
         {activeTab === 'meal' && (
           <div className="animate-fadeIn">
-            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            <h2 className="text-xl font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
               식사 안내
             </h2>
 
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)]">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] scroll-section">
               <div className="relative h-44 bg-gradient-to-br from-[#E8EEF8] to-[#D4E0F0] flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <img
                   src="/images/wedding/food.jpg"
@@ -668,6 +694,16 @@ export default function WeddingProgramPage() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        /* 스크롤 기반 섹션 애니메이션 */
+        .scroll-section {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .scroll-section.scroll-visible {
+          opacity: 1;
+          transform: translateY(0);
         }
       `}</style>
     </div>
