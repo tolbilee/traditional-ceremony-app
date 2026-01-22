@@ -50,8 +50,11 @@ export async function POST(request: NextRequest) {
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents';
     console.log('Using bucket:', bucketName);
 
-    // 원본 파일명 저장 (한글 포함 가능)
-    const originalFileName = file.name;
+    // 원본 파일명 처리: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
+    const customFileName = formData.get('fileName') as string | null;
+    const originalFileName = customFileName && customFileName.trim() 
+      ? customFileName  // 자동 생성된 파일명 사용 ([신청자이름]_[증빙서류명]_[날짜시간].확장자)
+      : file.name;     // 사용자가 선택한 원본 파일명 사용
     
     // 파일 확장자 추출
     const fileExt = originalFileName.split('.').pop()?.toLowerCase() || 'jpg';

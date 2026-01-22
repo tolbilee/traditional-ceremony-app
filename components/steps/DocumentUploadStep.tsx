@@ -323,12 +323,14 @@ export default function DocumentUploadStep({
         formDataToUpload.append('file', file);
         formDataToUpload.append('type', formData.type || 'wedding');
         
-        // 자동 생성 파일명 사용
+        // 자동 생성 파일명 사용 (한글 포함, 확장자 추가)
         const customFileName = generateAutoFileName(i, files.length);
-        const sanitizedFileName = sanitizeFileName(customFileName);
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const originalFileName = `${customFileName}.${fileExt}`;
         
-        if (sanitizedFileName && sanitizedFileName.trim()) {
-          formDataToUpload.append('fileName', sanitizedFileName);
+        // 원본 파일명(한글 포함)을 API에 전달
+        if (originalFileName && originalFileName.trim()) {
+          formDataToUpload.append('fileName', originalFileName);
         }
         
         const response = await fetch('/api/upload', {

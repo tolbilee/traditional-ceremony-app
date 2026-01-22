@@ -32,7 +32,7 @@ export default function CompletionStep({
         <div className="mb-4 text-6xl">✅</div>
         <h2 className="mb-4 text-2xl font-bold text-gray-800">신청해주셔서 감사합니다</h2>
         <p className="text-lg text-gray-700">
-          서류검토 후 담당자가 합격 여부 및 향후 진행 과정에 대해 연락을 드리오니 결과를 기다려 주시면 감사하겠습니다.
+          서류검토 후 담당자가 선정 여부 및 향후 진행 과정에 대해 연락을 드리오니 결과를 기다려 주시면 감사하겠습니다.
         </p>
       </div>
 
