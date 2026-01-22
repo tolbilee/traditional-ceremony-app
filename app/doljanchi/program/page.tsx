@@ -545,23 +545,13 @@ export default function DoljanchiProgramPage() {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
-                <span className="absolute bottom-3 text-sm text-[#C9A227] font-medium opacity-90 bg-white/80 px-3 py-1 rounded-full">떡케이크</span>
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">떡케이크</h3>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
-                  돌잔치에 걸맞게 정성껏 준비한<br />
-                  한국의집 떡케이크가 제공됩니다.
+                  귀한 아이의 첫 번째 생일상,<br />
+                  정성으로 빚고 귀여움으로 완성한 프리미엄 캐릭터 떡케이크를 준비했습니다.
                 </p>
-                <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
-                  <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  하객 최대 10명
-                </div>
               </div>
             </div>
 
@@ -577,13 +567,12 @@ export default function DoljanchiProgramPage() {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
-                <span className="absolute bottom-3 text-sm text-[#C9A227] font-medium opacity-90 bg-white/80 px-3 py-1 rounded-full">답례떡</span>
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">답례떡</h3>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
-                  돌잔치에 걸맞게 정성껏 준비한<br />
-                  한국의집 답례떡이 제공됩니다.
+                  아이의 미래에 보내주신 따뜻한 축복과 응원 잊지 않고,<br />
+                  그 감사한 마음을 담아 행복한 미소가 지어지는 앙증맞은 캐릭터 답례떡을 정성껏 준비했습니다.
                 </p>
                 <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
                   <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
