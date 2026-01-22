@@ -28,7 +28,15 @@ export async function PUT(
       .eq('id', applicationId)
       .single();
 
-    const existingFileUrls = (existingApp as { file_urls?: string[] } | null)?.file_urls || [];
+    // 타입 명시적으로 지정
+    type ApplicationRow = {
+      file_urls?: string[] | null;
+      file_metadata?: string | Record<string, string> | null;
+    };
+    
+    const typedExistingApp = existingApp as ApplicationRow | null;
+
+    const existingFileUrls = typedExistingApp?.file_urls || [];
     console.log('Existing file URLs:', existingFileUrls);
     console.log('Existing file URLs count:', existingFileUrls.length);
 
@@ -48,16 +56,16 @@ export async function PUT(
 
     // 기존 file_metadata 가져오기
     let existingFileMetadata: Record<string, string> = {};
-    if (existingApp?.file_metadata) {
-      if (typeof existingApp.file_metadata === 'string') {
+    if (typedExistingApp?.file_metadata) {
+      if (typeof typedExistingApp.file_metadata === 'string') {
         try {
-          existingFileMetadata = JSON.parse(existingApp.file_metadata);
+          existingFileMetadata = JSON.parse(typedExistingApp.file_metadata);
         } catch (e) {
           console.error('Failed to parse existing file_metadata:', e);
           existingFileMetadata = {};
         }
-      } else if (typeof existingApp.file_metadata === 'object') {
-        existingFileMetadata = existingApp.file_metadata as Record<string, string>;
+      } else if (typeof typedExistingApp.file_metadata === 'object' && typedExistingApp.file_metadata !== null) {
+        existingFileMetadata = typedExistingApp.file_metadata as Record<string, string>;
       }
     }
     
