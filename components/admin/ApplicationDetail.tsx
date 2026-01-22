@@ -304,8 +304,13 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {application.file_urls.map((url: string, index: number) => {
                   if (!url) return null;
-                  const fileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
-                  const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName) || url.includes('image') || url.includes('photo');
+                  
+                  // file_metadata에서 원본 파일명 가져오기
+                  const fileMetadata = application.file_metadata || {};
+                  const originalFileName = fileMetadata[url] || url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
+                  const storageFileName = url.split('/').pop() || url.split('\\').pop() || `증빙서류_${index + 1}`;
+                  
+                  const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(originalFileName) || url.includes('image') || url.includes('photo');
                   
                   // 해당 인덱스에 매핑된 증빙서류명 가져오기
                   const documentName = orderedDocumentNames[index] || `증빙서류 ${index + 1}`;
@@ -344,8 +349,8 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                           </div>
                         )}
                       </div>
-                      <p className="mb-3 truncate text-xs text-gray-500" title={fileName}>
-                        {fileName}
+                      <p className="mb-3 truncate text-xs text-gray-500" title={originalFileName}>
+                        {originalFileName}
                       </p>
                       <div className="flex gap-2">
                         <a
@@ -364,7 +369,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                               const blobUrl = window.URL.createObjectURL(blob);
                               const a = document.createElement('a');
                               a.href = blobUrl;
-                              a.download = fileName;
+                              a.download = originalFileName; // 원본 파일명 사용
                               document.body.appendChild(a);
                               a.click();
                               document.body.removeChild(a);

@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       application_data: normalizeApplicationData(formData.applicationData || {}),
       consent_status: formData.consentStatus || false,
       file_urls: fileUrls,
+      file_metadata: formData.fileMetadata || {},
     };
 
     console.log('Inserting data:', JSON.stringify(insertData, null, 2));

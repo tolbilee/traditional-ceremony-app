@@ -50,53 +50,18 @@ export async function POST(request: NextRequest) {
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents';
     console.log('Using bucket:', bucketName);
 
-    // 파일명 처리: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
-    const customFileName = formData.get('fileName') as string | null;
+    // 원본 파일명 저장 (한글 포함 가능)
     const originalFileName = file.name;
     
     // 파일 확장자 추출
     const fileExt = originalFileName.split('.').pop()?.toLowerCase() || 'jpg';
     
-    // 파일명을 URL-safe하게 정리하는 함수
-    // 한글은 유지하고 공백과 특수문자만 처리
-    const sanitizeFileName = (name: string): string => {
-      // 1. Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
-      let sanitized = name.replace(/[<>:"/\\|?*]/g, '');
-      
-      // 2. 공백을 언더스코어로 변환
-      sanitized = sanitized.replace(/\s+/g, '_');
-      
-      // 3. 연속된 언더스코어를 하나로 통합
-      sanitized = sanitized.replace(/_+/g, '_');
-      
-      // 4. 앞뒤 언더스코어 제거
-      sanitized = sanitized.replace(/^_+|_+$/g, '');
-      
-      // 5. 한글은 유지하고, 제어 문자와 일부 특수문자만 제거
-      // 한글, 영문, 숫자, 언더스코어, 하이픈, 점, 한자 등은 유지
-      sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, ''); // 제어 문자만 제거
-      
-      return sanitized.trim();
-    };
-    
-    // 파일명 생성: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
-    let baseFileName: string;
-    if (customFileName && customFileName.trim()) {
-      // 사용자 지정 파일명 사용 (확장자 제거 후 다시 추가)
-      const nameWithoutExt = customFileName.replace(/\.[^/.]+$/, '');
-      const sanitizedName = sanitizeFileName(nameWithoutExt);
-      // 파일명이 비어있으면 기본 파일명 사용
-      baseFileName = sanitizedName ? `${sanitizedName}.${fileExt}` : `file.${fileExt}`;
-    } else {
-      // 원본 파일명 사용 (확장자 제거 후 다시 추가)
-      const nameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '');
-      const sanitizedName = sanitizeFileName(nameWithoutExt);
-      baseFileName = sanitizedName ? `${sanitizedName}.${fileExt}` : `file.${fileExt}`;
-    }
-    
-    // 타임스탬프 없이 파일명 그대로 사용
-    const fileName = baseFileName;
-    const filePath = `${type}/${fileName}`;
+    // UUID 기반 파일명 생성 (Supabase Storage 호환을 위해 영문/숫자만 사용)
+    // 형식: timestamp_uuid.확장자
+    const timestamp = Date.now();
+    const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 12); // 짧은 UUID
+    const storageFileName = `${timestamp}_${uuid}.${fileExt}`;
+    const filePath = `${type}/${storageFileName}`;
 
     console.log('File path:', filePath);
 
@@ -178,11 +143,14 @@ export async function POST(request: NextRequest) {
 
     console.log('=== Upload Success ===');
     console.log('Public URL:', urlData.publicUrl);
+    console.log('Storage file name:', storageFileName);
+    console.log('Original file name:', originalFileName);
 
     return NextResponse.json({ 
       url: urlData.publicUrl,
       path: filePath,
-      fileName: fileName
+      storageFileName: storageFileName, // Storage에 저장된 파일명
+      originalFileName: originalFileName // 원본 파일명 (한글 포함 가능)
     }, { status: 200 });
   } catch (error) {
     console.error('=== Upload API Error ===');

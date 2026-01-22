@@ -21,10 +21,10 @@ export async function PUT(
     console.log('New file URLs from formData:', newFileUrls);
     console.log('New file URLs count:', newFileUrls.length);
 
-    // 기존 파일 URL 가져오기 (삭제된 파일을 제외하기 위해)
+    // 기존 파일 URL 및 메타데이터 가져오기 (삭제된 파일을 제외하기 위해)
     const { data: existingApp } = await supabase
       .from('applications')
-      .select('file_urls')
+      .select('file_urls, file_metadata')
       .eq('id', applicationId)
       .single();
 
@@ -46,6 +46,12 @@ export async function PUT(
 
     // 한글 데이터 정규화는 helpers.ts에서 import한 함수 사용
 
+    // 기존 file_metadata 가져오기
+    const existingFileMetadata = (existingApp as { file_metadata?: Record<string, string> } | null)?.file_metadata || {};
+    
+    // 새로운 file_metadata 병합 (formData에서 온 것과 기존 것)
+    const newFileMetadata = { ...existingFileMetadata, ...(formData.fileMetadata || {}) };
+    
     // 데이터베이스 업데이트
     const updateData = {
       type: formData.type,
@@ -57,6 +63,7 @@ export async function PUT(
       application_data: normalizeApplicationData(formData.applicationData),
       consent_status: formData.consentStatus,
       file_urls: allFileUrls,
+      file_metadata: newFileMetadata,
       updated_at: new Date().toISOString(),
     };
     

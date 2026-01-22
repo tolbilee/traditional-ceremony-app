@@ -68,6 +68,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         applicationData: originalApplication.application_data as ApplicationData,
         consentStatus: originalApplication.consent_status,
         fileUrls: fileUrls, // 기존 파일 URL 로드
+        fileMetadata: originalApplication.file_metadata || {}, // 기존 파일 메타데이터 로드
         files: [],
       };
     }
@@ -141,6 +142,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
           body: JSON.stringify({
             ...formData,
             fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
+            fileMetadata: formData.fileMetadata || {}, // fileMetadata도 함께 전달
           }, null, 0), // JSON.stringify에 공백 없이 인코딩
         });
         
@@ -196,6 +198,7 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
           applicationData: formData.applicationData || undefined,
           consentStatus: formData.consentStatus || false,
           fileUrls: fileUrls, // 직접 전달받은 fileUrls 사용
+          fileMetadata: formData.fileMetadata || {}, // fileMetadata도 함께 저장
         };
         
         const response = await fetch('/api/applications', {

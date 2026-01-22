@@ -141,6 +141,7 @@ export interface ApplicationFormData {
   consentStatus: boolean;
   files?: File[];
   fileUrls?: string[]; // 업로드된 파일 URL들
+  fileMetadata?: Record<string, string>; // 파일 메타데이터: { storageUrl: originalFileName }
 }
 
 // 증빙서류 타입 (지원 유형별로 다른 서류 필요)

@@ -28,6 +28,11 @@ export default function DocumentUploadStep({
   
   // 선택된 파일 목록 (업로드 전) - UI 조건문에서만 사용
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  // 파일 메타데이터: { storageUrl: originalFileName }
+  // 기존 fileMetadata를 초기값으로 사용
+  const [fileMetadata, setFileMetadata] = useState<Record<string, string>>(
+    (formData.fileMetadata as Record<string, string>) || {}
+  );
   
   // 기존에 DB에 저장된 파일 URL 목록 (수정 모드에서만 사용)
   // 초기 로드 시 formData.fileUrls를 originalFileUrls로 설정
@@ -218,23 +223,46 @@ export default function DocumentUploadStep({
   const isLastDocument = currentDocumentIndex >= allRequiredDocuments.length - 1;
 
   // 파일명에 사용할 수 없는 문자 제거 및 URL-safe하게 변환 함수
-  // 한글은 유지하고 공백과 특수문자만 처리
+  // Supabase Storage는 한글을 지원하지 않으므로 영문/숫자만 허용
   const sanitizeFileName = (fileName: string): string => {
     // 1. Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
     let sanitized = fileName.replace(/[<>:"/\\|?*]/g, '');
     
-    // 2. 공백을 언더스코어로 변환 (Supabase Storage 키에서 공백은 문제가 될 수 있음)
+    // 2. 공백을 언더스코어로 변환
     sanitized = sanitized.replace(/\s+/g, '_');
     
-    // 3. 연속된 언더스코어를 하나로 통합
+    // 3. 한글을 영문으로 변환 (간단한 매핑)
+    // 주요 증빙서류명 매핑
+    const documentNameMap: Record<string, string> = {
+      '가족관계증명서': 'FamilyRelation',
+      '기초수급증명서': 'BasicLivelihood',
+      '국가유공자증명서': 'NationalMerit',
+      '장애인증명서': 'Disability',
+      '한부모가족증명서': 'SingleParent',
+      '차상위계층증명서': 'NearPoverty',
+      '주민등록등본': 'ResidentRegister',
+      '주민등록초본': 'ResidentExtract',
+      '소득증명원': 'IncomeCertificate',
+      '사업자등록증명원': 'BusinessRegistration',
+    };
+    
+    // 증빙서류명 변환
+    for (const [korean, english] of Object.entries(documentNameMap)) {
+      sanitized = sanitized.replace(new RegExp(korean, 'g'), english);
+    }
+    
+    // 4. 한글 및 특수문자 제거, 영문/숫자/언더스코어/하이픈/점만 허용
+    // Supabase Storage는 한글을 지원하지 않으므로 영문/숫자만 사용
+    sanitized = sanitized.replace(/[^\w\-.]/g, '');
+    
+    // 5. 연속된 언더스코어를 하나로 통합
     sanitized = sanitized.replace(/_+/g, '_');
     
-    // 4. 앞뒤 언더스코어 제거
+    // 6. 앞뒤 언더스코어 제거
     sanitized = sanitized.replace(/^_+|_+$/g, '');
     
-    // 5. 한글은 유지하고, 제어 문자와 일부 특수문자만 제거
-    // 한글, 영문, 숫자, 언더스코어, 하이픈, 점, 한자 등은 유지
-    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, ''); // 제어 문자만 제거
+    // 7. 제어 문자 제거
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
     
     return sanitized.trim();
   };
@@ -311,7 +339,15 @@ export default function DocumentUploadStep({
         if (response.ok) {
           const result = await response.json();
           uploadedUrls.push(result.url);
+          // 원본 파일명 저장 (file_metadata에 매핑)
+          if (result.originalFileName) {
+            setFileMetadata(prev => ({
+              ...prev,
+              [result.url]: result.originalFileName
+            }));
+          }
           console.log('File uploaded:', result.url);
+          console.log('Original file name:', result.originalFileName);
         } else {
           const errorData = await response.json().catch(() => ({}));
           console.error('Upload failed:', errorData);
@@ -361,13 +397,17 @@ export default function DocumentUploadStep({
     console.log('Uploaded URLs for current step:', uploadedUrls);
     console.log('Total file URLs:', newFileUrls.length);
     
-    // formData 업데이트
-    updateFormData({ fileUrls: newFileUrls });
+    // formData 업데이트 (fileUrls와 fileMetadata 함께)
+    updateFormData({ 
+      fileUrls: newFileUrls,
+      fileMetadata: fileMetadata
+    });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)
     setUploadedFiles((prev) => [...prev, ...files]);
     
     // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
+    // fileMetadata는 formData에 저장되어 있으므로 별도 전달 불필요
     if (uploadedUrls.length > 0 && onFileUploaded) {
       console.log('Triggering immediate save after file upload...');
       // 약간의 지연을 두어 formData 업데이트가 완료되도록 함

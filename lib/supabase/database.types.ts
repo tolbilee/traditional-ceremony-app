@@ -24,6 +24,7 @@ export interface Database {
           application_data: Json;
           consent_status: boolean;
           file_urls: string[];
+          file_metadata: Json;
           created_at: string;
           updated_at: string;
         };
@@ -38,6 +39,7 @@ export interface Database {
           application_data: Json;
           consent_status: boolean;
           file_urls?: string[];
+          file_metadata?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -52,6 +54,7 @@ export interface Database {
           application_data?: Json;
           consent_status?: boolean;
           file_urls?: string[];
+          file_metadata?: Json;
           created_at?: string;
           updated_at?: string;
         };
