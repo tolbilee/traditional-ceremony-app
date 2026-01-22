@@ -13,7 +13,7 @@ export default function WeddingProgramPage() {
         <span className="inline-block text-[11px] tracking-[1px] text-white/70 mb-1.5 font-normal">
           2026년 사회적 배려 대상자
         </span>
-        <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1.5 text-white">
+        <h1 className="text-4xl font-semibold tracking-[-0.5px] mb-1.5 text-white">
           전통혼례
         </h1>
       </header>
@@ -461,6 +461,9 @@ export default function WeddingProgramPage() {
                 <p className="text-base text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
                 </p>
+                <p className="text-[15px] text-[#4B5563] font-light mb-3.5 leading-relaxed">
+                  전통을 나누는 고품격 복합문화공간 한국의집에서 도심 속 아름다운 한옥의 정취를 간직한 채 인생의 소중한 순간을 남겨보세요.
+                </p>
                 <div className="flex gap-2 flex-wrap">
                   {['도심 속 한옥', '전통 정원', '고품격 공간'].map((tag) => (
                     <span key={tag} className="px-3.5 py-2 bg-[rgba(26,86,219,0.08)] rounded-2xl text-sm text-[#1A56DB] font-medium">
@@ -469,6 +472,10 @@ export default function WeddingProgramPage() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="bg-[rgba(26,86,219,0.04)] rounded-xl p-4 mt-5 text-sm text-[#4B5563] leading-relaxed border border-[rgba(26,86,219,0.12)]">
+              <strong className="text-[#EF4444] font-semibold">※</strong> 행사 일시는 신청하신 희망일자를 토대로 개별 상담을 진행하여 확정합니다.
             </div>
 
             {/* 다음 지도 */}
@@ -480,16 +487,6 @@ export default function WeddingProgramPage() {
                 title="한국의집 위치 지도"
                 loading="lazy"
               />
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(26,86,219,0.12)]">
-              <p className="text-[15px] text-[#4B5563] font-light leading-relaxed">
-                전통을 나누는 고품격 복합문화공간 한국의집에서 도심 속 아름다운 한옥의 정취를 간직한 채 인생의 소중한 순간을 남겨보세요.
-              </p>
-            </div>
-
-            <div className="bg-[rgba(26,86,219,0.04)] rounded-xl p-4 mt-4 text-sm text-[#4B5563] leading-relaxed border border-[rgba(26,86,219,0.12)]">
-              <strong className="text-[#EF4444] font-semibold">※</strong> 행사 일시는 신청하신 희망일자를 토대로 개별 상담을 진행하여 확정합니다.
             </div>
           </div>
         )}

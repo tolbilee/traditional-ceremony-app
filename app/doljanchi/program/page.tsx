@@ -14,7 +14,7 @@ export default function DoljanchiProgramPage() {
         <span className="inline-block text-[11px] tracking-[1px] text-white/70 mb-1.5 font-normal">
           2026년 사회적 배려 대상자
         </span>
-        <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1.5 text-white">
+        <h1 className="text-4xl font-semibold tracking-[-0.5px] mb-1.5 text-white">
           돌잔치
         </h1>
       </header>
@@ -487,11 +487,17 @@ export default function DoljanchiProgramPage() {
                     }
                   }}
                 />
+                <span className="absolute top-4 left-4 text-white text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                  돌잔치
+                </span>
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">한국의집 우금헌</h3>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
+                </p>
+                <p className="text-sm text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                  한국의집 우금헌에서 아이의 첫 번째 생일을 특별하게 기념하세요. 전통적인 분위기 속에서 소중한 추억을 남길 수 있습니다.
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {['전통 한옥', '아늑한 공간', '돌잔치 전용'].map((tag) => (
@@ -541,12 +547,6 @@ export default function DoljanchiProgramPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(201,162,39,0.15)]">
-              <p className="text-sm text-[#4B5563] font-normal leading-relaxed">
-                한국의집 우금헌에서 아이의 첫 번째 생일을 특별하게 기념하세요. 전통적인 분위기 속에서 소중한 추억을 남길 수 있습니다.
-              </p>
-            </div>
-
             {/* 찾아가는 돌잔치 */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
               <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
@@ -567,11 +567,14 @@ export default function DoljanchiProgramPage() {
                     }
                   }}
                 />
+                <span className="absolute top-4 left-4 text-white text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                  찾아가는 돌잔치
+                </span>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">찾아가는 돌잔치</h3>
-                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
-                  복지시설 또는 영아원 등 신청자 지정 장소
+                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">복지시설 또는 영아원 등 신청자 지정 장소</h3>
+                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                  아이의 소중한 첫 번째 생일을 축하해주기 위해 아이가 있는 곳으로 돌잔치 운영팀이 직접 방문합니다.
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {['복지시설', '영아원', '신청자 지정 장소'].map((tag) => (
