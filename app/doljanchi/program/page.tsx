@@ -533,6 +533,7 @@ export default function DoljanchiProgramPage() {
               다과 안내
             </h2>
 
+            {/* 떡케이크 */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)]">
               <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3">
                 <svg className="w-12 h-12 text-[#C9A227] opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -542,13 +543,43 @@ export default function DoljanchiProgramPage() {
                   <line x1="10" y1="1" x2="10" y2="4" />
                   <line x1="14" y1="1" x2="14" y2="4" />
                 </svg>
-                <span className="text-sm text-[#C9A227] font-medium opacity-80">한국의집 특제 다과</span>
+                <span className="text-sm text-[#C9A227] font-medium opacity-80">떡케이크</span>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">특제 다과</h3>
+                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">떡케이크</h3>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
                   돌잔치에 걸맞게 정성껏 준비한<br />
-                  한국의집 특제 다과가 제공됩니다.
+                  한국의집 떡케이크가 제공됩니다.
+                </p>
+                <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
+                  <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  하객 최대 10명
+                </div>
+              </div>
+            </div>
+
+            {/* 답례떡 */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5">
+              <div className="h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3">
+                <svg className="w-12 h-12 text-[#C9A227] opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                  <line x1="6" y1="1" x2="6" y2="4" />
+                  <line x1="10" y1="1" x2="10" y2="4" />
+                  <line x1="14" y1="1" x2="14" y2="4" />
+                </svg>
+                <span className="text-sm text-[#C9A227] font-medium opacity-80">답례떡</span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">답례떡</h3>
+                <p className="text-[15px] text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                  돌잔치에 걸맞게 정성껏 준비한<br />
+                  한국의집 답례떡이 제공됩니다.
                 </p>
                 <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
                   <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
