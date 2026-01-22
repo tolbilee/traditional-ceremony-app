@@ -585,15 +585,41 @@ export default function DocumentUploadStep({
         />
 
         {/* 기존에 업로드된 파일 URL 표시 (편집 모드일 때만 - DB에 저장된 원본 파일만) */}
-        {isEditMode && originalFileUrls && originalFileUrls.length > 0 && (
-          <div className="space-y-2">
-            <p className="font-semibold text-gray-700">기존 업로드된 파일 ({originalFileUrls.length}개)</p>
-            {originalFileUrls.map((url, index) => {
-              // file_metadata에서 원본 파일명 가져오기
-              const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
-              const originalFileName = currentFileMetadata[url] || url.split('/').pop() || `파일 ${index + 1}`;
-              
-              return (
+        {/* 현재 단계에 해당하는 파일만 필터링하여 표시 */}
+        {isEditMode && originalFileUrls && originalFileUrls.length > 0 && (() => {
+          // 현재 단계의 증빙서류명 추출
+          const currentDocName = currentDocument?.documentName || '';
+          
+          // 현재 단계에 해당하는 파일만 필터링
+          const currentStepFiles = originalFileUrls.filter(url => {
+            const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
+            const originalFileName = currentFileMetadata[url] || url.split('/').pop() || '';
+            
+            // 파일명에 현재 단계의 증빙서류명이 포함되어 있는지 확인
+            if (currentDocName && originalFileName.includes(currentDocName)) {
+              return true;
+            }
+            
+            // file_metadata가 없거나 매칭되지 않는 경우, 인덱스 기반으로 추정
+            // (이 방법은 완벽하지 않지만, 대부분의 경우 작동함)
+            return false;
+          });
+          
+          // 필터링 결과가 없으면 모든 파일 표시 (fallback)
+          const filesToShow = currentStepFiles.length > 0 ? currentStepFiles : originalFileUrls;
+          
+          return (
+            <div className="space-y-2">
+              <p className="font-semibold text-gray-700">
+                기존 업로드된 파일 ({filesToShow.length}개)
+                {currentDocName && <span className="text-sm text-gray-500"> - {currentDocName}</span>}
+              </p>
+              {filesToShow.map((url, index) => {
+                // file_metadata에서 원본 파일명 가져오기
+                const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
+                const originalFileName = currentFileMetadata[url] || url.split('/').pop() || `파일 ${index + 1}`;
+                
+                return (
                 <div
                   key={`existing-${index}`}
                   className="flex items-center justify-between rounded-lg border-2 border-blue-200 bg-blue-50 p-4"
@@ -641,9 +667,10 @@ export default function DocumentUploadStep({
                   </button>
                 </div>
               );
-            })}
-          </div>
-        )}
+              })}
+            </div>
+          );
+        })()}
 
         {/* 현재 단계에서 업로드한 파일 표시 */}
         {currentStepUrls.length > 0 && (

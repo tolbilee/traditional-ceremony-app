@@ -126,6 +126,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
     if (!appData.supportType) return [];
 
     const supportTypes = appData.supportType.split(',').map((t: string) => t.trim()).filter((t: string) => t) as SupportType[];
+    const documentNames: string[] = [];
     
     if (application.type === 'doljanchi') {
       // 돌잔치: 한부모가족은 항상 첫 번째, 그 다음 선택한 순서대로
@@ -162,17 +163,53 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           }
         });
         
-        return visitingTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
+        visitingTypes.forEach(type => {
+          const docName = REQUIRED_DOCUMENTS[type]?.documentName;
+          if (docName) documentNames.push(docName);
+        });
+      } else {
+        orderedTypes.forEach(type => {
+          const docName = REQUIRED_DOCUMENTS[type]?.documentName;
+          if (docName) documentNames.push(docName);
+        });
       }
-      
-      return orderedTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
     } else {
       // 전통혼례: 선택한 순서대로
-      return supportTypes.map(type => REQUIRED_DOCUMENTS[type]?.documentName || '').filter(Boolean);
+      supportTypes.forEach(type => {
+        const docName = REQUIRED_DOCUMENTS[type]?.documentName;
+        if (docName) documentNames.push(docName);
+      });
+      
+      // 전통혼례 특이 케이스 증빙서류 추가 (혼인관계증명서, 주민등록등본 등)
+      const targetCategory = (appData as any)?.targetCategory;
+      if (targetCategory === 'pre_marriage' || targetCategory === 'married_no_ceremony_no_registration') {
+        documentNames.push('혼인관계증명서');
+      }
+      if (targetCategory === 'married_no_ceremony_registered') {
+        documentNames.push('주민등록등본');
+      }
     }
+    
+    return documentNames;
   };
 
   const orderedDocumentNames = getOrderedDocumentNames();
+  
+  // file_metadata에서 파일명을 파싱하여 증빙서류명 추출하는 함수
+  const getDocumentNameFromFileName = (fileName: string): string | null => {
+    // file_metadata의 파일명 형식: [신청자이름]_[증빙서류명]_[날짜시간].확장자
+    // 예: "이석_기초수급증명서_20260122224222.jpg"
+    const parts = fileName.split('_');
+    if (parts.length >= 2) {
+      // 두 번째 부분이 증빙서류명일 가능성이 높음
+      const possibleDocName = parts.slice(1, -1).join('_'); // 마지막 부분(날짜시간.확장자) 제외
+      // orderedDocumentNames와 매칭 시도
+      const matched = orderedDocumentNames.find(docName => possibleDocName.includes(docName) || docName.includes(possibleDocName));
+      if (matched) return matched;
+      return possibleDocName;
+    }
+    return null;
+  };
 
   const appData = application.application_data || {};
 
@@ -363,7 +400,21 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(originalFileName) || url.includes('image') || url.includes('photo');
                   
                   // 해당 인덱스에 매핑된 증빙서류명 가져오기
-                  const documentName = orderedDocumentNames[index] || `증빙서류 ${index + 1}`;
+                  // file_metadata의 파일명에서 증빙서류명 추출 시도
+                  let documentName = orderedDocumentNames[index];
+                  
+                  // orderedDocumentNames에 없으면 파일명에서 추출 시도
+                  if (!documentName && originalFileName) {
+                    const extractedDocName = getDocumentNameFromFileName(originalFileName);
+                    if (extractedDocName) {
+                      documentName = extractedDocName;
+                    }
+                  }
+                  
+                  // 여전히 없으면 기본값 사용
+                  if (!documentName) {
+                    documentName = `증빙서류 ${index + 1}`;
+                  }
                   
                   return (
                     <div
