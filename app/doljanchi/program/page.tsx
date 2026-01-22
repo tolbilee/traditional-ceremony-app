@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 export default function DoljanchiProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'program' | 'venue' | 'meal'>('overview');
+  const [showMap, setShowMap] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#FFFDF7]">
@@ -502,16 +503,43 @@ export default function DoljanchiProgramPage() {
               </div>
             </div>
 
-            {/* 다음 지도 */}
-            <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white">
-              <iframe
-                src="/daum-map.html"
-                className="w-full border-0"
-                style={{ minHeight: '360px', height: '360px' }}
-                title="한국의집 우금헌 위치 지도"
-                loading="lazy"
-              />
+            {/* 지도보기 버튼 */}
+            <div className="mt-5 flex justify-center">
+              <button
+                onClick={() => setShowMap(!showMap)}
+                className="px-6 py-3 bg-[#C9A227] text-white text-[15px] font-semibold rounded-xl transition-all hover:bg-[#B89220] active:scale-[0.98] shadow-lg flex items-center gap-2"
+                style={{ boxShadow: '0 4px 12px rgba(201, 162, 39, 0.35)' }}
+              >
+                {showMap ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                    지도 숨기기
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    지도보기
+                  </>
+                )}
+              </button>
             </div>
+
+            {/* 다음 지도 */}
+            {showMap && (
+              <div className="mt-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white animate-fadeIn">
+                <iframe
+                  src="/daum-map.html"
+                  className="w-full border-0"
+                  style={{ minHeight: '360px', height: '360px' }}
+                  title="한국의집 우금헌 위치 지도"
+                  loading="lazy"
+                />
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl p-5 mt-6 shadow-sm border border-[rgba(201,162,39,0.15)]">
               <p className="text-sm text-[#4B5563] font-normal leading-relaxed">
