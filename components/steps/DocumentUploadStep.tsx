@@ -26,10 +26,8 @@ export default function DocumentUploadStep({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
   
-  // 선택된 파일 목록 (업로드 전)
+  // 선택된 파일 목록 (업로드 전) - UI 조건문에서만 사용
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  // 각 파일에 대한 사용자 지정 파일명
-  const [fileNames, setFileNames] = useState<Record<number, string>>({});
   
   // 기존에 DB에 저장된 파일 URL 목록 (수정 모드에서만 사용)
   // 초기 로드 시 formData.fileUrls를 originalFileUrls로 설정
@@ -220,6 +218,7 @@ export default function DocumentUploadStep({
   const isLastDocument = currentDocumentIndex >= allRequiredDocuments.length - 1;
 
   // 파일명에 사용할 수 없는 문자 제거 및 URL-safe하게 변환 함수
+  // 한글은 유지하고 공백과 특수문자만 처리
   const sanitizeFileName = (fileName: string): string => {
     // 1. Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
     let sanitized = fileName.replace(/[<>:"/\\|?*]/g, '');
@@ -233,30 +232,35 @@ export default function DocumentUploadStep({
     // 4. 앞뒤 언더스코어 제거
     sanitized = sanitized.replace(/^_+|_+$/g, '');
     
-    // 5. 한글과 특수문자가 포함된 경우, URL-safe하게 인코딩
-    // 하지만 Supabase Storage는 한글을 직접 지원하지 않을 수 있으므로
-    // 한글을 제거하거나 영문/숫자/언더스코어/하이픈만 허용
-    // 한글 유니코드 범위: \uAC00-\uD7A3
-    // 영문, 숫자, 언더스코어, 하이픈, 점만 허용
-    sanitized = sanitized.replace(/[^\w\-.]/g, '');
+    // 5. 한글은 유지하고, 제어 문자와 일부 특수문자만 제거
+    // 한글, 영문, 숫자, 언더스코어, 하이픈, 점, 한자 등은 유지
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, ''); // 제어 문자만 제거
     
     return sanitized.trim();
   };
 
-  // 자동 파일명 생성 함수
+  // 자동 파일명 생성 함수 (UI 표시용 - 한글 유지)
   const generateAutoFileName = (index: number = 0, totalFiles: number = 1): string => {
     const parts: string[] = [];
     
-    // 1. 신청자 이름
+    // 1. 신청자 이름 (한글 유지, 특수문자만 제거)
     const userName = formData.userName?.trim() || '';
     if (userName) {
-      parts.push(sanitizeFileName(userName));
+      // Windows 파일명에 사용할 수 없는 문자만 제거 (한글은 유지)
+      const cleanedName = userName.replace(/[<>:"/\\|?*]/g, '').trim();
+      if (cleanedName) {
+        parts.push(cleanedName);
+      }
     }
     
-    // 2. 증빙서류명
+    // 2. 증빙서류명 (한글 유지, 특수문자만 제거)
     const documentName = currentDocument?.documentName?.trim() || '';
     if (documentName) {
-      parts.push(sanitizeFileName(documentName));
+      // Windows 파일명에 사용할 수 없는 문자만 제거 (한글은 유지)
+      const cleanedName = documentName.replace(/[<>:"/\\|?*]/g, '').trim();
+      if (cleanedName) {
+        parts.push(cleanedName);
+      }
     }
     
     // 3. 날짜시간 (YYYYMMDDHHmmss 형식)
@@ -278,47 +282,25 @@ export default function DocumentUploadStep({
     return parts.join('_');
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     
-    // 파일 선택 후 파일명 입력을 위해 파일 목록 저장
-    setSelectedFiles(files);
-    
-    // 각 파일의 자동 생성 파일명 설정
-    const initialFileNames: Record<number, string> = {};
-    files.forEach((file, index) => {
-      // 자동 생성 파일명 사용
-      initialFileNames[index] = generateAutoFileName(index, files.length);
-    });
-    setFileNames(initialFileNames);
-  };
-
-  const handleUploadFiles = async () => {
-    if (selectedFiles.length === 0) return;
-
-    // 파일을 업로드하고 URL 받기
+    // 파일 선택 시 즉시 업로드
     const uploadedUrls: string[] = [];
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       try {
         const formDataToUpload = new FormData();
         formDataToUpload.append('file', file);
         formDataToUpload.append('type', formData.type || 'wedding');
         
-        // 파일명 지정: fileNames에 저장된 파일명이 있으면 사용, 없으면 자동 생성
-        let customFileName = fileNames[i];
+        // 자동 생성 파일명 사용
+        const customFileName = generateAutoFileName(i, files.length);
+        const sanitizedFileName = sanitizeFileName(customFileName);
         
-        if (!customFileName || customFileName.trim() === '') {
-          // 파일명이 지정되지 않았으면 자동 생성
-          customFileName = generateAutoFileName(i, selectedFiles.length);
-        }
-        
-        // 파일명 정리 (특수문자 제거)
-        customFileName = sanitizeFileName(customFileName);
-        
-        if (customFileName && customFileName.trim()) {
-          formDataToUpload.append('fileName', customFileName);
+        if (sanitizedFileName && sanitizedFileName.trim()) {
+          formDataToUpload.append('fileName', sanitizedFileName);
         }
         
         const response = await fetch('/api/upload', {
@@ -336,18 +318,24 @@ export default function DocumentUploadStep({
           const errorMessage = errorData.error || '알 수 없는 오류';
           const hint = errorData.hint || '';
           alert(`파일 업로드 실패: ${errorMessage}\n\n${hint}`);
-          return; // 오류 발생 시 중단
+          // 오류 발생 시 파일 입력 초기화
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          return;
         }
       } catch (error) {
         console.error('Upload error:', error);
         alert('파일 업로드 중 오류가 발생했습니다.');
-        return; // 오류 발생 시 중단
+        // 오류 발생 시 파일 입력 초기화
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
       }
     }
 
-    // 업로드 완료 후 선택된 파일 목록 초기화
-    setSelectedFiles([]);
-    setFileNames({});
+    // 업로드 완료 후 파일 입력 초기화
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -362,15 +350,10 @@ export default function DocumentUploadStep({
 
     // 전체 파일 URL 목록 업데이트 (모든 단계의 파일 URL 합치기)
     const allStepUrls: string[] = [];
-    for (let i = 0; i <= currentDocumentIndex; i++) {
-      if (uploadedFilesByStep[i]) {
-        allStepUrls.push(...uploadedFilesByStep[i]);
-      }
-    }
-    // 현재 단계의 새로 업로드한 파일 추가
+    Object.values(uploadedFilesByStep).forEach(stepUrls => {
+      allStepUrls.push(...stepUrls);
+    });
     allStepUrls.push(...uploadedUrls);
-    
-    // 기존 파일 URL과 합치기
     const newFileUrls = [...originalFileUrls, ...allStepUrls];
     
     console.log('=== File upload completed ===');
@@ -382,7 +365,7 @@ export default function DocumentUploadStep({
     updateFormData({ fileUrls: newFileUrls });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)
-    setUploadedFiles((prev) => [...prev, ...selectedFiles]);
+    setUploadedFiles((prev) => [...prev, ...files]);
     
     // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
     if (uploadedUrls.length > 0 && onFileUploaded) {
@@ -399,13 +382,6 @@ export default function DocumentUploadStep({
     }
   };
 
-  const handleCancelFileSelection = () => {
-    setSelectedFiles([]);
-    setFileNames({});
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const handleCameraClick = () => {
     if (fileInputRef.current) {
@@ -508,60 +484,6 @@ export default function DocumentUploadStep({
           </div>
         )}
 
-        {/* 선택된 파일이 있을 때 파일명 입력 및 업로드 */}
-        {selectedFiles.length > 0 && (
-          <div className="space-y-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-800">
-                선택된 파일 ({selectedFiles.length}개)
-              </h3>
-              <button
-                onClick={handleCancelFileSelection}
-                className="rounded-lg bg-gray-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-gray-600"
-              >
-                취소
-              </button>
-            </div>
-            
-            {selectedFiles.map((file, index) => {
-              const autoFileName = generateAutoFileName(index, selectedFiles.length);
-              return (
-                <div key={index} className="space-y-2 rounded-lg bg-white p-3">
-                  <p className="text-sm font-medium text-gray-700">
-                    원본 파일명: {file.name}
-                  </p>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      저장할 파일명 (선택사항)
-                    </label>
-                    <input
-                      type="text"
-                      value={fileNames[index] || ''}
-                      placeholder={autoFileName}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                      onChange={(e) => {
-                        setFileNames(prev => ({
-                          ...prev,
-                          [index]: e.target.value,
-                        }));
-                      }}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      파일명을 지정하지 않으면 자동으로 생성됩니다. 형식: [이름]_[증빙서류명]_[날짜시간]. 확장자는 자동으로 추가됩니다.
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-            
-            <button
-              onClick={handleUploadFiles}
-              className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
-            >
-              📤 파일 업로드
-            </button>
-          </div>
-        )}
 
         <input
           ref={fileInputRef}
