@@ -1,10 +1,82 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 export default function WeddingProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'ceremony' | 'venue' | 'meal'>('overview');
+  const ceremonyStepsRef = useRef<HTMLDivElement>(null);
+  const scrollAnimationRef = useRef<number | null>(null);
+
+  // 전통혼례 안내 탭이 활성화되면 파란색 박스로 자동 스크롤
+  useEffect(() => {
+    if (activeTab === 'ceremony' && ceremonyStepsRef.current) {
+      // 약간의 지연을 두어 DOM이 완전히 렌더링된 후 실행
+      const timer = setTimeout(() => {
+        const container = ceremonyStepsRef.current;
+        if (!container) return;
+        
+        // 파란색 박스(highlight: true) 찾기 - 전안례, 교배례, 합근례
+        // data-highlight="true" 속성을 가진 요소 찾기
+        const highlightedBoxes = Array.from(container.children).filter((child) => {
+          const element = child as HTMLElement;
+          return element.getAttribute('data-highlight') === 'true';
+        });
+        
+        if (highlightedBoxes.length > 0) {
+          // 두 번째 파란색 박스(교배례)를 기준으로 스크롤
+          const targetBox = highlightedBoxes.length >= 2 
+            ? highlightedBoxes[1] as HTMLElement  // 교배례 (두 번째)
+            : highlightedBoxes[0] as HTMLElement;  // fallback: 전안례
+          
+          // 박스의 중앙이 컨테이너 중앙에 오도록 계산
+          const targetScrollLeft = targetBox.offsetLeft - (container.offsetWidth / 2) + (targetBox.offsetWidth / 2);
+          const startScrollLeft = container.scrollLeft;
+          const distance = targetScrollLeft - startScrollLeft;
+          
+          // 기존 애니메이션 취소
+          if (scrollAnimationRef.current) {
+            cancelAnimationFrame(scrollAnimationRef.current);
+          }
+          
+          // 커스텀 부드러운 애니메이션 (ease-out cubic)
+          const duration = 2000; // 2초
+          const startTime = Date.now();
+          
+          // easing 함수: 시작은 느리고 끝날수록 더 느려짐 (ease-out cubic)
+          const easeOutCubic = (t: number): number => {
+            return 1 - Math.pow(1 - t, 3);
+          };
+          
+          const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // ease-out cubic 적용
+            const easedProgress = easeOutCubic(progress);
+            
+            container.scrollLeft = startScrollLeft + (distance * easedProgress);
+            
+            if (progress < 1) {
+              scrollAnimationRef.current = requestAnimationFrame(animate);
+            } else {
+              scrollAnimationRef.current = null;
+            }
+          };
+          
+          scrollAnimationRef.current = requestAnimationFrame(animate);
+        }
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer);
+        if (scrollAnimationRef.current) {
+          cancelAnimationFrame(scrollAnimationRef.current);
+          scrollAnimationRef.current = null;
+        }
+      };
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
@@ -301,7 +373,10 @@ export default function WeddingProgramPage() {
               <strong className="text-[#1F2937]">전안례, 교배례, 합근례</strong>를 진행합니다.
             </p>
 
-            <div className="flex gap-1.5 overflow-x-auto pb-4 scrollbar-hide">
+            <div 
+              ref={ceremonyStepsRef}
+              className="flex gap-1.5 overflow-x-auto pb-4 scrollbar-hide"
+            >
               {[
                 { name: '혼담' },
                 { name: '납채' },
@@ -318,6 +393,7 @@ export default function WeddingProgramPage() {
               ].map((step, idx) => (
                 <div
                   key={idx}
+                  data-highlight={step.highlight ? 'true' : 'false'}
                   className={`flex-shrink-0 text-center p-3.5 rounded-xl min-w-[76px] shadow-sm ${
                     step.highlight 
                       ? 'bg-[#1A56DB] text-white border border-[#1A56DB]' 
@@ -335,6 +411,8 @@ export default function WeddingProgramPage() {
                 </div>
               ))}
             </div>
+            
+            {/* 자동 스크롤은 useEffect에서 처리됨 */}
 
             <h2 className="text-xl font-semibold mb-5 mt-10 flex items-center gap-2.5 text-[#1F2937]">
               <span className="w-1 h-5 bg-[#1A56DB] rounded"></span>
