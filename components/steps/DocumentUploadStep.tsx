@@ -495,12 +495,27 @@ export default function DocumentUploadStep({
     // 새로 업로드한 파일을 제거할 때는 fileUrls에서도 제거
     // 새로 업로드한 파일의 URL은 formData.fileUrls의 마지막 부분에 있음
     const currentUrls = formData.fileUrls || [];
-    const newFileUrls = currentUrls.slice(0, currentUrls.length - (uploadedFiles.length - newFiles.length));
-    updateFormData({ fileUrls: newFileUrls });
+    const removedFileCount = uploadedFiles.length - newFiles.length;
+    const newFileUrls = currentUrls.slice(0, currentUrls.length - removedFileCount);
     
-    // DB에도 저장
+    // fileMetadata에서도 삭제된 파일의 URL 제거
+    const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
+    const updatedFileMetadata = { ...currentFileMetadata };
+    
+    // 삭제된 파일의 URL 찾아서 제거
+    const removedUrls = currentUrls.slice(currentUrls.length - removedFileCount);
+    removedUrls.forEach(url => {
+      delete updatedFileMetadata[url];
+    });
+    
+    updateFormData({ 
+      fileUrls: newFileUrls,
+      fileMetadata: updatedFileMetadata
+    });
+    
+    // DB에도 저장 (fileMetadata도 함께 전달)
     if (onFileUploaded) {
-      onFileUploaded(newFileUrls);
+      onFileUploaded(newFileUrls, updatedFileMetadata);
     }
   };
 
@@ -590,23 +605,68 @@ export default function DocumentUploadStep({
           // 현재 단계의 증빙서류명 추출
           const currentDocName = currentDocument?.documentName || '';
           
+          // 모든 증빙서류 목록 가져오기
+          const allDocs = allRequiredDocuments;
+          
           // 현재 단계에 해당하는 파일만 필터링
           const currentStepFiles = originalFileUrls.filter(url => {
             const currentFileMetadata = (formData.fileMetadata as Record<string, string>) || {};
-            const originalFileName = currentFileMetadata[url] || url.split('/').pop() || '';
+            const originalFileName = currentFileMetadata[url] || '';
             
-            // 파일명에 현재 단계의 증빙서류명이 포함되어 있는지 확인
-            if (currentDocName && originalFileName.includes(currentDocName)) {
-              return true;
+            // file_metadata가 없으면 표시하지 않음 (정확한 매칭 불가)
+            if (!originalFileName || !currentFileMetadata[url]) {
+              console.log(`File ${url}: No file_metadata, skipping`);
+              return false;
             }
             
-            // file_metadata가 없거나 매칭되지 않는 경우, 인덱스 기반으로 추정
-            // (이 방법은 완벽하지 않지만, 대부분의 경우 작동함)
+            // 파일명 형식: [신청자이름]_[증빙서류명]_[날짜시간].확장자
+            // 파일명에서 증빙서류명 부분 추출 시도
+            const fileNameParts = originalFileName.split('_');
+            if (fileNameParts.length < 2) {
+              console.log(`File ${url}: Invalid filename format, skipping`);
+              return false;
+            }
+            
+            // 두 번째 부분부터 마지막 부분 전까지가 증빙서류명일 가능성이 높음
+            // (마지막 부분은 날짜시간.확장자)
+            const possibleDocName = fileNameParts.slice(1, -1).join('_');
+            
+            // 현재 단계의 증빙서류명과 정확히 매칭되는지 확인
+            if (currentDocName) {
+              // 정확한 매칭 또는 포함 관계 확인
+              if (possibleDocName === currentDocName || possibleDocName.includes(currentDocName) || currentDocName.includes(possibleDocName)) {
+                // 다른 단계의 증빙서류명이 포함되어 있는지 확인 (겹치는 경우 방지)
+                let hasOtherDocName = false;
+                for (let i = 0; i < allDocs.length; i++) {
+                  if (i !== currentDocumentIndex && allDocs[i]?.documentName) {
+                    const otherDocName = allDocs[i].documentName;
+                    // 다른 단계의 증빙서류명이 파일명에 포함되어 있고, 현재 증빙서류명보다 더 구체적인 경우
+                    if (possibleDocName.includes(otherDocName) && otherDocName.length > currentDocName.length) {
+                      hasOtherDocName = true;
+                      break;
+                    }
+                  }
+                }
+                
+                if (!hasOtherDocName) {
+                  console.log(`File ${url}: Matches current step (${currentDocName})`);
+                  return true;
+                } else {
+                  console.log(`File ${url}: Matches other step, skipping`);
+                  return false;
+                }
+              }
+            }
+            
+            // 매칭되지 않으면 제외
+            console.log(`File ${url}: No match for current step (${currentDocName}), skipping`);
             return false;
           });
           
-          // 필터링 결과가 없으면 모든 파일 표시 (fallback)
-          const filesToShow = currentStepFiles.length > 0 ? currentStepFiles : originalFileUrls;
+          // 필터링된 파일만 표시 (fallback 제거)
+          const filesToShow = currentStepFiles;
+          
+          console.log(`Step ${currentDocumentIndex} (${currentDocName}): Filtered ${filesToShow.length} files from ${originalFileUrls.length} total files`);
           
           return (
             <div className="space-y-2">
@@ -638,13 +698,15 @@ export default function DocumentUploadStep({
                   </div>
                   <button
                     onClick={() => {
+                      // filesToShow에서 선택한 파일의 URL 가져오기
+                      const urlToRemove = filesToShow[index];
+                      
                       // originalFileUrls에서 제거
-                      const newOriginalUrls = originalFileUrls.filter((_, i) => i !== index);
+                      const newOriginalUrls = originalFileUrls.filter(u => u !== urlToRemove);
                       setOriginalFileUrls(newOriginalUrls);
                       
                       // formData의 fileUrls도 업데이트 (전체 목록에서 해당 URL 제거)
                       const currentUrls = formData.fileUrls || [];
-                      const urlToRemove = originalFileUrls[index];
                       const updatedUrls = currentUrls.filter(u => u !== urlToRemove);
                       
                       // file_metadata에서도 해당 URL 제거

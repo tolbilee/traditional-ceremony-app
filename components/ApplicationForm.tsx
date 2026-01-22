@@ -297,7 +297,11 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
         applicationData: formData.applicationData || undefined,
         consentStatus: formData.consentStatus || false,
         fileUrls: formData.fileUrls || [],
+        fileMetadata: formData.fileMetadata || {}, // fileMetadata 추가 - 자동 저장 시 데이터 유실 방지
       };
+      
+      console.log('SaveData includes fileMetadata:', !!saveData.fileMetadata);
+      console.log('fileMetadata keys:', saveData.fileMetadata ? Object.keys(saveData.fileMetadata) : []);
 
       console.log('Sending saveData to API:', JSON.stringify(saveData, null, 2));
 
