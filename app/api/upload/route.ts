@@ -50,9 +50,29 @@ export async function POST(request: NextRequest) {
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'documents';
     console.log('Using bucket:', bucketName);
 
+    // 파일명 처리: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
+    const customFileName = formData.get('fileName') as string | null;
+    const originalFileName = file.name;
+    
     // 파일 확장자 추출
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fileExt = originalFileName.split('.').pop()?.toLowerCase() || 'jpg';
+    
+    // 파일명 생성: 사용자 지정 파일명이 있으면 사용, 없으면 원본 파일명 사용
+    // 중복 방지를 위해 타임스탬프를 앞에 추가
+    let baseFileName: string;
+    if (customFileName && customFileName.trim()) {
+      // 사용자 지정 파일명 사용 (확장자 제거 후 다시 추가)
+      const nameWithoutExt = customFileName.replace(/\.[^/.]+$/, '');
+      baseFileName = `${nameWithoutExt}.${fileExt}`;
+    } else {
+      // 원본 파일명 사용 (확장자 제거 후 다시 추가)
+      const nameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '');
+      baseFileName = `${nameWithoutExt}.${fileExt}`;
+    }
+    
+    // 중복 방지를 위해 타임스탬프 추가 (파일명 앞에)
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${baseFileName}`;
     const filePath = `${type}/${fileName}`;
 
     console.log('File path:', filePath);

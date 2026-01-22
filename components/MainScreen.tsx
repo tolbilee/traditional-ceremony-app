@@ -88,7 +88,7 @@ export default function MainScreen() {
       transition: 'background-color 0.2s ease, color 0.2s ease'
     } as any}
     /* curve-center-right는 항상 유지, tab-active만 조건부 추가 */
-    className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-right overflow-visible
+    className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-right overflow-visible tracking-[-2px]
       ${activeTab === 'wedding' ? 'tab-active rounded-br-[40px]' : ''}
     `}
   >
@@ -107,7 +107,7 @@ export default function MainScreen() {
       transition: 'background-color 0.2s ease, color 0.2s ease'
     } as any}
     /* curve-center-left는 항상 유지, tab-active만 조건부 추가 */
-    className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-left overflow-visible
+    className={`relative flex-1 flex items-center justify-center font-bold text-lg curve-center-left overflow-visible tracking-[-2px]
       ${activeTab === 'doljanchi' ? 'tab-active rounded-bl-[40px]' : ''}
     `}
   >

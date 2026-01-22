@@ -26,6 +26,11 @@ export default function DocumentUploadStep({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>(formData.files || []);
   
+  // 선택된 파일 목록 (업로드 전)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  // 각 파일에 대한 사용자 지정 파일명
+  const [fileNames, setFileNames] = useState<Record<number, string>>({});
+  
   // 기존에 DB에 저장된 파일 URL 목록 (수정 모드에서만 사용)
   // 초기 로드 시 formData.fileUrls를 originalFileUrls로 설정
   const [originalFileUrls, setOriginalFileUrls] = useState<string[]>([]);
@@ -214,17 +219,89 @@ export default function DocumentUploadStep({
   const currentDocument = getCurrentDocument();
   const isLastDocument = currentDocumentIndex >= allRequiredDocuments.length - 1;
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일명에 사용할 수 없는 문자 제거 함수
+  const sanitizeFileName = (fileName: string): string => {
+    // Windows에서 파일명에 사용할 수 없는 문자 제거: < > : " / \ | ? *
+    return fileName.replace(/[<>:"/\\|?*]/g, '').trim();
+  };
+
+  // 자동 파일명 생성 함수
+  const generateAutoFileName = (index: number = 0, totalFiles: number = 1): string => {
+    const parts: string[] = [];
+    
+    // 1. 신청자 이름
+    const userName = formData.userName?.trim() || '';
+    if (userName) {
+      parts.push(sanitizeFileName(userName));
+    }
+    
+    // 2. 증빙서류명
+    const documentName = currentDocument?.documentName?.trim() || '';
+    if (documentName) {
+      parts.push(sanitizeFileName(documentName));
+    }
+    
+    // 3. 날짜시간 (YYYYMMDDHHmmss 형식)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const dateTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
+    parts.push(dateTime);
+    
+    // 여러 파일인 경우 번호 추가
+    if (totalFiles > 1) {
+      parts.push(String(index + 1));
+    }
+    
+    return parts.join('_');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+    
+    // 파일 선택 후 파일명 입력을 위해 파일 목록 저장
+    setSelectedFiles(files);
+    
+    // 각 파일의 자동 생성 파일명 설정
+    const initialFileNames: Record<number, string> = {};
+    files.forEach((file, index) => {
+      // 자동 생성 파일명 사용
+      initialFileNames[index] = generateAutoFileName(index, files.length);
+    });
+    setFileNames(initialFileNames);
+  };
 
-    // 파일을 즉시 업로드하고 URL 받기
+  const handleUploadFiles = async () => {
+    if (selectedFiles.length === 0) return;
+
+    // 파일을 업로드하고 URL 받기
     const uploadedUrls: string[] = [];
-    for (const file of files) {
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
       try {
         const formDataToUpload = new FormData();
         formDataToUpload.append('file', file);
         formDataToUpload.append('type', formData.type || 'wedding');
+        
+        // 파일명 지정: fileNames에 저장된 파일명이 있으면 사용, 없으면 자동 생성
+        let customFileName = fileNames[i];
+        
+        if (!customFileName || customFileName.trim() === '') {
+          // 파일명이 지정되지 않았으면 자동 생성
+          customFileName = generateAutoFileName(i, selectedFiles.length);
+        }
+        
+        // 파일명 정리 (특수문자 제거)
+        customFileName = sanitizeFileName(customFileName);
+        
+        if (customFileName && customFileName.trim()) {
+          formDataToUpload.append('fileName', customFileName);
+        }
         
         const response = await fetch('/api/upload', {
           method: 'POST',
@@ -241,11 +318,20 @@ export default function DocumentUploadStep({
           const errorMessage = errorData.error || '알 수 없는 오류';
           const hint = errorData.hint || '';
           alert(`파일 업로드 실패: ${errorMessage}\n\n${hint}`);
+          return; // 오류 발생 시 중단
         }
       } catch (error) {
         console.error('Upload error:', error);
         alert('파일 업로드 중 오류가 발생했습니다.');
+        return; // 오류 발생 시 중단
       }
+    }
+
+    // 업로드 완료 후 선택된 파일 목록 초기화
+    setSelectedFiles([]);
+    setFileNames({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
 
     // 현재 단계에 업로드한 파일 URL 저장
@@ -278,7 +364,7 @@ export default function DocumentUploadStep({
     updateFormData({ fileUrls: newFileUrls });
 
     // 로컬 파일 목록도 업데이트 (UI 표시용 - 새로 업로드한 파일만)
-    setUploadedFiles((prev) => [...prev, ...files]);
+    setUploadedFiles((prev) => [...prev, ...selectedFiles]);
     
     // 파일 업로드 후 즉시 저장 (fileUrls를 직접 전달)
     if (uploadedUrls.length > 0 && onFileUploaded) {
@@ -293,10 +379,13 @@ export default function DocumentUploadStep({
         }
       }, 300);
     }
-    
-    // input 초기화
-    if (e.target) {
-      e.target.value = '';
+  };
+
+  const handleCancelFileSelection = () => {
+    setSelectedFiles([]);
+    setFileNames({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -383,20 +472,78 @@ export default function DocumentUploadStep({
       ) : null}
 
       <div className="space-y-4">
-        <div className="flex gap-4">
-          <button
-            onClick={handleCameraClick}
-            className="flex-1 rounded-lg bg-green-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-green-700 active:scale-95"
-          >
-            📷 카메라 촬영
-          </button>
-          <button
-            onClick={handleGalleryClick}
-            className="flex-1 rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
-          >
-            🖼️ 갤러리 선택
-          </button>
-        </div>
+        {/* 선택된 파일이 없을 때만 파일 선택 버튼 표시 */}
+        {selectedFiles.length === 0 && (
+          <div className="flex gap-4">
+            <button
+              onClick={handleCameraClick}
+              className="flex-1 rounded-lg bg-green-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-green-700 active:scale-95"
+            >
+              📷 카메라 촬영
+            </button>
+            <button
+              onClick={handleGalleryClick}
+              className="flex-1 rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+            >
+              🖼️ 갤러리 선택
+            </button>
+          </div>
+        )}
+
+        {/* 선택된 파일이 있을 때 파일명 입력 및 업로드 */}
+        {selectedFiles.length > 0 && (
+          <div className="space-y-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">
+                선택된 파일 ({selectedFiles.length}개)
+              </h3>
+              <button
+                onClick={handleCancelFileSelection}
+                className="rounded-lg bg-gray-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-gray-600"
+              >
+                취소
+              </button>
+            </div>
+            
+            {selectedFiles.map((file, index) => {
+              const autoFileName = generateAutoFileName(index, selectedFiles.length);
+              return (
+                <div key={index} className="space-y-2 rounded-lg bg-white p-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    원본 파일명: {file.name}
+                  </p>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      저장할 파일명 (선택사항)
+                    </label>
+                    <input
+                      type="text"
+                      value={fileNames[index] || ''}
+                      placeholder={autoFileName}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      onChange={(e) => {
+                        setFileNames(prev => ({
+                          ...prev,
+                          [index]: e.target.value,
+                        }));
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      파일명을 지정하지 않으면 자동으로 생성됩니다. 형식: [이름]_[증빙서류명]_[날짜시간]. 확장자는 자동으로 추가됩니다.
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            
+            <button
+              onClick={handleUploadFiles}
+              className="w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+            >
+              📤 파일 업로드
+            </button>
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
