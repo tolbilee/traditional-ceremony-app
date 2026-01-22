@@ -329,7 +329,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                         {isImage ? (
                           <img
                             src={url}
-                            alt={fileName}
+                            alt={originalFileName}
                             className="h-48 w-full rounded-lg object-contain bg-white"
                             onError={(e) => {
                               console.error('Image load error:', url);
