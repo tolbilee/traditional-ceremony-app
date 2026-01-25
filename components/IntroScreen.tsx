@@ -29,7 +29,7 @@ export default function IntroScreen({ onEnter }: IntroScreenProps) {
       {/* 배경 이미지 */}
       <div className="absolute inset-0 overflow-hidden">
         <Image
-          src="https://cdn.imweb.me/thumbnail/20260116/a579b76ec6ca9.jpg"
+          src="/images/intro-background.jpg"
           alt="인트로 배경"
           fill
           className="object-cover"
