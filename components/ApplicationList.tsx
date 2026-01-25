@@ -51,7 +51,8 @@ export default function ApplicationList({ userName, birthDate, loginType = 'norm
           console.log('조회된 전체 돌잔치 신청서 수:', data?.length || 0);
 
           // 각 신청서의 application_data 구조 확인
-          (data || []).forEach((app, index) => {
+          const applicationsData = (data || []) as Application[];
+          applicationsData.forEach((app, index) => {
             console.log(`--- 신청서 ${index + 1} (ID: ${app.id}) ---`);
             console.log('application_data:', JSON.stringify(app.application_data, null, 2));
             const appData = app.application_data as any;
