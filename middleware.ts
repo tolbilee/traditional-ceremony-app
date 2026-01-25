@@ -1,9 +1,36 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// 모바일 기기 감지 함수
+function isMobileDevice(userAgent: string): boolean {
+  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
+  return mobileRegex.test(userAgent);
+}
+
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+  const userAgent = request.headers.get('user-agent') || '';
+
+  // 관리자 페이지와 API, QR 페이지는 제외
+  const isAdminPage = pathname.startsWith('/admin');
+  const isAPIRoute = pathname.startsWith('/api');
+  const isQRPage = pathname === '/qr';
+  const isStaticAsset = pathname.startsWith('/_next') || 
+                        pathname.startsWith('/images') || 
+                        pathname.startsWith('/videos') ||
+                        pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/);
+
+  // 제외된 경로는 그대로 통과
+  if (isAdminPage || isAPIRoute || isQRPage || isStaticAsset) {
+    return response;
+  }
+
+  // 모바일이 아닌 경우 QR 페이지로 리다이렉트
+  if (!isMobileDevice(userAgent)) {
+    const qrUrl = new URL('/qr', request.url);
+    return NextResponse.redirect(qrUrl);
+  }
 
   // 개발 환경에서는 CSP를 완화하고, 프로덕션에서는 엄격하게 설정
   const isDevelopment = process.env.NODE_ENV === 'development';

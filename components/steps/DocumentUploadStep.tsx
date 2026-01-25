@@ -272,7 +272,15 @@ export default function DocumentUploadStep({
     const parts: string[] = [];
     
     // 1. 신청자 이름 (한글 유지, 특수문자만 제거)
-    const userName = formData.userName?.trim() || '';
+    // 찾아가는 돌잔치인 경우 기관 대표자 이름 사용
+    let userName = formData.userName?.trim() || '';
+    if (formData.type === 'doljanchi' && doljanchiSubType === 'visiting') {
+      const appData = formData.applicationData as any;
+      if (appData?.facility?.representative) {
+        userName = appData.facility.representative.trim();
+      }
+    }
+    
     if (userName) {
       // Windows 파일명에 사용할 수 없는 문자만 제거 (한글은 유지)
       const cleanedName = userName.replace(/[<>:"/\\|?*]/g, '').trim();

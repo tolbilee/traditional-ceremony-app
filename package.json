@@ -24,6 +24,7 @@
     "pdfkit": "^0.17.2",
     "puppeteer": "^24.35.0",
     "puppeteer-core": "^24.35.0",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
