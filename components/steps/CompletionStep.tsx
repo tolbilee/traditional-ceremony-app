@@ -69,8 +69,8 @@ export default function CompletionStep({
         <button
           onClick={async () => {
             await handleSubmit();
-            // 신청 완료 후 /test 홈으로 이동
-            window.location.href = '/test';
+            // 신청 완료 후 홈으로 이동
+            window.location.href = '/';
           }}
           className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
         >
