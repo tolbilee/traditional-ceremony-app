@@ -16,6 +16,7 @@ interface Application {
   schedule_1: any;
   created_at: string;
   consent_status: boolean;
+  deleted_at?: string | null;
 }
 
 interface AdminDashboardProps {
@@ -27,6 +28,11 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
   const router = useRouter();
   const [filterType, setFilterType] = useState<'all' | 'wedding' | 'doljanchi'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [localApplications, setLocalApplications] = useState<Application[]>(applications);
+  const [showTrash, setShowTrash] = useState(false);
+  const [trashApplications, setTrashApplications] = useState<Application[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/admin/api/logout', { method: 'POST' });
@@ -34,7 +40,87 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
     router.refresh();
   };
 
-  const filteredApplications = applications.filter((app) => {
+  const loadTrash = async () => {
+    setLoadingTrash(true);
+    try {
+      const response = await fetch('/api/applications/trash');
+      if (response.ok) {
+        const data = await response.json();
+        setTrashApplications(data.applications || []);
+      }
+    } catch (error) {
+      console.error('Failed to load trash:', error);
+    } finally {
+      setLoadingTrash(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('이 신청서를 휴지통으로 이동하시겠습니까? 나중에 복원할 수 있습니다.')) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/applications/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        // 응답 본문이 있는지 확인
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Failed to delete application';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (jsonError) {
+            // JSON 파싱 실패 시 텍스트로 읽기 시도
+            try {
+              const text = await response.text();
+              errorMessage = text || errorMessage;
+            } catch (textError) {
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+          }
+        } else {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      // 응답 본문이 있는지 확인 후 파싱
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          await response.json();
+        } catch (jsonError) {
+          // JSON이 아니어도 성공 응답이면 무시
+          console.log('Response is not JSON, but status is OK');
+        }
+      }
+
+      // 로컬 상태에서 삭제된 항목 제거
+      setLocalApplications(localApplications.filter(app => app.id !== id));
+      
+      // 휴지통이 열려있으면 새로고침
+      if (showTrash) {
+        loadTrash();
+      }
+      
+      // 페이지 새로고침하여 서버 상태 동기화
+      router.refresh();
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('삭제 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const filteredApplications = localApplications.filter((app) => {
     const matchesType = filterType === 'all' || app.type === filterType;
     
     if (searchTerm === '') {
@@ -132,9 +218,12 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
             <button
-              onClick={() => setFilterType('all')}
+              onClick={() => {
+                setShowTrash(false);
+                setFilterType('all');
+              }}
               className={`rounded-md px-4 py-2 text-sm font-semibold ${
-                filterType === 'all'
+                !showTrash && filterType === 'all'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
@@ -142,9 +231,12 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
               전체
             </button>
             <button
-              onClick={() => setFilterType('wedding')}
+              onClick={() => {
+                setShowTrash(false);
+                setFilterType('wedding');
+              }}
               className={`rounded-md px-4 py-2 text-sm font-semibold ${
-                filterType === 'wedding'
+                !showTrash && filterType === 'wedding'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
@@ -152,14 +244,30 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
               전통혼례
             </button>
             <button
-              onClick={() => setFilterType('doljanchi')}
+              onClick={() => {
+                setShowTrash(false);
+                setFilterType('doljanchi');
+              }}
               className={`rounded-md px-4 py-2 text-sm font-semibold ${
-                filterType === 'doljanchi'
+                !showTrash && filterType === 'doljanchi'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
               돌잔치
+            </button>
+            <button
+              onClick={() => {
+                setShowTrash(true);
+                loadTrash();
+              }}
+              className={`rounded-md px-4 py-2 text-sm font-semibold ${
+                showTrash
+                  ? 'bg-gray-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              휴지통
             </button>
           </div>
 
@@ -177,19 +285,19 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
           <div className="rounded-lg bg-white p-4 shadow">
             <div className="text-sm text-gray-600">전체 신청</div>
             <div className="text-2xl font-bold text-gray-900">
-              {applications.length}
+              {localApplications.length}
             </div>
           </div>
           <div className="rounded-lg bg-white p-4 shadow">
             <div className="text-sm text-gray-600">전통혼례</div>
             <div className="text-2xl font-bold text-blue-600">
-              {applications.filter((a) => a.type === 'wedding').length}
+              {localApplications.filter((a) => a.type === 'wedding').length}
             </div>
           </div>
           <div className="rounded-lg bg-white p-4 shadow">
             <div className="text-sm text-gray-600">돌잔치</div>
             <div className="text-2xl font-bold text-yellow-600">
-              {applications.filter((a) => a.type === 'doljanchi').length}
+              {localApplications.filter((a) => a.type === 'doljanchi').length}
             </div>
           </div>
         </div>
@@ -223,7 +331,144 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredApplications.length === 0 ? (
+              {showTrash ? (
+                loadingTrash ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      로딩 중...
+                    </td>
+                  </tr>
+                ) : trashApplications.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      휴지통이 비어있습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  trashApplications.map((app) => (
+                    <tr key={app.id} className="hover:bg-gray-50 opacity-75">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                        {format(new Date(app.created_at), 'yyyy-MM-dd HH:mm', {
+                          locale: ko,
+                        })}
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          삭제: {app.deleted_at ? format(new Date(app.deleted_at), 'yyyy-MM-dd HH:mm', { locale: ko }) : '-'}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            app.type === 'wedding'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {getTypeLabel(app.type)}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                        {(() => {
+                          const appData = app.application_data;
+                          const isVisitingDoljanchi = appData?.facility || appData?.targets || appData?.target;
+                          
+                          if (isVisitingDoljanchi) {
+                            return (
+                              <>
+                                {appData?.facility?.representative || app.user_name}
+                                <br />
+                                <span className="text-gray-500">{appData?.facility?.businessNumber || '-'}</span>
+                              </>
+                            );
+                          } else {
+                            return (
+                              <>
+                                {app.user_name}
+                                <br />
+                                <span className="text-gray-500">{app.birth_date}</span>
+                              </>
+                            );
+                          }
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {getSupportTypeLabel(app.support_type, app.application_data)}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                        {app.schedule_1?.date
+                          ? `${app.schedule_1.date} ${app.schedule_1.time}`
+                          : '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {app.consent_status ? (
+                          <span className="text-green-600">✓ 동의</span>
+                        ) : (
+                          <span className="text-red-600">✗ 미동의</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={async () => {
+                              if (!confirm('이 신청서를 복원하시겠습니까?')) {
+                                return;
+                              }
+                              try {
+                                const response = await fetch(`/api/applications/${app.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ action: 'restore' }),
+                                });
+                                if (response.ok) {
+                                  setTrashApplications(trashApplications.filter(a => a.id !== app.id));
+                                  router.refresh();
+                                } else {
+                                  const errorData = await response.json();
+                                  alert('복원 중 오류가 발생했습니다: ' + (errorData.error || 'Unknown error'));
+                                }
+                              } catch (error) {
+                                console.error('Restore error:', error);
+                                alert('복원 중 오류가 발생했습니다.');
+                              }
+                            }}
+                            className="text-green-600 hover:text-green-900"
+                            title="복원"
+                          >
+                            복원
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm('정말 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                                return;
+                              }
+                              try {
+                                const response = await fetch(`/api/applications/${app.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ action: 'permanent-delete' }),
+                                });
+                                if (response.ok) {
+                                  setTrashApplications(trashApplications.filter(a => a.id !== app.id));
+                                } else {
+                                  const errorData = await response.json();
+                                  alert('영구 삭제 중 오류가 발생했습니다: ' + (errorData.error || 'Unknown error'));
+                                }
+                              } catch (error) {
+                                console.error('Permanent delete error:', error);
+                                alert('영구 삭제 중 오류가 발생했습니다.');
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                            title="영구 삭제"
+                          >
+                            영구 삭제
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
+              ) : filteredApplications.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     신청 내역이 없습니다.
@@ -291,12 +536,24 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <Link
-                        href={`/admin/applications/${app.id}`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        상세보기
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/admin/applications/${app.id}`}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          상세보기
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(app.id)}
+                          disabled={deletingId === app.id}
+                          className={`text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed ${
+                            deletingId === app.id ? 'opacity-50' : ''
+                          }`}
+                          title="삭제"
+                        >
+                          {deletingId === app.id ? '삭제 중...' : '삭제'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

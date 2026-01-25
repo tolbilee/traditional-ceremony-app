@@ -11,9 +11,11 @@ export default async function AdminDashboardPage() {
   }
 
   const supabase = await createClient();
+  // deleted_at이 null인 항목만 조회 (삭제되지 않은 항목)
   const { data: applications, error } = await supabase
     .from('applications')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {

@@ -156,3 +156,181 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient();
+    const { id: applicationId } = await params;
+
+    console.log('=== SOFT DELETE APPLICATION ===');
+    console.log('Application ID:', applicationId);
+
+    // Soft delete: deleted_at 필드 설정 (실제 삭제하지 않음)
+    // 파일은 삭제하지 않음 (복원 시 필요하므로)
+    const { error } = await (supabase as any)
+      .from('applications')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', applicationId);
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: error.message },
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, message: 'Application moved to trash successfully' },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: '삭제 중 오류가 발생했습니다.' },
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient();
+    const { id: applicationId } = await params;
+    const body = await request.json();
+    const { action } = body; // 'restore' or 'permanent-delete'
+
+    console.log('=== PATCH APPLICATION ===');
+    console.log('Application ID:', applicationId);
+    console.log('Action:', action);
+
+    if (action === 'restore') {
+      // 복원: deleted_at을 null로 설정
+      const { error } = await (supabase as any)
+        .from('applications')
+        .update({ deleted_at: null })
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Database error:', error);
+        return NextResponse.json(
+          { error: error.message },
+          {
+            status: 500,
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+            },
+          }
+        );
+      }
+
+      return NextResponse.json(
+        { success: true, message: 'Application restored successfully' },
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
+      );
+    } else if (action === 'permanent-delete') {
+      // 영구 삭제: 실제로 삭제
+      const { data: existingApp } = await (supabase as any)
+        .from('applications')
+        .select('file_urls')
+        .eq('id', applicationId)
+        .single();
+
+      // Supabase Storage에서 파일 삭제
+      if (existingApp?.file_urls && Array.isArray(existingApp.file_urls)) {
+        for (const fileUrl of existingApp.file_urls) {
+          try {
+            const urlParts = fileUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const filePath = `applications/${fileName}`;
+            
+            const { error: deleteError } = await supabase.storage
+              .from('applications')
+              .remove([filePath]);
+            
+            if (deleteError) {
+              console.warn(`Failed to delete file ${filePath}:`, deleteError);
+            }
+          } catch (fileError) {
+            console.warn(`Error deleting file ${fileUrl}:`, fileError);
+          }
+        }
+      }
+
+      // 데이터베이스에서 신청서 영구 삭제
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Database error:', error);
+        return NextResponse.json(
+          { error: error.message },
+          {
+            status: 500,
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+            },
+          }
+        );
+      }
+
+      return NextResponse.json(
+        { success: true, message: 'Application permanently deleted' },
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+        }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid action' },
+      {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: '처리 중 오류가 발생했습니다.' },
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      }
+    );
+  }
+}
