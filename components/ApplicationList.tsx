@@ -85,7 +85,7 @@ export default function ApplicationList({ userName, birthDate, loginType = 'norm
           };
 
           // 먼저 찾아가는 돌잔치만 필터링
-          const visitingDoljanchiApps = (data || []).filter((app) => {
+          const visitingDoljanchiApps = applicationsData.filter((app) => {
             if (!app.application_data) {
               console.log('필터링 실패: application_data 없음');
               return false;
@@ -97,7 +97,7 @@ export default function ApplicationList({ userName, birthDate, loginType = 'norm
           console.log('찾아가는 돌잔치 신청서 수:', visitingDoljanchiApps.length);
 
           // application_data에서 facility.representative와 businessNumber가 일치하는 것만 필터링
-          const filteredData = visitingDoljanchiApps.filter((app) => {
+          const filteredData = visitingDoljanchiApps.filter((app: Application) => {
             const appData = app.application_data as any;
             
             // 대표자 이름과 사업자 번호 매칭
