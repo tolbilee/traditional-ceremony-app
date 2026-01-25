@@ -1077,15 +1077,6 @@ export default function ApplicationDataStep({
                   <p className="mt-1 text-sm text-red-500">{errors[`targets.${teamIndex}.gender`]}</p>
                 )}
               </div>
-              {/* 대상유형과 추가유형은 자동 입력이므로 표시만 */}
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-sm text-gray-600">
-                  <strong>대상유형:</strong> {target.targetType || '자동 입력'}
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  <strong>추가유형:</strong> {target.additionalTypes || '자동 입력'}
-                </p>
-              </div>
             </div>
           ))}
 
@@ -1262,21 +1253,32 @@ export default function ApplicationDataStep({
             <label className="block text-sm font-semibold text-gray-700">
               희망 일시
             </label>
-            {formData.schedule1?.date ? (
-              <input
-                type="text"
-                value={`${formData.schedule1.date} ${formData.schedule1.time}`}
-                disabled
-                className="mt-1 w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-600"
-              />
-            ) : (
-              <input
-                type="text"
-                value="날짜를 선택하지 않았습니다"
-                disabled
-                className="mt-1 w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-400"
-              />
-            )}
+            <div className="mt-1 space-y-2">
+              {formData.schedule1 && (
+                <input
+                  type="text"
+                  value={`1순위: ${formData.schedule1.date} ${formData.schedule1.time}`}
+                  disabled
+                  className="w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-600"
+                />
+              )}
+              {formData.schedule2 && (
+                <input
+                  type="text"
+                  value={`2순위: ${formData.schedule2.date} ${formData.schedule2.time}`}
+                  disabled
+                  className="w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-600"
+                />
+              )}
+              {!formData.schedule1 && !formData.schedule2 && (
+                <input
+                  type="text"
+                  value="날짜를 선택하지 않았습니다"
+                  disabled
+                  className="w-full rounded-lg border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg text-gray-400"
+                />
+              )}
+            </div>
           </div>
 
           <div>

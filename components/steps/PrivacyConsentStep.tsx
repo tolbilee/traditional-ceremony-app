@@ -23,13 +23,16 @@ export default function PrivacyConsentStep({
 
   const currentDate = format(new Date(), 'yyyy년 M월 d일', { locale: ko });
   
-  // 신청자 이름 추출 (전통혼례: 신랑/신부 이름, 돌잔치: 부/모 이름)
+  // 신청자 이름 추출 (전통혼례: 신랑/신부 이름, 돌잔치: 부/모 이름, 찾아가는 돌잔치: 복지시설 대표자 이름)
   const getApplicantName = (): string => {
     if (!formData.applicationData) return formData.userName || '';
     
     if ('groom' in formData.applicationData && formData.applicationData.groom?.name) {
       // 전통혼례: 신랑 이름 사용
       return formData.applicationData.groom.name;
+    } else if ('facility' in formData.applicationData && formData.applicationData.facility?.representative) {
+      // 찾아가는 돌잔치: 복지시설 대표자 이름 사용
+      return formData.applicationData.facility.representative;
     } else if ('parent' in formData.applicationData && formData.applicationData.parent?.name) {
       // 돌잔치: 부/모 이름 사용
       return formData.applicationData.parent.name;

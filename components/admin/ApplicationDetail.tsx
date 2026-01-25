@@ -709,20 +709,6 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                                         </div>
                                       </div>
                                     )}
-                                    
-                                    {/* 대상유형과 추가유형 */}
-                                    <div className="mt-3 rounded-lg bg-blue-50 p-3">
-                                      <div className="text-sm">
-                                        <span className="font-semibold text-gray-700">대상유형:</span>{' '}
-                                        <span className="text-gray-900">{target.targetType || '-'}</span>
-                                      </div>
-                                      {target.additionalTypes && (
-                                        <div className="mt-1 text-sm">
-                                          <span className="font-semibold text-gray-700">추가유형:</span>{' '}
-                                          <span className="text-gray-900">{target.additionalTypes}</span>
-                                        </div>
-                                      )}
-                                    </div>
                                   </div>
                                 );
                               });
