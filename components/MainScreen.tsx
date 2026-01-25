@@ -49,10 +49,17 @@ export default function MainScreen() {
           transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} 
         >
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.wedding }}>
+            {/* 로고 - 최상단 전체 너비 */}
+            <div className="absolute top-0 left-0 right-0 w-full z-20 px-4 pt-4">
+              <img src="/images/logo.png" alt="Logo" className="w-full h-auto object-contain" />
+            </div>
             {/* 내용 동일 */}
-            <div className="absolute left-8 top-12 text-white z-10">
+            {/* 타이틀 위치 조절: top-32 (128px) - 더 아래로 내리려면 숫자를 늘리세요 (예: top-36, top-40) */}
+            <div className="absolute left-10 top-24 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
-              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-5px]">전통혼례 및<br />돌잔치</h1>
+              {/* 자간 조절: tracking-[-3px] (현재) - 더 벌리려면 숫자를 줄이거나 양수로 (예: tracking-[-2px], tracking-0, tracking-[2px]) */}
+              {/* 왼쪽 정렬 오프셋 조정: ml-[-3px] - tracking 값에 맞춰 조절 필요 */}
+              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-3px] ml-[-3px]">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute right-0 bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4">
                <img src="/images/wedding_couple.png" alt="Wedding" className="object-contain max-h-full" />
@@ -60,10 +67,17 @@ export default function MainScreen() {
           </div>
 
           <div className="w-1/2 h-full relative" style={{ backgroundColor: colors.doljanchi }}>
+            {/* 로고 - 최상단 전체 너비 */}
+            <div className="absolute top-0 left-0 right-0 w-full z-20 px-4 pt-4">
+              <img src="/images/logo.png" alt="Logo" className="w-full h-auto object-contain" />
+            </div>
             {/* 내용 동일 */}
-            <div className="absolute left-8 top-12 text-white z-10">
+            {/* 타이틀 위치 조절: top-32 (128px) - 더 아래로 내리려면 숫자를 늘리세요 (예: top-36, top-40) */}
+            <div className="absolute left-10 top-24 text-white z-10">
               <p className="text-sm opacity-80 mb-1">2026년 사회적 배려 대상자</p>
-              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-5px]">전통혼례 및<br />돌잔치</h1>
+              {/* 자간 조절: tracking-[-3px] (현재) - 더 벌리려면 숫자를 줄이거나 양수로 (예: tracking-[-2px], tracking-0, tracking-[2px]) */}
+              {/* 왼쪽 정렬 오프셋 조정: ml-[-3px] - tracking 값에 맞춰 조절 필요 */}
+              <h1 className="text-4xl font-bold font-sans leading-tight tracking-[-3px] ml-[-3px]">전통혼례 및<br />돌잔치</h1>
             </div>
             <div className="absolute bottom-0 w-3/4 h-3/4 flex justify-end items-end p-4" style={{ right: '-40px' }}>
                <img src="/images/doljanchi_baby.png" alt="Doljanchi" className="object-contain max-h-full scale-[0.7]" />

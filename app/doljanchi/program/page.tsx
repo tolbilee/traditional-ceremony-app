@@ -531,12 +531,22 @@ export default function DoljanchiProgramPage() {
                     }
                   }}
                 />
-                <span className="absolute top-4 left-4 text-white text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                <span className="absolute top-4 left-4 text-white text-sm font-medium bg-black/30 px-3 py-1.5 rounded-lg backdrop-blur-sm">
                   돌잔치
                 </span>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold mb-1.5 text-[#1F2937]">한국의집 우금헌</h3>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <h3 className="text-lg font-bold text-[#1F2937]">한국의집 우금헌</h3>
+                  <a
+                    href="https://www.kh.or.kr/kh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#C9A227] hover:text-[#C9A227]/80 underline decoration-1 underline-offset-2"
+                  >
+                    [홈페이지 바로가기]
+                  </a>
+                </div>
                 <p className="text-[15px] text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
                 </p>
@@ -611,7 +621,7 @@ export default function DoljanchiProgramPage() {
                     }
                   }}
                 />
-                <span className="absolute top-4 left-4 text-white text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                <span className="absolute top-4 left-4 text-white text-sm font-medium bg-black/30 px-3 py-1.5 rounded-lg backdrop-blur-sm">
                   찾아가는 돌잔치
                 </span>
               </div>

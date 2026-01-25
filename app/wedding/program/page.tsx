@@ -579,7 +579,17 @@ export default function WeddingProgramPage() {
                 />
               </div>
               <div className="p-5">
-                <h3 className="text-xl font-bold mb-1.5 text-[#1F2937]">한국의집</h3>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <h3 className="text-xl font-bold text-[#1F2937]">한국의집</h3>
+                  <a
+                    href="https://www.kh.or.kr/kh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#1A56DB] hover:text-[#1A56DB]/80 underline decoration-1 underline-offset-2"
+                  >
+                    [홈페이지 바로가기]
+                  </a>
+                </div>
                 <p className="text-base text-[#4B5563] font-normal mb-3.5">
                   서울특별시 중구 퇴계로36길 10
                 </p>
