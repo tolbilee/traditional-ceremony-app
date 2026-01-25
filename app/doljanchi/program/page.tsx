@@ -52,7 +52,7 @@ export default function DoljanchiProgramPage() {
             { id: 'overview', label: '모집개요' },
             { id: 'program', label: '돌잔치 안내' },
             { id: 'venue', label: '장소안내' },
-            { id: 'meal', label: '다과안내' },
+            { id: 'meal', label: '식사·답례품' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -646,12 +646,119 @@ export default function DoljanchiProgramPage() {
           </div>
         )}
 
-        {/* 4. 다과안내 */}
+        {/* 4. 식사 안내 및 답례품 */}
         {activeTab === 'meal' && (
           <div className="animate-fadeIn">
-            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937]">
+            {/* 1. 식사 안내 */}
+            <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
-              다과 안내
+              식사 안내
+            </h2>
+
+            {/* 특제 갈비탕 - 돌잔치 제공 */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
+              <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <img
+                  src="/images/wedding/food.jpg"
+                  alt="한국의집 특제 갈비탕"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'flex flex-col items-center justify-center gap-3';
+                      placeholder.innerHTML = `
+                        <svg class="w-[52px] h-[52px] text-[#C9A227] opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                          <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4" />
+                          <path d="M6 16c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2" />
+                        </svg>
+                        <span class="text-base text-[#C9A227] font-medium opacity-70">한국의집 특제 갈비탕</span>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
+                <span className="absolute top-4 left-4 text-white text-sm font-medium bg-black/30 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                  돌잔치 제공
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-xl font-bold mb-2 text-[#1F2937]">특제 갈비탕</h3>
+                <p className="text-base text-[#C9A227] font-medium mb-3.5 italic">
+                  "백년가약의 기쁨을 담은 따스한 한 그릇"
+                </p>
+                <p className="text-base text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                  일생의 가장 찬란한 잔칫날, 한국의집이 엄선한 최상급 갈비와 오랜 시간 정성으로 우려낸 진한 육수가 만나 깊은 풍미를 완성했습니다. 귀한 발걸음 해주신 분들을 위해 혼례의 예를 다해 준비한 한국의집 특제 갈비탕을 대접합니다.
+                </p>
+                <div className="flex items-center gap-2.5 px-4 py-3.5 bg-[rgba(201,162,39,0.06)] rounded-xl text-base text-[#4B5563]">
+                  <svg className="w-[18px] h-[18px] text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  하객 최대 50명 (혼주 포함)
+                </div>
+              </div>
+            </div>
+
+            {/* 30만원 상당의 다과 제공 - 찾아가는 돌잔치 제공 */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] mt-5 scroll-section">
+              <div className="relative h-44 bg-gradient-to-br from-[#F5EED6] to-[#EBE0C0] flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <img
+                  src="/images/doljanchi/dan-gwa.jpg"
+                  alt="30만원 상당의 다과"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 placeholder 표시
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'flex flex-col items-center justify-center gap-3';
+                      placeholder.innerHTML = `
+                        <svg class="w-[52px] h-[52px] text-[#C9A227] opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                          <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4" />
+                          <path d="M6 16c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2" />
+                        </svg>
+                        <span class="text-base text-[#C9A227] font-medium opacity-70">30만원 상당의 다과</span>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
+                <span className="absolute top-4 left-4 text-white text-sm font-medium bg-black/30 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                  찾아가는 돌잔치 제공
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-xl font-bold mb-2 text-[#1F2937]">30만원 상당의 다과 제공</h3>
+                <p className="text-base text-[#4B5563] font-normal mb-3.5 leading-relaxed">
+                  찾아가는 돌잔치에서는 30만원 상당의 간단한 다과가 지원됩니다. 시설 내 돌잔치 진행공간에서 아이의 첫 번째 생일을 특별하게 기념할 수 있습니다.
+                </p>
+                <div className="flex items-center gap-2 px-4 py-3 bg-[rgba(201,162,39,0.08)] rounded-xl text-[15px] text-[#4B5563]">
+                  <svg className="w-4 h-4 text-[#C9A227] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  하객 최대 10명
+                </div>
+              </div>
+            </div>
+
+            {/* 2. 답례품 */}
+            <h2 className="text-lg font-semibold mb-5 mt-8 flex items-center gap-2.5 text-[#1F2937] scroll-section">
+              <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
+              답례품
+              <span className="text-xs text-[#9CA3AF] font-normal ml-1">(돌잔치, 찾아가는 돌잔치 동일)</span>
             </h2>
 
             {/* 떡케이크 */}
@@ -705,18 +812,6 @@ export default function DoljanchiProgramPage() {
                   하객 최대 10명
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 mt-5 shadow-sm border border-[rgba(201,162,39,0.15)]">
-              <div className="text-sm font-semibold text-[#1F2937] mb-2.5 flex items-center gap-2">
-                <svg className="w-[18px] h-[18px] text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-                찾아가는 돌잔치
-              </div>
-              <p className="text-[15px] text-[#4B5563] font-normal">30만원 상당의 간단한 다과가 지원됩니다.</p>
             </div>
           </div>
         )}
