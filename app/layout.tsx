@@ -21,7 +21,7 @@ const notoSerifKR = Noto_Serif_KR({
 });
 
 export const metadata: Metadata = {
-  title: "2026 한국의 집 전통혼례 및 돌잔치 온라인 신청",
+  title: "2026 사회적 배려 대상자 전통혼례 및 돌잔치 온라인 신청",
   description: "사회적 배려 대상자를 위한 전통혼례 및 돌잔치 온라인 신청 시스템",
 };
 
