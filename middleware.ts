@@ -12,22 +12,27 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const userAgent = request.headers.get('user-agent') || '';
 
-  // 관리자 페이지와 API, QR 페이지는 제외
+  // 관리자 페이지와 API, QR 페이지, 개발자 페이지는 제외
   const isAdminPage = pathname.startsWith('/admin');
   const isAPIRoute = pathname.startsWith('/api');
   const isQRPage = pathname === '/qr';
+  const isDevPage = pathname === '/dev';
   const isStaticAsset = pathname.startsWith('/_next') || 
                         pathname.startsWith('/images') || 
                         pathname.startsWith('/videos') ||
                         pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/);
 
   // 제외된 경로는 그대로 통과
-  if (isAdminPage || isAPIRoute || isQRPage || isStaticAsset) {
+  if (isAdminPage || isAPIRoute || isQRPage || isDevPage || isStaticAsset) {
     return response;
   }
 
-  // 모바일이 아닌 경우 QR 페이지로 리다이렉트
-  if (!isMobileDevice(userAgent)) {
+  // 개발자 모드 쿠키 확인
+  const devModeCookie = request.cookies.get('dev-mode');
+  const isDevMode = devModeCookie?.value === 'true';
+
+  // 모바일이 아니고 개발자 모드가 아닌 경우 QR 페이지로 리다이렉트
+  if (!isMobileDevice(userAgent) && !isDevMode) {
     const qrUrl = new URL('/qr', request.url);
     return NextResponse.redirect(qrUrl);
   }

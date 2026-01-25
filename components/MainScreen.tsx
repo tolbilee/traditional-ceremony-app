@@ -86,9 +86,9 @@ export default function MainScreen() {
         </motion.div>
       </div>
 
-{/* 2. 탭 (Tab) & 물방울 마스크 (Liquid Mask): 0.3초 지연 후 변화 */}
-<div className="relative flex-1 bg-white">
-        <div className="absolute -top-[1px] left-0 w-full flex h-[60px] z-30">
+      {/* 2. 탭 (Tab) & 물방울 마스크 (Liquid Mask): 0.3초 지연 후 변화 */}
+      <div className="relative flex-1 bg-white">
+        <div className="absolute -top-[1px] left-0 w-full flex h-[60px] z-30 overflow-hidden">
           
 {/* 왼쪽 탭: 전통혼례 */}
 <button
