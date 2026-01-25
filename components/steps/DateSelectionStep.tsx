@@ -209,7 +209,7 @@ export default function DateSelectionStep({
       if (doljanchiSubType === 'doljanchi') {
         return '2026년 일요일만 선택 가능합니다.';
       } else {
-        return '2026년 모든 요일을 선택할 수 있습니다.';
+        return '2026년 모든 요일을 선택하실 수 있고 시간은 협의 후 결정됩니다.';
       }
     }
     return '2026년 일요일만 선택 가능합니다.';
@@ -422,4 +422,3 @@ export default function DateSelectionStep({
     </div>
   );
 }
-

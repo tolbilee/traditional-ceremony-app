@@ -36,11 +36,30 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
 
   const filteredApplications = applications.filter((app) => {
     const matchesType = filterType === 'all' || app.type === filterType;
-    const matchesSearch =
-      searchTerm === '' ||
-      app.user_name.includes(searchTerm) ||
-      app.birth_date.includes(searchTerm);
-    return matchesType && matchesSearch;
+    
+    if (searchTerm === '') {
+      return matchesType;
+    }
+    
+    // 찾아가는 돌잔치인지 확인
+    const appData = app.application_data;
+    const isVisitingDoljanchi = appData?.facility || appData?.targets || appData?.target;
+    
+    if (isVisitingDoljanchi) {
+      // 찾아가는 돌잔치: 대표자 이름과 사업자번호로 검색
+      const representative = appData?.facility?.representative || app.user_name || '';
+      const businessNumber = appData?.facility?.businessNumber || '';
+      const matchesSearch = 
+        representative.includes(searchTerm) ||
+        businessNumber.includes(searchTerm);
+      return matchesType && matchesSearch;
+    } else {
+      // 일반 신청: 이름과 생년월일로 검색
+      const matchesSearch =
+        app.user_name.includes(searchTerm) ||
+        app.birth_date.includes(searchTerm);
+      return matchesType && matchesSearch;
+    }
   });
 
   const getTypeLabel = (type: string) => {
@@ -146,7 +165,7 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
 
           <input
             type="text"
-            placeholder="이름 또는 생년월일로 검색..."
+            placeholder="이름/생년월일 또는 대표자/사업자번호로 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -230,9 +249,31 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {app.user_name}
-                      <br />
-                      <span className="text-gray-500">{app.birth_date}</span>
+                      {(() => {
+                        // 찾아가는 돌잔치인지 확인
+                        const appData = app.application_data;
+                        const isVisitingDoljanchi = appData?.facility || appData?.targets || appData?.target;
+                        
+                        if (isVisitingDoljanchi) {
+                          // 찾아가는 돌잔치: 대표자 이름과 사업자번호 표시
+                          return (
+                            <>
+                              {appData?.facility?.representative || app.user_name}
+                              <br />
+                              <span className="text-gray-500">{appData?.facility?.businessNumber || '-'}</span>
+                            </>
+                          );
+                        } else {
+                          // 일반 신청: 이름과 생년월일 표시
+                          return (
+                            <>
+                              {app.user_name}
+                              <br />
+                              <span className="text-gray-500">{app.birth_date}</span>
+                            </>
+                          );
+                        }
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {getSupportTypeLabel(app.support_type, app.application_data)}
@@ -267,4 +308,3 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -153,17 +153,35 @@ export default function WeddingProgramPage() {
               모집 개요
             </h2>
 
-            {/* 유튜브 영상 */}
+            {/* 소개 영상 */}
             <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white scroll-section">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full border-0"
-                  src="https://www.youtube.com/embed/6LeMb6RjH-Y?rel=0&modestbranding=1&iv_load_policy=3&fs=1&playsinline=1&cc_load_policy=0&disablekb=0&enablejsapi=0"
+                <video
+                  className="absolute top-0 left-0 w-full h-full object-cover cursor-pointer"
+                  src="/videos/wedding-intro.mp4"
+                  poster="/images/wedding/video-thumbnail.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
                   title="전통혼례 소개 영상"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  loading="lazy"
-                />
+                  onClick={(e) => {
+                    const video = e.currentTarget;
+                    if (video.paused) {
+                      video.play();
+                    } else {
+                      video.pause();
+                    }
+                  }}
+                  style={{ 
+                    WebkitAppearance: 'none',
+                    appearance: 'none'
+                  }}
+                  suppressHydrationWarning
+                >
+                  <source src="/videos/wedding-intro.mp4" type="video/mp4" />
+                </video>
               </div>
             </div>
 

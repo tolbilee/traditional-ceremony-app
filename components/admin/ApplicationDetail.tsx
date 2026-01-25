@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
 import { useRouter } from 'next/navigation';
-import { REQUIRED_DOCUMENTS } from '@/lib/utils/constants';
+import { REQUIRED_DOCUMENTS, VISITING_DOLJANCHI_SPECIAL_DOCUMENTS } from '@/lib/utils/constants';
 import { SupportType } from '@/types';
 
 interface ApplicationDetailProps {
@@ -164,8 +164,16 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         });
         
         visitingTypes.forEach(type => {
-          const docName = REQUIRED_DOCUMENTS[type]?.documentName;
-          if (docName) documentNames.push(docName);
+          // 찾아가는 돌잔치의 경우 한부모가족 복지시설/영아원은 개별 서류로 분리 (4-6-2 * 주의사항)
+          if (type === 'doljanchi_welfare_facility' || type === 'doljanchi_orphanage') {
+            // 한부모가족 복지시설 또는 영아원인 경우 3개의 개별 서류로 분리
+            documentNames.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.business_registration.documentName);
+            documentNames.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.admission_confirmation.documentName);
+            documentNames.push(VISITING_DOLJANCHI_SPECIAL_DOCUMENTS.single_parent_certificate.documentName);
+          } else {
+            const docName = REQUIRED_DOCUMENTS[type]?.documentName;
+            if (docName) documentNames.push(docName);
+          }
         });
       } else {
         orderedTypes.forEach(type => {
@@ -292,32 +300,73 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           {/* 신청자 정보 */}
           <div className="rounded-lg bg-white p-6 shadow">
             <h2 className="mb-4 text-xl font-bold text-gray-900">신청자 정보</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-500">이름</label>
-                <p className="mt-1 text-gray-900">{application.user_name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">생년월일</label>
-                <p className="mt-1 text-gray-900">{application.birth_date}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">지원 유형</label>
-                <p className="mt-1 text-gray-900">
-                  {getSupportTypeLabel(application.support_type, application.application_data)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">동의 여부</label>
-                <p className="mt-1 text-gray-900">
-                  {application.consent_status ? (
-                    <span className="text-green-600">✓ 동의함</span>
-                  ) : (
-                    <span className="text-red-600">✗ 미동의</span>
-                  )}
-                </p>
-              </div>
-            </div>
+            {(() => {
+              // 찾아가는 돌잔치인지 확인
+              const appData = application.application_data;
+              const isVisitingDoljanchi = appData?.facility || appData?.targets || appData?.target;
+              
+              if (isVisitingDoljanchi) {
+                // 찾아가는 돌잔치: 대표자 이름과 사업자번호 표시
+                return (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">대표자 이름</label>
+                      <p className="mt-1 text-gray-900">{appData?.facility?.representative || application.user_name || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">사업자등록번호</label>
+                      <p className="mt-1 text-gray-900">{appData?.facility?.businessNumber || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">지원 유형</label>
+                      <p className="mt-1 text-gray-900">
+                        {getSupportTypeLabel(application.support_type, application.application_data)}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">동의 여부</label>
+                      <p className="mt-1 text-gray-900">
+                        {application.consent_status ? (
+                          <span className="text-green-600">✓ 동의함</span>
+                        ) : (
+                          <span className="text-red-600">✗ 미동의</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                );
+              } else {
+                // 일반 신청: 이름과 생년월일 표시
+                return (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">이름</label>
+                      <p className="mt-1 text-gray-900">{application.user_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">생년월일</label>
+                      <p className="mt-1 text-gray-900">{application.birth_date}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">지원 유형</label>
+                      <p className="mt-1 text-gray-900">
+                        {getSupportTypeLabel(application.support_type, application.application_data)}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">동의 여부</label>
+                      <p className="mt-1 text-gray-900">
+                        {application.consent_status ? (
+                          <span className="text-green-600">✓ 동의함</span>
+                        ) : (
+                          <span className="text-red-600">✗ 미동의</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+            })()}
           </div>
 
           {/* 일정 정보 */}
