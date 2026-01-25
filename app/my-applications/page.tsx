@@ -9,10 +9,14 @@ export default function MyApplicationsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [loginType, setLoginType] = useState<'normal' | 'visiting'>('normal');
+  const [businessNumber, setBusinessNumber] = useState('');
 
-  const handleLogin = (name: string, birth: string) => {
+  const handleLogin = (name: string, birth: string, type?: 'normal' | 'visiting', businessNum?: string) => {
     setUserName(name);
-    setBirthDate(birth);
+    setBirthDate(birth || '');
+    setLoginType(type || 'normal');
+    setBusinessNumber(businessNum || '');
     setIsAuthenticated(true);
   };
 
@@ -20,6 +24,8 @@ export default function MyApplicationsPage() {
     setIsAuthenticated(false);
     setUserName('');
     setBirthDate('');
+    setLoginType('normal');
+    setBusinessNumber('');
   };
 
   if (!isAuthenticated) {
@@ -45,7 +51,12 @@ export default function MyApplicationsPage() {
             로그아웃
           </button>
         </div>
-        <ApplicationList userName={userName} birthDate={birthDate} />
+        <ApplicationList 
+          userName={userName} 
+          birthDate={birthDate} 
+          loginType={loginType}
+          businessNumber={businessNumber}
+        />
       </div>
     </div>
   );

@@ -470,11 +470,6 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                       key={index}
                       className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
                     >
-                      {/* 증빙서류명 표시 */}
-                      <div className="mb-2 rounded-lg bg-blue-100 px-3 py-2">
-                        <p className="text-sm font-semibold text-blue-800">{documentName}</p>
-                      </div>
-                      
                       <div className="mb-3">
                         {isImage ? (
                           <img

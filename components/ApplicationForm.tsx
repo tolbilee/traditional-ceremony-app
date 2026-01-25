@@ -26,12 +26,24 @@ export default function ApplicationForm({ type, isEditMode = false, originalAppl
     isEditMode && originalApplication ? originalApplication.id : null
   );
   
-  // 편집 모드에서 doljanchiSubType 결정 (originalApplication의 support_type 기반)
+  // 편집 모드에서 doljanchiSubType 결정 (originalApplication의 application_data 기반)
   const getDoljanchiSubType = (): 'doljanchi' | 'welfare_facility' | 'orphanage' | 'visiting' | undefined => {
     if (propDoljanchiSubType) {
       return propDoljanchiSubType;
     }
     if (isEditMode && originalApplication && originalApplication.type === 'doljanchi') {
+      const appData = originalApplication.application_data as any;
+      
+      // 찾아가는 돌잔치인지 확인 (facility와 targets가 있고 parent.name이 비어있음)
+      if (appData?.facility && (appData.targets || appData.target)) {
+        const parentName = appData.parent?.name?.trim() || '';
+        if (!parentName) {
+          // 찾아가는 돌잔치
+          return 'visiting';
+        }
+      }
+      
+      // 일반 돌잔치인 경우 support_type 기반으로 판단
       const supportType = originalApplication.support_type;
       if (supportType === 'doljanchi') {
         return 'doljanchi';
