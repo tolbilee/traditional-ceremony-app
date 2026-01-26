@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -7,6 +7,8 @@ export default function WeddingProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'ceremony' | 'venue' | 'meal'>('overview');
   const ceremonyStepsRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // 전통혼례 안내 탭이 활성화되면 파란색 박스로 자동 스크롤
   useEffect(() => {
@@ -157,23 +159,26 @@ export default function WeddingProgramPage() {
             <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(26,86,219,0.12)] bg-white scroll-section">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <video
+                  ref={videoRef}
                   className="absolute top-0 left-0 w-full h-full object-cover cursor-pointer"
                   src="/videos/wedding-intro.mp4"
                   poster="/images/wedding/video-thumbnail.jpg"
-                  autoPlay
-                  muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   title="전통혼례 소개 영상"
                   onClick={(e) => {
                     const video = e.currentTarget;
                     if (video.paused) {
                       video.play();
+                      setIsVideoPlaying(true);
                     } else {
                       video.pause();
+                      setIsVideoPlaying(false);
                     }
                   }}
+                  onPlay={() => setIsVideoPlaying(true)}
+                  onPause={() => setIsVideoPlaying(false)}
                   style={{ 
                     WebkitAppearance: 'none',
                     appearance: 'none'
@@ -182,6 +187,26 @@ export default function WeddingProgramPage() {
                 >
                   <source src="/videos/wedding-intro.mp4" type="video/mp4" />
                 </video>
+                {/* 재생 버튼 */}
+                {!isVideoPlaying && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (videoRef.current) {
+                        videoRef.current.play();
+                        setIsVideoPlaying(true);
+                      }
+                    }}
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-all z-10 group"
+                    aria-label="영상 재생"
+                  >
+                    <div className="bg-white/90 hover:bg-white rounded-full p-4 shadow-lg transition-all group-hover:scale-110">
+                      <svg className="w-12 h-12 text-[#1A56DB]" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
 

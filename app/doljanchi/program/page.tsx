@@ -1,11 +1,13 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 export default function DoljanchiProgramPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'program' | 'venue' | 'meal'>('overview');
   const [showMap, setShowMap] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // 스크롤 기반 섹션 애니메이션
   useEffect(() => {
@@ -86,23 +88,26 @@ export default function DoljanchiProgramPage() {
             <div className="mb-5 rounded-2xl overflow-hidden shadow-sm border border-[rgba(201,162,39,0.15)] bg-white scroll-section">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <video
+                  ref={videoRef}
                   className="absolute top-0 left-0 w-full h-full object-cover cursor-pointer"
                   src="/videos/doljanchi-intro.mp4"
                   poster="/images/doljanchi/video-thumbnail.jpg"
-                  autoPlay
-                  muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   title="돌잔치 소개 영상"
                   onClick={(e) => {
                     const video = e.currentTarget;
                     if (video.paused) {
                       video.play();
+                      setIsVideoPlaying(true);
                     } else {
                       video.pause();
+                      setIsVideoPlaying(false);
                     }
                   }}
+                  onPlay={() => setIsVideoPlaying(true)}
+                  onPause={() => setIsVideoPlaying(false)}
                   style={{ 
                     WebkitAppearance: 'none',
                     appearance: 'none'
@@ -111,6 +116,26 @@ export default function DoljanchiProgramPage() {
                 >
                   <source src="/videos/doljanchi-intro.mp4" type="video/mp4" />
                 </video>
+                {/* 재생 버튼 */}
+                {!isVideoPlaying && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (videoRef.current) {
+                        videoRef.current.play();
+                        setIsVideoPlaying(true);
+                      }
+                    }}
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-all z-10 group"
+                    aria-label="영상 재생"
+                  >
+                    <div className="bg-white/90 hover:bg-white rounded-full p-4 shadow-lg transition-all group-hover:scale-110">
+                      <svg className="w-12 h-12 text-[#C9A227]" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
 
