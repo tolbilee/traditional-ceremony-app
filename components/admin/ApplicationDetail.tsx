@@ -220,7 +220,10 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               currentY = topMargin;
             }
             
-            pdf.addImage(finalImgData, 'JPEG', 30 * 0.264583, currentY, imgWidthMm, imgHeightMm);
+            // 이미지 중앙 정렬: (페이지 너비 - 이미지 너비) / 2
+            const imgX = (pageWidth - imgWidthMm) / 2;
+            
+            pdf.addImage(finalImgData, 'JPEG', imgX, currentY, imgWidthMm, imgHeightMm);
             currentY += imgHeightMm + 5;
           } catch (error) {
             console.error(`증빙서류 ${i + 1} 처리 실패:`, error);
@@ -448,75 +451,79 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         <div style={{ width: '210mm', padding: '40px 30px', fontFamily: "'Malgun Gothic', Arial, sans-serif", backgroundColor: 'white' }}>
           {/* 타이틀 */}
           <h1 style={{ fontSize: '18pt', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px', marginTop: 0 }}>
-            2026년 사회적배려대상자 전통혼례 참가신청서
+            {application.type === 'doljanchi' ? '2026년 사회적배려대상자 돌잔치 참가신청서' : '2026년 사회적배려대상자 전통혼례 참가신청서'}
           </h1>
           
           {/* 1. 참가자 정보 */}
           <div data-section="participant">
             <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '10px', marginTop: 0, marginLeft: '25px' }}>1. 참가자 정보</h2>
             {application.type === 'wedding' ? (
-              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed' }}>
+              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed', fontSize: '10pt' }}>
                 <tbody>
                   <tr>
-                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>이름</td>
-                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>신랑<br/>(남)</td>
-                    <td style={{ width: '32%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.groom?.name || ''}</td>
-                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>신부<br/>(여)</td>
-                    <td style={{ width: '36%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.bride?.name || ''}</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>이름</td>
+                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>신랑<br/>(남)</td>
+                    <td style={{ width: '32%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.groom?.name || ''}</td>
+                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>신부<br/>(여)</td>
+                    <td style={{ width: '36%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.bride?.name || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap' }}>생년월일</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap' }}>{appData.groom?.birthDate || ''}</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap' }}>{appData.bride?.birthDate || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>생년월일</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.groom?.birthDate || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.bride?.birthDate || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>국적</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.groom?.nationality || ''}</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.bride?.nationality || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>국적</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.groom?.nationality || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.bride?.nationality || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>주소</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word' }}>{appData.representative?.address || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>주소</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word', fontSize: '10pt' }}>{appData.representative?.address || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap' }}>대표번호</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', whiteSpace: 'nowrap' }}>{appData.representative?.phone || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>대표번호</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.representative?.phone || ''}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>지원유형</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', fontSize: '10pt' }}>{getSupportTypeLabel(application.support_type || '', appData)}</td>
                   </tr>
                 </tbody>
               </table>
             ) : (
-              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed' }}>
+              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed', fontSize: '10pt' }}>
                 <tbody>
                   <tr>
-                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>이름</td>
-                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>부/모<br/>({appData.parent?.gender === 'male' ? '남' : appData.parent?.gender === 'female' ? '여' : ''})</td>
-                    <td style={{ width: '32%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.parent?.name || ''}</td>
-                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>아이</td>
-                    <td style={{ width: '36%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.child?.name || ''}</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>이름</td>
+                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>부/모<br/>({appData.parent?.gender === 'male' ? '남' : appData.parent?.gender === 'female' ? '여' : ''})</td>
+                    <td style={{ width: '32%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.parent?.name || ''}</td>
+                    <td rowSpan={3} style={{ width: '10%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>아이</td>
+                    <td style={{ width: '36%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.child?.name || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap' }}>생년월일</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap' }}>{appData.parent?.birthDate || ''}</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap' }}>{appData.child?.birthDate || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>생년월일</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.parent?.birthDate || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.child?.birthDate || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>성별</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.parent?.gender === 'male' ? '남' : appData.parent?.gender === 'female' ? '여' : ''}</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.child?.gender === 'male' ? '남' : appData.child?.gender === 'female' ? '여' : ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>성별</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.parent?.gender === 'male' ? '남' : appData.parent?.gender === 'female' ? '여' : ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.child?.gender === 'male' ? '남' : appData.child?.gender === 'female' ? '여' : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>주소</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word' }}>{appData.representative?.address || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>주소</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word', fontSize: '10pt' }}>{appData.representative?.address || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap' }}>대표번호</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', whiteSpace: 'nowrap' }}>{appData.representative?.phone || ''}</td>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>이메일</td>
-                    <td colSpan={2} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word' }}>{appData.representative?.email || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>대표번호</td>
+                    <td colSpan={2} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', whiteSpace: 'nowrap', fontSize: '10pt' }}>{appData.representative?.phone || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>이메일</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word', fontSize: '10pt' }}>{appData.representative?.email || ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>사배자 구분</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left' }}>{getOrderedDocumentNames()[0] || appData.supportType || ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>지원유형</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', fontSize: '10pt' }}>{getSupportTypeLabel(application.support_type || '', appData)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -527,42 +534,46 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           <div data-section="progress" style={{ marginTop: '20px' }}>
             <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '10px', marginTop: 0, marginLeft: '25px' }}>2. 진행정보</h2>
             {application.type === 'wedding' ? (
-              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed' }}>
+              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed', fontSize: '10pt' }}>
                 <tbody>
                   <tr>
-                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>희망혼례 일시</td>
-                    <td style={{ width: '15%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>1순위</td>
-                    <td style={{ width: '30%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{application.schedule_1?.date && application.schedule_1?.time ? `${application.schedule_1.date} ${application.schedule_1.time}` : ''}</td>
-                    <td style={{ width: '15%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>2순위</td>
-                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{application.schedule_2?.date && application.schedule_2?.time ? `${application.schedule_2.date} ${application.schedule_2.time}` : ''}</td>
+                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>대상구분</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', fontSize: '10pt' }}>{(appData as any)?.targetCategory === 'pre_marriage' ? '예비부부' : (appData as any)?.targetCategory === 'married_no_ceremony_no_registration' ? '결혼식 미진행 부부(혼인신고 X)' : (appData as any)?.targetCategory === 'married_no_ceremony_registered' ? '결혼식 미진행 부부(혼인신고 O)' : (appData as any)?.targetCategory === 'other' ? '기타' : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>신청동기</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word' }}>{(appData.applicationReason || '').replace(/\n+$/, '')}</td>
+                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>희망혼례 일시</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>1순위</td>
+                    <td style={{ width: '25%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{application.schedule_1?.date && application.schedule_1?.time ? `${application.schedule_1.date} ${application.schedule_1.time}` : ''}</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>2순위</td>
+                    <td style={{ width: '31%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{application.schedule_2?.date && application.schedule_2?.time ? `${application.schedule_2.date} ${application.schedule_2.time}` : ''}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>신청동기</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word', fontSize: '10pt' }}>{(appData.applicationReason || '').replace(/\n+$/, '')}</td>
                   </tr>
                 </tbody>
               </table>
             ) : (
-              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed' }}>
+              <table style={{ width: 'calc(100% - 50px)', margin: '0 25px', borderCollapse: 'collapse', border: '0.5px solid #000', tableLayout: 'fixed', fontSize: '10pt' }}>
                 <tbody>
                   <tr>
-                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>혼인여부</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.parentMarried === 'yes' ? '예' : appData.parentMarried === 'no' ? '아니오' : ''}</td>
+                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>혼인여부</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.parentMarried === 'yes' ? '예' : appData.parentMarried === 'no' ? '아니오' : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>자녀양육여부</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{appData.parentRaisingChild === 'yes' ? '예' : appData.parentRaisingChild === 'no' ? '아니오' : ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>자녀양육여부</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', fontSize: '10pt' }}>{appData.parentRaisingChild === 'yes' ? '예' : appData.parentRaisingChild === 'no' ? '아니오' : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>희망일시</td>
-                    <td style={{ width: '15%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>1순위</td>
-                    <td style={{ width: '30%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{application.schedule_1?.date && application.schedule_1?.time ? `${application.schedule_1.date} ${application.schedule_1.time}` : ''}</td>
-                    <td style={{ width: '15%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>2순위</td>
-                    <td style={{ width: '20%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center' }}>{application.schedule_2?.date && application.schedule_2?.time ? `${application.schedule_2.date} ${application.schedule_2.time}` : ''}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>희망일시</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>1순위</td>
+                    <td style={{ width: '25%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{application.schedule_1?.date && application.schedule_1?.time ? `${application.schedule_1.date} ${application.schedule_1.time}` : ''}</td>
+                    <td style={{ width: '12%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>2순위</td>
+                    <td style={{ width: '31%', paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '10pt' }}>{application.schedule_2?.date && application.schedule_2?.time ? `${application.schedule_2.date} ${application.schedule_2.time}` : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center' }}>신청동기</td>
-                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word' }}>{(appData.applicationReason || '').replace(/\n+$/, '')}</td>
+                    <td style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1', border: '0.5px solid #000', backgroundColor: '#f0f0f0', fontWeight: 'bold', textAlign: 'center', fontSize: '10pt' }}>신청동기</td>
+                    <td colSpan={4} style={{ paddingTop: '1px', paddingBottom: '15px', paddingLeft: '5px', paddingRight: '5px', verticalAlign: 'middle', lineHeight: '1.3', border: '0.5px solid #000', textAlign: 'left', wordBreak: 'break-word', fontSize: '10pt' }}>{(appData.applicationReason || '').replace(/\n+$/, '')}</td>
                   </tr>
                 </tbody>
               </table>
@@ -805,12 +816,12 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                       key={index}
                       className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
                     >
-                      <div className="mb-3">
+                      <div className="mb-3 flex items-center justify-center">
                         {isImage ? (
                           <img
                             src={url}
                             alt={originalFileName}
-                            className="h-48 w-full rounded-lg object-contain bg-white"
+                            className="h-48 max-w-full rounded-lg object-contain bg-white mx-auto"
                             onError={(e) => {
                               console.error('Image load error:', url);
                               (e.target as HTMLImageElement).style.display = 'none';
