@@ -37,6 +37,8 @@ export async function POST(
     }
 
     // Google Apps Script로 데이터 전송
+    console.log('Sending request to Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
+    
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
       headers: {
@@ -52,9 +54,10 @@ export async function POST(
         supportType: application.support_type,
         applicationData: application.application_data,
         consentStatus: application.consent_status,
-        fileUrls: application.file_urls,
+        fileUrls: application.file_urls, // 모든 파일 URL 전달 (Google Apps Script에서 처리)
       }),
     });
+    console.log('Google Apps Script response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -65,7 +68,21 @@ export async function POST(
       );
     }
 
-    const result = await response.json();
+    // 응답 본문 확인
+    const responseText = await response.text();
+    console.log('Google Apps Script response body:', responseText);
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text:', responseText);
+      return NextResponse.json(
+        { error: 'Invalid response from Google Apps Script' },
+        { status: 500 }
+      );
+    }
 
     if (!result.success) {
       return NextResponse.json(
