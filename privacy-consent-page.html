@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보이용동의서</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12pt;
+      line-height: 1.8;
+      color: #1f2937;
+      background: #ffffff;
+      padding: 20mm;
+    }
+    
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    .page-break {
+      page-break-after: always;
+    }
+    
+    .no-break {
+      page-break-inside: avoid;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #1e40af;
+    }
+    
+    .header h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    
+    .section {
+      margin-bottom: 25px;
+      page-break-inside: avoid;
+    }
+    
+    .section-title {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .intro-text {
+      font-size: 11pt;
+      line-height: 1.8;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+    
+    .info-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .info-item {
+      margin-bottom: 12px;
+    }
+    
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      color: #1f2937;
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .info-value {
+      color: #4b5563;
+      font-size: 11pt;
+      line-height: 1.6;
+    }
+    
+    .notice {
+      font-size: 10pt;
+      color: #6b7280;
+      margin-top: 15px;
+      padding-left: 10px;
+      border-left: 3px solid #d1d5db;
+    }
+    
+    .consent-box {
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      padding: 15px;
+      background: #ffffff;
+      margin-top: 15px;
+    }
+    
+    .consent-question {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      font-size: 11pt;
+    }
+    
+    .consent-options {
+      display: flex;
+      gap: 20px;
+      font-size: 11pt;
+    }
+    
+    .consent-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .consent-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #4b5563;
+      border-radius: 3px;
+      display: inline-block;
+      position: relative;
+    }
+    
+    .consent-checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      top: -2px;
+      left: 2px;
+      color: #1e40af;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .divider {
+      border-top: 2px solid #e5e7eb;
+      margin: 25px 0;
+    }
+    
+    .signature-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+    }
+    
+    .signature-text {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 15px;
+    }
+    
+    .signature-info {
+      font-size: 11pt;
+      color: #374151;
+      line-height: 2;
+    }
+    
+    .signature-date {
+      margin-bottom: 8px;
+    }
+    
+    .signature-name {
+      margin-bottom: 8px;
+    }
+    
+    .signature-recipient {
+      margin-top: 20px;
+    }
+    
+    @media print {
+      body {
+        padding: 15mm;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+      .no-break {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>개인정보이용동의서</h1>
+  </div>
+
+  <!-- 개인정보 수집·이용 동의서 -->
+  <div class="section no-break">
+    <div class="section-title">개인정보 수집·이용 동의서</div>
+    
+    <div class="intro-text">
+      <p style="margin-bottom: 10px;">
+        국가유산진흥원에서는 귀하의 2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집을 위하여 아래와 같이 개인정보를 수집·이용하고자 합니다.
+      </p>
+      <p>
+        아래 내용을 충분히 숙지하신 후, 개인정보 수집‧이용 동의서에 서명하여 주시기 바랍니다.
+      </p>
+    </div>
+
+    <div class="info-box">
+      <div class="info-item">
+        <span class="info-label">[수집하는 개인정보의 항목]</span>
+        <div class="info-value">성명, 생년월일, 주소, 성별, 국적, 이메일, 연락처 등</div>
+      </div>
+      <div class="info-item">
+        <span class="info-label">[개인정보 수집 이용 목적]</span>
+        <div class="info-value">2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집 및 관리</div>
+      </div>
+      <div class="info-item">
+        <span class="info-label">[개인정보 보유기간]</span>
+        <div class="info-value">행사 종료 후 1년</div>
+      </div>
+    </div>
+
+    <p class="notice">
+      ※ 위의 개인정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
+    </p>
+
+    <div class="consent-box">
+      <div class="consent-question">
+        개인정보의 수집 및 이용에 동의하십니까?
+      </div>
+      <div class="consent-options">
+        <div class="consent-option">
+          <span class="consent-checkbox checked"></span>
+          <span>동의함</span>
+        </div>
+        <div class="consent-option">
+          <span class="consent-checkbox"></span>
+          <span>동의하지 않음</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 민감정보의 수집 및 이용 동의 -->
+  <div class="section no-break">
+    <div class="section-title">민감정보의 수집 및 이용 동의</div>
+    
+    <div class="info-box">
+      <div class="info-item">
+        <span class="info-label">[수집하는 민감정보의 항목]</span>
+        <div class="info-value">사회적 배려 대상자 증빙 서류 및 혼인사실 증빙 서류</div>
+      </div>
+      <div class="info-item">
+        <span class="info-label">[수집 이용 목적]</span>
+        <div class="info-value">2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집 및 관리</div>
+      </div>
+      <div class="info-item">
+        <span class="info-label">[개인정보 보유기간]</span>
+        <div class="info-value">행사 종료 후 1년</div>
+      </div>
+    </div>
+
+    <p class="notice">
+      ※ 위의 민감정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
+    </p>
+
+    <div class="consent-box">
+      <div class="consent-question">
+        민감정보의 수집 및 이용에 동의하십니까?
+      </div>
+      <div class="consent-options">
+        <div class="consent-option">
+          <span class="consent-checkbox checked"></span>
+          <span>동의함</span>
+        </div>
+        <div class="consent-option">
+          <span class="consent-checkbox"></span>
+          <span>동의하지 않음</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 서명란 -->
+  <div class="signature-section no-break">
+    <p class="signature-text">위의 각 사항에 동의하였음을 확인합니다.</p>
+    <div class="signature-info">
+      <div class="signature-date">2026년 1월 23일</div>
+      <div class="signature-name">성명 : 홍길동</div>
+      <div class="signature-recipient">국가유산진흥원장 귀하</div>
+    </div>
+  </div>
+</body>
+</html>

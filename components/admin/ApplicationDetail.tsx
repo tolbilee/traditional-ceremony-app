@@ -232,6 +232,340 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         }
       }
 
+      // 4. 개인정보 동의 페이지 추가
+      pdf.addPage();
+      currentY = topMargin;
+
+      // 신청자 이름 추출
+      const getApplicantName = (): string => {
+        const appData = application.application_data || {};
+        
+        if (application.type === 'wedding') {
+          // 전통혼례: 신랑 이름 사용
+          return appData.groom?.name || application.user_name || '';
+        } else {
+          const isVisitingDoljanchi = appData?.facility || appData?.targets || appData?.target;
+          if (isVisitingDoljanchi) {
+            // 찾아가는 돌잔치: 복지시설 대표자 이름 사용
+            return appData.facility?.representative || application.user_name || '';
+          } else {
+            // 돌잔치: 부/모 이름 사용
+            return appData.parent?.name || application.user_name || '';
+          }
+        }
+      };
+
+      const applicantName = getApplicantName();
+      
+      // 날짜 추출 (신청일시 사용)
+      const consentDate = application.created_at 
+        ? format(new Date(application.created_at), 'yyyy년 M월 d일', { locale: ko })
+        : format(new Date(), 'yyyy년 M월 d일', { locale: ko });
+
+      // 개인정보 동의 페이지 HTML 생성
+      const consentPageHTML = `
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Noto Sans KR', sans-serif;
+              font-size: 10.8pt;
+              line-height: 1.4;
+              color: #1f2937;
+              background: #ffffff;
+              padding: 36px 27px 50px 27px;
+              width: 210mm;
+              box-sizing: border-box;
+            }
+            .content-wrapper {
+              margin: 0 40px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 27px;
+              margin-left: 40px;
+              margin-right: 40px;
+              padding-bottom: 13.5px;
+              border-bottom: 3px solid #1e40af;
+            }
+            .header h1 {
+              font-size: 18pt;
+              font-weight: 700;
+              color: #1e40af;
+              margin-bottom: 7.2px;
+            }
+            .section {
+              margin-bottom: 20px;
+            }
+            .section-title {
+              font-size: 14.4pt;
+              font-weight: 700;
+              color: #1e40af;
+              margin-bottom: 12px;
+              margin-left: 0;
+              padding-bottom: 7.2px;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            .intro-text {
+              font-size: 9.9pt;
+              line-height: 1.4;
+              color: #374151;
+              margin-bottom: 16px;
+            }
+            .info-box {
+              background: #f9fafb;
+              border: 1px solid #e5e7eb;
+              border-radius: 5.4px;
+              padding: 8.5px;
+              margin-bottom: 13.5px;
+            }
+            .info-item {
+              margin-bottom: 9px;
+            }
+            .info-item:last-child {
+              margin-bottom: 0;
+            }
+            .info-label {
+              font-weight: 600;
+              color: #1f2937;
+              display: block;
+              margin-bottom: 4px;
+            }
+            .info-value {
+              color: #4b5563;
+              font-size: 9.9pt;
+              line-height: 1.3;
+            }
+            .notice {
+              font-size: 9pt;
+              color: #6b7280;
+              margin-top: 13.5px;
+              padding-left: 9px;
+              border-left: 3px solid #d1d5db;
+            }
+            .consent-box {
+              border: 2px solid #d1d5db;
+              border-radius: 5.4px;
+              padding: 8.5px;
+              background: #ffffff;
+              margin-top: 13.5px;
+            }
+            .consent-question {
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 10.8px;
+              font-size: 9.9pt;
+            }
+            .consent-options {
+              display: flex;
+              gap: 18px;
+              font-size: 9.9pt;
+            }
+            .consent-option {
+              display: flex;
+              align-items: center;
+              gap: 7.2px;
+            }
+            .consent-checkbox {
+              width: 16.2px;
+              height: 16.2px;
+              border: 2px solid #4b5563;
+              border-radius: 2.7px;
+              display: inline-block;
+              position: relative;
+              flex-shrink: 0;
+            }
+            .consent-checkbox.checked::after {
+              content: '✓';
+              position: absolute;
+              top: -10px;
+              left: 3px;
+              color: #dc2626;
+              font-weight: bold;
+              font-size: 12.6px;
+              line-height: 16.2px;
+            }
+            .divider {
+              border-top: none;
+              margin: 18px 0;
+            }
+            .signature-section {
+              margin-top: 10px;
+              padding-top: 15px;
+              padding-bottom: 20px;
+              border-top: none;
+            }
+            .signature-text {
+              font-size: 9.9pt;
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 12px;
+            }
+            .signature-info {
+              font-size: 9.9pt;
+              color: #374151;
+              line-height: 1.5;
+            }
+            .signature-date {
+              margin-bottom: 7.2px;
+            }
+            .signature-name {
+              margin-bottom: 7.2px;
+            }
+            .signature-recipient {
+              margin-top: 18px;
+              margin-bottom: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>개인정보이용동의서</h1>
+          </div>
+
+          <div class="content-wrapper">
+          <div class="section">
+            <div class="section-title">개인정보 수집·이용 동의서</div>
+            
+            <div class="intro-text">
+              <p style="margin-bottom: 10px;">
+                국가유산진흥원에서는 귀하의 2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집을 위하여 아래와 같이 개인정보를 수집·이용하고자 합니다.
+              </p>
+              <p>
+                아래 내용을 충분히 숙지하신 후, 개인정보 수집‧이용 동의서에 서명하여 주시기 바랍니다.
+              </p>
+            </div>
+
+            <div class="info-box">
+              <div class="info-item">
+                <span class="info-label">[수집하는 개인정보의 항목]</span>
+                <div class="info-value">성명, 생년월일, 주소, 성별, 국적, 이메일, 연락처 등</div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">[개인정보 수집 이용 목적]</span>
+                <div class="info-value">2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집 및 관리</div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">[개인정보 보유기간]</span>
+                <div class="info-value">행사 종료 후 1년</div>
+              </div>
+            </div>
+
+            <p class="notice">
+              ※ 위의 개인정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
+            </p>
+
+            <div class="consent-box">
+              <div class="consent-question">
+                개인정보의 수집 및 이용에 동의하십니까?
+              </div>
+              <div class="consent-options">
+                <div class="consent-option">
+                  <span class="consent-checkbox checked"></span>
+                  <span>동의함</span>
+                </div>
+                <div class="consent-option">
+                  <span class="consent-checkbox"></span>
+                  <span>동의하지 않음</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section">
+            <div class="section-title">민감정보의 수집 및 이용 동의</div>
+            
+            <div class="info-box">
+              <div class="info-item">
+                <span class="info-label">[수집하는 민감정보의 항목]</span>
+                <div class="info-value">사회적 배려 대상자 증빙 서류 및 혼인사실 증빙 서류</div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">[수집 이용 목적]</span>
+                <div class="info-value">2026년 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 참가자 모집 및 관리</div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">[개인정보 보유기간]</span>
+                <div class="info-value">행사 종료 후 1년</div>
+              </div>
+            </div>
+
+            <p class="notice">
+              ※ 위의 민감정보 처리에 대한 동의를 거부할 권리가 있습니다. 그러나, 동의를 거부할 경우 사회적 배려 대상자 전통혼례 및 돌잔치 지원 프로그램 신청을 할 수 없습니다.
+            </p>
+
+            <div class="consent-box">
+              <div class="consent-question">
+                민감정보의 수집 및 이용에 동의하십니까?
+              </div>
+              <div class="consent-options">
+                <div class="consent-option">
+                  <span class="consent-checkbox checked"></span>
+                  <span>동의함</span>
+                </div>
+                <div class="consent-option">
+                  <span class="consent-checkbox"></span>
+                  <span>동의하지 않음</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="signature-section">
+            <p class="signature-text">위의 각 사항에 동의하였음을 확인합니다.</p>
+            <div class="signature-info">
+              <div class="signature-date">${consentDate}</div>
+              <div class="signature-name">성명 : ${applicantName || '(신청자 성명)'}</div>
+              <div class="signature-recipient">국가유산진흥원장 귀하</div>
+            </div>
+          </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // 개인정보 동의 페이지를 임시 DOM 요소로 생성
+      const consentPageDiv = document.createElement('div');
+      consentPageDiv.innerHTML = consentPageHTML;
+      consentPageDiv.style.cssText = `
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 210mm;
+        background: white;
+        font-family: 'Noto Sans KR', sans-serif;
+      `;
+      document.body.appendChild(consentPageDiv);
+
+      // 폰트 로딩 대기
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 개인정보 동의 페이지 캡처
+      const consentCanvas = await html2canvas(consentPageDiv, {
+        scale: 1.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: consentPageDiv.scrollWidth,
+        height: consentPageDiv.scrollHeight,
+      });
+
+      document.body.removeChild(consentPageDiv);
+
+      const consentImgData = consentCanvas.toDataURL('image/jpeg', 0.75);
+      const consentImgHeight = (consentCanvas.height * imgWidth) / consentCanvas.width;
+
+      // 개인정보 동의 페이지를 PDF에 추가
+      pdf.addImage(consentImgData, 'JPEG', 0, currentY, imgWidth, consentImgHeight);
+
       // 원래 스타일 복원
       pdfContentRef.current.style.display = originalDisplay;
       pdfContentRef.current.style.position = originalPosition;
