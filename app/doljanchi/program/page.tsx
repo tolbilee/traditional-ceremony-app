@@ -288,7 +288,7 @@ export default function DoljanchiProgramPage() {
 
             <h2 className="text-lg font-semibold mb-5 flex items-center gap-2.5 text-[#1F2937] scroll-section">
               <span className="w-1 h-[18px] bg-[#C9A227] rounded"></span>
-              모집 일정
+              모집 일정(수시모집)
             </h2>
 
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(201,162,39,0.15)] scroll-section">
@@ -296,19 +296,18 @@ export default function DoljanchiProgramPage() {
                 <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-[rgba(201,162,39,0.25)] rounded"></div>
                 <div className="relative pb-6">
                   <div className="absolute -left-[22px] top-1.5 w-3 h-3 bg-[#C9A227] rounded-full border-[3px] border-[#FFFDF7]"></div>
-                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">2026. 1. 26.(월) ~ 2. 25.(수)</div>
+                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">2026. 3. 3.(화) ~ 모집마감시</div>
                   <div className="text-[15px] font-semibold text-[#1F2937] mb-0.5">신청 접수</div>
                 </div>
                 <div className="relative pb-6">
                   <div className="absolute -left-[22px] top-1.5 w-3 h-3 bg-[#C9A227] rounded-full border-[3px] border-[#FFFDF7]"></div>
-                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">2026. 2. 26.(목) ~ 2. 27.(금)</div>
+                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">매월 말 내부심사</div>
                   <div className="text-[15px] font-semibold text-[#1F2937] mb-0.5">선정 심사</div>
                 </div>
                 <div className="relative">
                   <div className="absolute -left-[22px] top-1.5 w-3 h-3 bg-[#C9A227] rounded-full border-[3px] border-[#FFFDF7]"></div>
-                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">2026. 2. 28.(토)</div>
+                  <div className="text-[13px] text-[#C9A227] font-semibold mb-1">내부 심사 후 개별 연락</div>
                   <div className="text-[15px] font-semibold text-[#1F2937] mb-0.5">발표</div>
-                  <div className="text-[13px] text-[#9CA3AF] font-normal">개별연락</div>
                 </div>
               </div>
             </div>
