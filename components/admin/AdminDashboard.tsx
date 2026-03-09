@@ -184,20 +184,12 @@ export default function AdminDashboard({ applications, error }: AdminDashboardPr
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/admin/content"
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-              >
-                콘텐츠 관리
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                로그아웃
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              로그아웃
+            </button>
           </div>
         </div>
       </header>
