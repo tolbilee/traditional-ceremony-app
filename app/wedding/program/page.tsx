@@ -718,7 +718,7 @@ export default function WeddingProgramPage() {
         >
           신청하기
         </Link>
-        <p className="mt-3.5 text-sm text-[#9CA3AF]">신청기간 2026. 1. 26.(월) ~ 2. 25.(수)</p>
+        <p className="mt-3.5 text-sm text-[#9CA3AF]">신청기간 2026. 3. 3.(화) ~ 모집마감 시까지</p>
       </section>
 
       {/* Footer */}
