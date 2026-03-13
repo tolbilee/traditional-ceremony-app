@@ -155,96 +155,14 @@ export default function ApplicationDataStep({
   };
 
   // 주소 검색 팝업 열기 (카카오 주소검색 API 공식 매뉴얼 기준)
-  // embed 방식 사용: 팝업 차단 문제 해결 및 CSP 호환성 향상
+  // 팝업 방식 사용: CSP가 완화되어 있어 팝업이 정상 작동함
   const openPostcodePopup = (onComplete: (address: string) => void) => {
     if (!window.daum || !window.daum.Postcode) {
       alert('주소 검색 서비스를 사용할 수 없습니다.');
       return;
     }
 
-    // 모달 오버레이 생성
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    `;
-
-    // 주소 검색 컨테이너 생성
-    const container = document.createElement('div');
-    container.style.cssText = `
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      height: 500px;
-      background: white;
-      border-radius: 8px;
-      z-index: 9999;
-      overflow: hidden;
-    `;
-
-    // 닫기 버튼
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 30px;
-      height: 30px;
-      border: none;
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 10000;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    `;
-
-    // 모달이 이미 닫혔는지 추적하는 플래그
-    let isClosed = false;
-
-    const closeModal = () => {
-      // 이미 닫혔으면 무시
-      if (isClosed) return;
-      
-      // 노드가 존재하는지 확인 후 제거
-      if (overlay && overlay.parentNode === document.body) {
-        try {
-          document.body.removeChild(overlay);
-          isClosed = true;
-        } catch (error) {
-          // 이미 제거되었거나 다른 이유로 제거할 수 없는 경우 무시
-          console.warn('Failed to remove overlay:', error);
-          isClosed = true;
-        }
-      } else {
-        isClosed = true;
-      }
-    };
-
-    closeBtn.onclick = closeModal;
-    overlay.onclick = (e) => {
-      if (e.target === overlay) {
-        closeModal();
-      }
-    };
-
-    container.appendChild(closeBtn);
-    overlay.appendChild(container);
-    document.body.appendChild(overlay);
-
-    // embed 방식으로 주소 검색 API 임베드
-    const postcode = new window.daum.Postcode({
+    new window.daum.Postcode({
       oncomplete: (data) => {
         // 사용자가 선택한 타입에 따라 도로명 주소 또는 지번 주소 선택
         const isRoad = data.userSelectedType === 'R';
@@ -261,18 +179,8 @@ export default function ApplicationDataStep({
         }
 
         onComplete(fullAddress);
-        // oncomplete에서 닫으면 onclose는 호출되지 않을 수 있으므로 여기서만 닫기
-        closeModal();
       },
-      onclose: () => {
-        // oncomplete에서 이미 닫혔을 수 있으므로 안전하게 닫기
-        closeModal();
-      },
-      width: '100%',
-      height: '100%',
-    });
-
-    postcode.embed(container);
+    }).open();
   };
 
   // 전화번호 포맷팅 함수 (000-0000-0000 형식)
