@@ -42,8 +42,8 @@ export function middleware(request: NextRequest) {
 
   // 공통으로 사용할 CSP 베이스 설정
   const scriptSrc = isDevelopment
-    ? "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://dapi.kakao.com"
-    : "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net https://dapi.kakao.com";
+    ? "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net https://postcode.map.daum.net https://*.map.daum.net https://dapi.kakao.com"
+    : "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net https://postcode.map.daum.net https://*.map.daum.net https://dapi.kakao.com";
   
   const styleSrc = isDevelopment
     ? "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net http://t1.daumcdn.net"
@@ -52,8 +52,8 @@ export function middleware(request: NextRequest) {
   const imgSrc = "'self' data: https: blob: http://t1.daumcdn.net http://mts.daumcdn.net";
   const fontSrc = "'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net";
   const frameSrc = isDevelopment
-    ? "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://postcode.map.daum.net https://www.youtube.com https://youtube.com"
-    : "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net https://postcode.map.daum.net https://www.youtube.com https://youtube.com";
+    ? "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net https://postcode.map.daum.net https://*.map.daum.net https://www.youtube.com https://youtube.com"
+    : "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net https://postcode.map.daum.net https://*.map.daum.net https://www.youtube.com https://youtube.com";
 
   // frame-ancestors 설정: daum-map.html만 'self', 나머지는 'none'
   let frameAncestors = "'none'";
@@ -68,7 +68,7 @@ export function middleware(request: NextRequest) {
     `style-src ${styleSrc}`,
     `img-src ${imgSrc}`,
     `font-src ${fontSrc}`,
-    "connect-src 'self' https:",
+    "connect-src 'self' https: https://*.daumcdn.net https://*.daum.net https://postcode.map.daum.net",
     `frame-src ${frameSrc}`,
     "object-src 'none'",
     "base-uri 'self'",
