@@ -41,9 +41,10 @@ export function middleware(request: NextRequest) {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   // 공통으로 사용할 CSP 베이스 설정 - 카카오 주소 API를 위한 완전한 설정
+  // postcode.map.kakao.com도 추가
   const scriptSrc = isDevelopment
-    ? "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://*.map.daum.net http://*.map.daum.net https://*.daum.net http://*.daum.net https://dapi.kakao.com"
-    : "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://*.map.daum.net http://*.map.daum.net https://*.daum.net http://*.daum.net https://dapi.kakao.com";
+    ? "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com https://*.map.daum.net http://*.map.daum.net https://*.map.kakao.com http://*.map.kakao.com https://*.daum.net http://*.daum.net https://*.kakao.com http://*.kakao.com https://dapi.kakao.com"
+    : "'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com https://*.map.daum.net http://*.map.daum.net https://*.map.kakao.com http://*.map.kakao.com https://*.daum.net http://*.daum.net https://*.kakao.com http://*.kakao.com https://dapi.kakao.com";
   
   const styleSrc = isDevelopment
     ? "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net http://t1.daumcdn.net"
@@ -52,10 +53,9 @@ export function middleware(request: NextRequest) {
   const imgSrc = "'self' data: https: blob: http://t1.daumcdn.net http://mts.daumcdn.net";
   const fontSrc = "'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net";
   // 카카오 주소 API를 위한 완전한 frame-src 설정
-  // 개발 환경에서는 더 완화된 설정 사용
-  const frameSrc = isDevelopment
-    ? "'self' https: http: https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://*.map.daum.net http://*.map.daum.net https://*.daum.net http://*.daum.net https://www.youtube.com https://youtube.com"
-    : "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://*.map.daum.net http://*.map.daum.net https://*.daum.net http://*.daum.net https://www.youtube.com https://youtube.com";
+  // 프로덕션 환경에서도 카카오 주소 API가 작동하도록 모든 카카오 도메인 허용
+  // postcode.map.kakao.com도 추가 (카카오 주소 API가 사용하는 실제 도메인)
+  const frameSrc = "'self' https://t1.daumcdn.net http://t1.daumcdn.net https://*.daumcdn.net http://*.daumcdn.net https://ssl.daumcdn.net https://ssl.daum.net http://ssl.daum.net https://postcode.map.daum.net http://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com https://*.map.daum.net http://*.map.daum.net https://*.map.kakao.com http://*.map.kakao.com https://*.daum.net http://*.daum.net https://*.kakao.com http://*.kakao.com https://www.youtube.com https://youtube.com";
 
   // frame-ancestors 설정: daum-map.html만 'self', 나머지는 'none'
   let frameAncestors = "'none'";
@@ -70,7 +70,7 @@ export function middleware(request: NextRequest) {
     `style-src ${styleSrc}`,
     `img-src ${imgSrc}`,
     `font-src ${fontSrc}`,
-    "connect-src 'self' https: http: https://*.daumcdn.net http://*.daumcdn.net https://*.daum.net http://*.daum.net https://postcode.map.daum.net http://postcode.map.daum.net",
+    "connect-src 'self' https: http: https://*.daumcdn.net http://*.daumcdn.net https://*.daum.net http://*.daum.net https://*.kakao.com http://*.kakao.com https://postcode.map.daum.net http://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com",
     `frame-src ${frameSrc}`,
     "object-src 'none'",
     "base-uri 'self'",
