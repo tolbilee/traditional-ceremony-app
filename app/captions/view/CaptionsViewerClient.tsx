@@ -77,7 +77,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         setStatus('connected');
         pollTimer = setInterval(() => {
           void pullLatestState();
-        }, 1200);
+        }, 400);
 
         channel = supabase
           .channel(`caption-state-${data.room.id}`)

@@ -257,7 +257,7 @@ export default function CaptionsAdminPage() {
     setMessage('큐를 삭제했습니다.');
   }
 
-  async function publishCueAt(index: number, appendMessages = true) {
+  async function publishCueAt(index: number, appendMessages = true, useBusy = true) {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
@@ -268,7 +268,7 @@ export default function CaptionsAdminPage() {
       return;
     }
 
-    setBusy(true);
+    if (useBusy) setBusy(true);
     setMessage('');
     try {
       const res = await fetch('/api/captions/publish', {
@@ -298,7 +298,7 @@ export default function CaptionsAdminPage() {
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
-      setBusy(false);
+      if (useBusy) setBusy(false);
     }
   }
 
@@ -306,7 +306,7 @@ export default function CaptionsAdminPage() {
     if (cues.length === 0) return;
     const clamped = Math.max(0, Math.min(next, cues.length - 1));
     setCurrentIndex(clamped);
-    void publishCueAt(clamped, false);
+    void publishCueAt(clamped, false, false);
   }
 
   async function publishCurrent() {
