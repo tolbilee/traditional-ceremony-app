@@ -19,6 +19,17 @@ type Cue = {
   texts: Record<string, string>;
 };
 
+type HistoryMessageRow = {
+  seq: number;
+  lang: string;
+  content: string;
+  speaker?: string | null;
+};
+
+type HistoryStateRow = {
+  current_index?: number;
+};
+
 const OPERATOR_LANGUAGE_CODE = 'korean';
 
 function normalizeRoomCode(value: string): string {
@@ -74,6 +85,62 @@ export default function CaptionsAdminPage() {
 
   const displayLanguages = useMemo(() => CAPTION_LANGUAGE_OPTIONS, []);
 
+  async function loadRoomCues(targetRoomCode: string) {
+    try {
+      const res = await fetch(`/api/captions/history?roomCode=${encodeURIComponent(targetRoomCode)}&limit=500`);
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(`오류: ${data?.error || '기존 자막을 불러오지 못했습니다.'}`);
+        return;
+      }
+
+      const rows = (data.messages || []) as HistoryMessageRow[];
+      const grouped = new Map<number, Cue>();
+
+      for (const row of rows) {
+        const seq = Number(row.seq);
+        if (!Number.isFinite(seq) || seq <= 0) continue;
+
+        const existing = grouped.get(seq);
+        if (!existing) {
+          grouped.set(seq, {
+            id: `loaded-${seq}`,
+            speaker: row.speaker || '',
+            texts: {
+              [row.lang]: row.content || '',
+            },
+          });
+        } else {
+          existing.texts[row.lang] = row.content || '';
+          if (!existing.speaker && row.speaker) existing.speaker = row.speaker;
+        }
+      }
+
+      const nextCues = Array.from(grouped.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([, cue]) => cue);
+
+      setCues(nextCues);
+
+      const state = (data.state || null) as HistoryStateRow | null;
+      const nextIndex = typeof state?.current_index === 'number' ? state.current_index : -1;
+      if (nextCues.length === 0) {
+        setCurrentIndex(-1);
+      } else {
+        const safeIndex = Math.max(0, Math.min(nextIndex, nextCues.length - 1));
+        setCurrentIndex(nextIndex >= 0 ? safeIndex : 0);
+      }
+
+      if (nextCues.length > 0) {
+        setMessage(`기존 자막 ${nextCues.length}개를 불러왔습니다.`);
+      } else {
+        setMessage('기존 자막이 없습니다. 새로 입력해 주세요.');
+      }
+    } catch (error) {
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   async function ensureRoom() {
     setBusy(true);
     setMessage('');
@@ -96,7 +163,14 @@ export default function CaptionsAdminPage() {
       setRoomId(data.room.id);
       setTitle(data.room.title);
       setRoomCodeInput(data.room.room_code);
-      setMessage(data.created ? '룸이 생성되었습니다.' : '기존 룸에 연결되었습니다.');
+      if (data.created) {
+        setMessage('룸이 생성되었습니다.');
+        setCues([]);
+        setCurrentIndex(-1);
+      } else {
+        setMessage('기존 룸에 연결되었습니다. 저장된 자막을 불러오는 중...');
+      }
+      await loadRoomCues(data.room.room_code);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
