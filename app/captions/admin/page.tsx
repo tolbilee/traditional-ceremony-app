@@ -17,7 +17,7 @@ function normalizeRoomCode(value: string): string {
 }
 
 export default function CaptionsAdminPage() {
-  const [title, setTitle] = useState('Live Captions');
+  const [title, setTitle] = useState('실시간 자막');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [roomId, setRoomId] = useState('');
@@ -52,7 +52,7 @@ export default function CaptionsAdminPage() {
     try {
       const payload = {
         roomCode: normalizeRoomCode(roomCodeInput),
-        title: title.trim() || 'Live Captions',
+        title: title.trim() || '실시간 자막',
       };
       const res = await fetch('/api/captions/rooms', {
         method: 'POST',
@@ -61,16 +61,16 @@ export default function CaptionsAdminPage() {
       });
       const data = (await res.json()) as RoomResponse | { error: string };
       if (!res.ok || 'error' in data) {
-        setMessage(`Error: ${'error' in data ? data.error : 'Failed to create room'}`);
+        setMessage(`오류: ${'error' in data ? data.error : '룸 생성에 실패했습니다.'}`);
         return;
       }
       setRoomCode(data.room.room_code);
       setRoomId(data.room.id);
       setTitle(data.room.title);
       setRoomCodeInput(data.room.room_code);
-      setMessage(data.created ? 'Room created.' : 'Connected to existing room.');
+      setMessage(data.created ? '룸이 생성되었습니다.' : '기존 룸에 연결되었습니다.');
     } catch (error) {
-      setMessage(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
@@ -78,7 +78,7 @@ export default function CaptionsAdminPage() {
 
   async function publishCurrent() {
     if (!roomCode) {
-      setMessage('Create or connect a room first.');
+      setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
     }
     setBusy(true);
@@ -99,12 +99,12 @@ export default function CaptionsAdminPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setMessage(`Error: ${data?.error || 'Publish failed'}`);
+        setMessage(`오류: ${data?.error || '송출에 실패했습니다.'}`);
         return;
       }
-      setMessage(`Published (seq: ${data.seq})`);
+      setMessage(`송출 완료 (시퀀스: ${data.seq})`);
     } catch (error) {
-      setMessage(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
@@ -119,47 +119,47 @@ export default function CaptionsAdminPage() {
   async function copyGuestUrl() {
     if (!guestUrl) return;
     await navigator.clipboard.writeText(guestUrl);
-    setMessage('Guest link copied.');
+    setMessage('게스트 링크를 복사했습니다.');
   }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-bold">Live Captions Admin</h1>
+      <h1 className="text-2xl font-bold">실시간 자막 운영자 페이지</h1>
 
       <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">Room Setup</h2>
+        <h2 className="mb-3 text-lg font-semibold">룸 설정</h2>
         <div className="grid gap-3 md:grid-cols-3">
           <input
             className="rounded border p-2"
-            placeholder="Room code (optional)"
+            placeholder="룸 코드 (비우면 자동 생성)"
             value={roomCodeInput}
             onChange={(e) => setRoomCodeInput(e.target.value)}
           />
           <input
             className="rounded border p-2"
-            placeholder="Performance title"
+            placeholder="공연 제목"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <button className="rounded bg-blue-600 px-4 py-2 font-semibold text-white" disabled={busy} onClick={ensureRoom}>
-            Create/Connect Room
+            룸 생성/연결
           </button>
         </div>
-        {roomCode ? <p className="mt-2 text-sm text-gray-700">Active room: `{roomCode}` (id: {roomId})</p> : null}
+        {roomCode ? <p className="mt-2 text-sm text-gray-700">활성 룸: `{roomCode}` (id: {roomId})</p> : null}
       </section>
 
       <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">Caption Source Input</h2>
+        <h2 className="mb-3 text-lg font-semibold">자막 원문 입력</h2>
         <div className="grid gap-3 md:grid-cols-2">
           <textarea
             className="min-h-56 rounded border p-3"
-            placeholder="Korean captions, one line per row"
+            placeholder="한국어 자막을 한 줄씩 입력하세요"
             value={koreanLinesText}
             onChange={(e) => setKoreanLinesText(e.target.value)}
           />
           <textarea
             className="min-h-56 rounded border p-3"
-            placeholder="English captions, one line per row"
+            placeholder="영어 자막을 한 줄씩 입력하세요"
             value={englishLinesText}
             onChange={(e) => setEnglishLinesText(e.target.value)}
           />
@@ -167,49 +167,49 @@ export default function CaptionsAdminPage() {
       </section>
 
       <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">Publish Controls</h2>
+        <h2 className="mb-3 text-lg font-semibold">송출 제어</h2>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <button className="rounded border px-3 py-2" onClick={() => moveIndex(currentIndex - 1)} disabled={busy || currentIndex <= 0}>
-            Prev
+            이전
           </button>
           <button
             className="rounded border px-3 py-2"
             onClick={() => moveIndex(currentIndex + 1)}
             disabled={busy || maxCount === 0 || currentIndex >= maxCount - 1}
           >
-            Next
+            다음
           </button>
           <button className="rounded border px-3 py-2" onClick={() => setCurrentLanguage('korean')}>
-            Language: Korean
+            언어: 한국어
           </button>
           <button className="rounded border px-3 py-2" onClick={() => setCurrentLanguage('english')}>
-            Language: English
+            언어: 영어
           </button>
           <button className="rounded bg-emerald-600 px-4 py-2 font-semibold text-white" disabled={busy} onClick={publishCurrent}>
-            Publish Current
+            현재 자막 송출
           </button>
         </div>
         <p className="text-sm text-gray-700">
-          Current index: {currentIndex >= 0 ? currentIndex + 1 : 0} / {maxCount}
+          현재 인덱스: {currentIndex >= 0 ? currentIndex + 1 : 0} / {maxCount}
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <div className="rounded border p-3">
-            <div className="mb-2 text-xs text-gray-500">Current Korean</div>
+            <div className="mb-2 text-xs text-gray-500">현재 한국어</div>
             <div className="min-h-14 whitespace-pre-wrap">{currentKorean || '-'}</div>
           </div>
           <div className="rounded border p-3">
-            <div className="mb-2 text-xs text-gray-500">Current English</div>
+            <div className="mb-2 text-xs text-gray-500">현재 영어</div>
             <div className="min-h-14 whitespace-pre-wrap">{currentEnglish || '-'}</div>
           </div>
         </div>
       </section>
 
       <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">Guest Link</h2>
+        <h2 className="mb-3 text-lg font-semibold">게스트 링크</h2>
         <div className="flex flex-wrap items-center gap-2">
           <input className="min-w-[260px] flex-1 rounded border p-2" value={guestUrl} readOnly />
           <button className="rounded border px-3 py-2" disabled={!guestUrl} onClick={copyGuestUrl}>
-            Copy Link
+            링크 복사
           </button>
         </div>
       </section>
