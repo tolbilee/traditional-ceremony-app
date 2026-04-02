@@ -1,15 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isCaptionLanguage, normalizeRoomCode, toOptionalText } from '../_utils';
+
+type CurrentTexts = Record<string, string>;
+
+function sanitizeTexts(input: unknown): CurrentTexts {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const out: CurrentTexts = {};
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (typeof key !== 'string') continue;
+    out[key.trim().toLowerCase()] = typeof value === 'string' ? value : '';
+  }
+  return out;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const roomCode = normalizeRoomCode(body.roomCode);
-    const currentLanguage = toOptionalText(body.currentLanguage);
+    const currentLanguage = toOptionalText(body.currentLanguage).trim().toLowerCase();
     const currentIndex = Number(body.currentIndex);
-    const currentKorean = toOptionalText(body.currentKorean);
-    const currentEnglish = toOptionalText(body.currentEnglish);
+    const currentSpeaker = toOptionalText(body.currentSpeaker).trim();
+    const currentTexts = sanitizeTexts(body.currentTexts);
     const performanceTitle = toOptionalText(body.performanceTitle).trim();
     const appendMessages = body.appendMessages !== false;
 
@@ -20,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'currentIndex가 올바르지 않습니다.' }, { status: 400 });
     }
     if (!isCaptionLanguage(currentLanguage)) {
-      return NextResponse.json({ error: 'currentLanguage는 korean 또는 english여야 합니다.' }, { status: 400 });
+      return NextResponse.json({ error: 'currentLanguage는 비어있을 수 없습니다.' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -48,7 +60,7 @@ export async function POST(request: NextRequest) {
 
       if (titleError) {
         console.error('Failed to update room title:', titleError);
-        return NextResponse.json({ error: '공연명 업데이트 중 오류가 발생했습니다.' }, { status: 500 });
+        return NextResponse.json({ error: '공연 제목 업데이트 중 오류가 발생했습니다.' }, { status: 500 });
       }
     }
 
@@ -78,8 +90,10 @@ export async function POST(request: NextRequest) {
           room_id: room.id,
           current_index: currentIndex,
           current_language: currentLanguage,
-          current_korean: currentKorean,
-          current_english: currentEnglish,
+          current_speaker: currentSpeaker,
+          current_korean: currentTexts.korean || '',
+          current_english: currentTexts.english || '',
+          current_texts: currentTexts,
         },
         { onConflict: 'room_id' }
       );
@@ -90,21 +104,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (appendMessages) {
-      const rows = [];
-      if (currentKorean.trim()) {
+      const rows: Array<{ room_id: string; seq: number; lang: string; content: string; speaker: string }> = [];
+      for (const [lang, content] of Object.entries(currentTexts)) {
+        if (!content || !content.trim()) continue;
         rows.push({
           room_id: room.id,
           seq: nextSeq,
-          lang: 'korean',
-          content: currentKorean,
-        });
-      }
-      if (currentEnglish.trim()) {
-        rows.push({
-          room_id: room.id,
-          seq: nextSeq,
-          lang: 'english',
-          content: currentEnglish,
+          lang,
+          content,
+          speaker: currentSpeaker,
         });
       }
 
@@ -127,6 +135,7 @@ export async function POST(request: NextRequest) {
       seq: nextSeq,
       currentIndex,
       currentLanguage,
+      currentSpeaker,
       appendMessages,
     });
   } catch (error) {
@@ -134,4 +143,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '요청 처리 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
-

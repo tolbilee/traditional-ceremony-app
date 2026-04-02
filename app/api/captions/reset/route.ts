@@ -47,8 +47,10 @@ export async function POST(request: NextRequest) {
           room_id: room.id,
           current_index: -1,
           current_language: 'korean',
+          current_speaker: '',
           current_korean: '',
           current_english: '',
+          current_texts: {},
         },
         { onConflict: 'room_id' }
       );
@@ -69,4 +71,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '요청 처리 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
-

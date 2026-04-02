@@ -1,11 +1,11 @@
-export type CaptionLanguage = 'korean' | 'english';
+export type CaptionLanguage = string;
 
 export function normalizeRoomCode(input?: string): string {
   return (input || '').trim().toLowerCase();
 }
 
 export function isCaptionLanguage(input: string): input is CaptionLanguage {
-  return input === 'korean' || input === 'english';
+  return typeof input === 'string' && input.trim().length > 0;
 }
 
 export function toSafeLimit(input: string | null, fallback = 100, max = 500): number {
@@ -18,4 +18,3 @@ export function toSafeLimit(input: string | null, fallback = 100, max = 500): nu
 export function toOptionalText(input: unknown): string {
   return typeof input === 'string' ? input : '';
 }
-

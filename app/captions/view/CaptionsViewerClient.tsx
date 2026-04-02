@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { CAPTION_LANGUAGE_OPTIONS } from '../languageOptions';
 
 type CaptionRoom = {
   id: string;
@@ -14,9 +15,11 @@ type CaptionRoom = {
 type CaptionState = {
   room_id: string;
   current_index: number;
-  current_language: 'korean' | 'english';
+  current_language: string;
+  current_speaker?: string;
   current_korean: string;
   current_english: string;
+  current_texts?: Record<string, string>;
   updated_at: string;
 };
 
@@ -27,7 +30,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
   const [room, setRoom] = useState<CaptionRoom | null>(null);
   const [state, setState] = useState<CaptionState | null>(null);
-  const [language, setLanguage] = useState<'korean' | 'english'>('korean');
+  const [language, setLanguage] = useState<string>('korean');
   const [status, setStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
   const [error, setError] = useState('');
 
@@ -98,14 +101,9 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
   const subtitle = useMemo(() => {
     if (!state) return '';
-    if (language === 'korean') return state.current_korean || '';
-    return state.current_english || '';
+    const map = (state.current_texts || {}) as Record<string, string>;
+    return map[language] || map.korean || state.current_korean || '';
   }, [state, language]);
-
-  const fallbackSubtitle = useMemo(() => {
-    if (!state) return '';
-    return state.current_korean || state.current_english || '';
-  }, [state]);
 
   function enterRoom() {
     const nextCode = roomCodeInput.trim().toLowerCase();
@@ -147,19 +145,19 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         </div>
       </header>
 
-      <section className="flex justify-center gap-2 px-4 py-3">
-        <button
-          onClick={() => setLanguage('korean')}
-          className={`rounded px-3 py-1 text-sm ${language === 'korean' ? 'bg-white text-black' : 'bg-white/20 text-white'}`}
+      <section className="flex items-center justify-center gap-2 px-4 py-3">
+        <label className="text-sm text-white/80">국가 선택</label>
+        <select
+          className="rounded border border-white/30 bg-black/40 px-3 py-1 text-sm text-white"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
         >
-          한국어
-        </button>
-        <button
-          onClick={() => setLanguage('english')}
-          className={`rounded px-3 py-1 text-sm ${language === 'english' ? 'bg-white text-black' : 'bg-white/20 text-white'}`}
-        >
-          영어
-        </button>
+          {CAPTION_LANGUAGE_OPTIONS.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.label}
+            </option>
+          ))}
+        </select>
       </section>
 
       <section className="flex flex-1 items-center justify-center px-6 pb-10">
@@ -169,7 +167,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
           </div>
         ) : (
           <div className="max-w-5xl whitespace-pre-wrap text-center text-3xl font-semibold leading-relaxed md:text-5xl">
-            {subtitle || fallbackSubtitle || '자막을 기다리는 중입니다...'}
+            {subtitle || '자막을 기다리는 중입니다...'}
           </div>
         )}
       </section>

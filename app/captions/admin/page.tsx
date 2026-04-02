@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useMemo, useState } from 'react';
+import { CAPTION_LANGUAGE_OPTIONS } from '../languageOptions';
 
 type RoomResponse = {
   created: boolean;
@@ -12,8 +13,40 @@ type RoomResponse = {
   };
 };
 
+type Cue = {
+  id: string;
+  speaker: string;
+  texts: Record<string, string>;
+};
+
+const OPERATOR_LANGUAGE_CODE = 'korean';
+
 function normalizeRoomCode(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function createCue(speaker: string, langCode: string, lineText: string): Cue {
+  const baseTexts: Record<string, string> = {
+    [OPERATOR_LANGUAGE_CODE]: lineText,
+  };
+  if (langCode !== OPERATOR_LANGUAGE_CODE) {
+    baseTexts[langCode] = lineText;
+  }
+  return {
+    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    speaker,
+    texts: baseTexts,
+  };
+}
+
+function buttonClass(color: 'blue' | 'green' | 'red' | 'gray' = 'blue'): string {
+  const palette = {
+    blue: 'bg-blue-600 hover:bg-blue-700',
+    green: 'bg-emerald-600 hover:bg-emerald-700',
+    red: 'bg-red-600 hover:bg-red-700',
+    gray: 'bg-slate-600 hover:bg-slate-700',
+  };
+  return `rounded px-4 py-2 font-semibold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${palette[color]}`;
 }
 
 export default function CaptionsAdminPage() {
@@ -21,30 +54,25 @@ export default function CaptionsAdminPage() {
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [roomId, setRoomId] = useState('');
-  const [koreanLinesText, setKoreanLinesText] = useState('');
-  const [englishLinesText, setEnglishLinesText] = useState('');
+
+  const [selectedLanguage, setSelectedLanguage] = useState('korean');
+  const [speakerInput, setSpeakerInput] = useState('');
+  const [lineInput, setLineInput] = useState('');
+
+  const [cues, setCues] = useState<Cue[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
-  const [currentLanguage, setCurrentLanguage] = useState<'korean' | 'english'>('korean');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const koreanLines = useMemo(
-    () => koreanLinesText.split('\n').map((line) => line.trim()).filter(Boolean),
-    [koreanLinesText]
-  );
-  const englishLines = useMemo(
-    () => englishLinesText.split('\n').map((line) => line.trim()).filter(Boolean),
-    [englishLinesText]
-  );
-  const maxCount = Math.max(koreanLines.length, englishLines.length);
-  const currentKorean = currentIndex >= 0 ? koreanLines[currentIndex] || '' : '';
-  const currentEnglish = currentIndex >= 0 ? englishLines[currentIndex] || '' : '';
+  const currentCue = currentIndex >= 0 ? cues[currentIndex] : null;
 
   const guestUrl = useMemo(() => {
     if (!roomCode) return '';
     if (typeof window === 'undefined') return '';
     return `${window.location.origin}/captions/view?roomCode=${roomCode}`;
   }, [roomCode]);
+
+  const displayLanguages = useMemo(() => CAPTION_LANGUAGE_OPTIONS, []);
 
   async function ensureRoom() {
     setBusy(true);
@@ -76,11 +104,101 @@ export default function CaptionsAdminPage() {
     }
   }
 
+  function addCue() {
+    const speaker = speakerInput.trim();
+    const line = lineInput.trim();
+    if (!line) {
+      setMessage('대사를 입력해 주세요.');
+      return;
+    }
+
+    const nextCue = createCue(speaker, selectedLanguage, line);
+    setCues((prev) => [...prev, nextCue]);
+    setSpeakerInput('');
+    setLineInput('');
+
+    if (currentIndex < 0) setCurrentIndex(0);
+    setMessage('큐가 추가되었습니다.');
+  }
+
+  function updateCueAt(index: number, updater: (cue: Cue) => Cue) {
+    setCues((prev) => prev.map((cue, i) => (i === index ? updater(cue) : cue)));
+  }
+
+  function editCue(index: number) {
+    const cue = cues[index];
+    if (!cue) return;
+
+    const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', cue.speaker ?? '');
+    if (nextSpeaker === null) return;
+
+    const currentText = cue.texts[selectedLanguage] || '';
+    const nextText = window.prompt('수정할 대사를 입력하세요.', currentText);
+    if (nextText === null) return;
+
+    updateCueAt(index, (prev) => {
+      const texts = { ...prev.texts, [selectedLanguage]: nextText.trim() };
+      // 송출기준 한국어가 비어 있으면 편집 텍스트를 기본값으로 채움
+      if (!texts[OPERATOR_LANGUAGE_CODE]) {
+        texts[OPERATOR_LANGUAGE_CODE] = nextText.trim();
+      }
+      return {
+        ...prev,
+        speaker: nextSpeaker.trim(),
+        texts,
+      };
+    });
+    setMessage('큐를 수정했습니다.');
+  }
+
+  function insertCueBelow(index: number) {
+    const speaker = window.prompt('삽입할 화자를 입력하세요.', '') ?? '';
+    const line = window.prompt('삽입할 대사를 입력하세요.', '') ?? '';
+    if (!line.trim()) {
+      setMessage('삽입이 취소되었거나 대사가 비어 있습니다.');
+      return;
+    }
+
+    const newCue = createCue(speaker.trim(), selectedLanguage, line.trim());
+    setCues((prev) => {
+      const copy = [...prev];
+      copy.splice(index + 1, 0, newCue);
+      return copy;
+    });
+
+    if (currentIndex > index) setCurrentIndex((prev) => prev + 1);
+    setMessage('큐를 중간에 삽입했습니다.');
+  }
+
+  function deleteCue(index: number) {
+    const ok = window.confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+    if (!ok) return;
+
+    setCues((prev) => prev.filter((_, i) => i !== index));
+    setCurrentIndex((prev) => {
+      if (prev === index) return Math.max(0, Math.min(index, cues.length - 2));
+      if (prev > index) return prev - 1;
+      return prev;
+    });
+    setMessage('큐를 삭제했습니다.');
+  }
+
+  function moveIndex(next: number) {
+    if (cues.length === 0) return;
+    const clamped = Math.max(0, Math.min(next, cues.length - 1));
+    setCurrentIndex(clamped);
+  }
+
   async function publishCurrent() {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
     }
+    if (!currentCue || currentIndex < 0) {
+      setMessage('송출할 큐가 없습니다.');
+      return;
+    }
+
     setBusy(true);
     setMessage('');
     try {
@@ -90,9 +208,9 @@ export default function CaptionsAdminPage() {
         body: JSON.stringify({
           roomCode,
           currentIndex,
-          currentLanguage,
-          currentKorean,
-          currentEnglish,
+          currentLanguage: OPERATOR_LANGUAGE_CODE,
+          currentSpeaker: currentCue.speaker,
+          currentTexts: currentCue.texts,
           performanceTitle: title.trim(),
           appendMessages: true,
         }),
@@ -108,18 +226,6 @@ export default function CaptionsAdminPage() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function moveIndex(next: number) {
-    if (maxCount === 0) return;
-    const clamped = Math.max(0, Math.min(next, maxCount - 1));
-    setCurrentIndex(clamped);
-  }
-
-  async function copyGuestUrl() {
-    if (!guestUrl) return;
-    await navigator.clipboard.writeText(guestUrl);
-    setMessage('게스트 링크를 복사했습니다.');
   }
 
   async function resetRoom() {
@@ -139,10 +245,7 @@ export default function CaptionsAdminPage() {
       const res = await fetch('/api/captions/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomCode,
-          clearHistory: true,
-        }),
+        body: JSON.stringify({ roomCode, clearHistory: true }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -151,7 +254,6 @@ export default function CaptionsAdminPage() {
       }
 
       setCurrentIndex(-1);
-      setCurrentLanguage('korean');
       setMessage('룸 초기화가 완료되었습니다.');
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
@@ -160,102 +262,186 @@ export default function CaptionsAdminPage() {
     }
   }
 
+  async function copyGuestUrl() {
+    if (!guestUrl) return;
+    await navigator.clipboard.writeText(guestUrl);
+    setMessage('게스트 링크를 복사했습니다.');
+  }
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-bold">실시간 자막 운영자 페이지</h1>
+    <main className="h-screen overflow-hidden bg-slate-100 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">실시간 자막 운영자 페이지</h1>
+        {message ? <p className="text-sm font-medium text-blue-700">{message}</p> : null}
+      </div>
 
-      <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">룸 설정</h2>
-        <div className="grid gap-3 md:grid-cols-3">
-          <input
-            className="rounded border p-2"
-            placeholder="룸 코드 (비우면 자동 생성)"
-            value={roomCodeInput}
-            onChange={(e) => setRoomCodeInput(e.target.value)}
-          />
-          <input
-            className="rounded border p-2"
-            placeholder="공연 제목"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <button className="rounded bg-blue-600 px-4 py-2 font-semibold text-white" disabled={busy} onClick={ensureRoom}>
-            룸 생성/연결
-          </button>
-        </div>
-        {roomCode ? <p className="mt-2 text-sm text-gray-700">활성 룸: `{roomCode}` (id: {roomId})</p> : null}
-      </section>
-
-      <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">자막 원문 입력</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          <textarea
-            className="min-h-56 rounded border p-3"
-            placeholder="한국어 자막을 한 줄씩 입력하세요"
-            value={koreanLinesText}
-            onChange={(e) => setKoreanLinesText(e.target.value)}
-          />
-          <textarea
-            className="min-h-56 rounded border p-3"
-            placeholder="영어 자막을 한 줄씩 입력하세요"
-            value={englishLinesText}
-            onChange={(e) => setEnglishLinesText(e.target.value)}
-          />
-        </div>
-      </section>
-
-      <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">송출 제어</h2>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <button className="rounded border px-3 py-2" onClick={() => moveIndex(currentIndex - 1)} disabled={busy || currentIndex <= 0}>
-            이전
-          </button>
-          <button
-            className="rounded border px-3 py-2"
-            onClick={() => moveIndex(currentIndex + 1)}
-            disabled={busy || maxCount === 0 || currentIndex >= maxCount - 1}
-          >
-            다음
-          </button>
-          <button className="rounded border px-3 py-2" onClick={() => setCurrentLanguage('korean')}>
-            언어: 한국어
-          </button>
-          <button className="rounded border px-3 py-2" onClick={() => setCurrentLanguage('english')}>
-            언어: 영어
-          </button>
-          <button className="rounded bg-emerald-600 px-4 py-2 font-semibold text-white" disabled={busy} onClick={publishCurrent}>
-            현재 자막 송출
-          </button>
-          <button className="rounded bg-red-600 px-4 py-2 font-semibold text-white" disabled={busy || !roomCode} onClick={resetRoom}>
-            룸 초기화
-          </button>
-        </div>
-        <p className="text-sm text-gray-700">
-          현재 인덱스: {currentIndex >= 0 ? currentIndex + 1 : 0} / {maxCount}
-        </p>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded border p-3">
-            <div className="mb-2 text-xs text-gray-500">현재 한국어</div>
-            <div className="min-h-14 whitespace-pre-wrap">{currentKorean || '-'}</div>
+      <div className="grid h-[calc(100vh-88px)] grid-cols-1 gap-4 lg:grid-cols-2">
+        <section className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+          <h2 className="mb-3 text-lg font-semibold">입력 완료 대사 (송출기준: 한국어)</h2>
+          <div className="min-h-0 flex-1 overflow-auto rounded border">
+            {cues.length === 0 ? (
+              <div className="p-6 text-sm text-gray-500">아직 입력된 큐가 없습니다.</div>
+            ) : (
+              <ul className="divide-y">
+                {cues.map((cue, i) => (
+                  <li
+                    key={cue.id}
+                    className={`p-3 ${currentIndex === i ? 'bg-amber-100' : 'bg-white'} transition`}
+                  >
+                    <div className="text-xs text-gray-500">큐 #{i + 1}</div>
+                    <div className="text-sm font-semibold">화자: {cue.speaker || '-'}</div>
+                    <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts.korean || '-'}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <div className="rounded border p-3">
-            <div className="mb-2 text-xs text-gray-500">현재 영어</div>
-            <div className="min-h-14 whitespace-pre-wrap">{currentEnglish || '-'}</div>
+        </section>
+
+        <section className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+          <div className="space-y-4 overflow-auto">
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">룸 생성 / 연결</h3>
+              <div className="grid gap-2 md:grid-cols-3">
+                <input
+                  className="rounded border p-2"
+                  placeholder="룸 코드 (비우면 자동 생성)"
+                  value={roomCodeInput}
+                  onChange={(e) => setRoomCodeInput(e.target.value)}
+                />
+                <input
+                  className="rounded border p-2"
+                  placeholder="공연 제목"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <button className={buttonClass('blue')} disabled={busy} onClick={ensureRoom}>
+                  룸 생성/연결
+                </button>
+              </div>
+              {roomCode ? <p className="mt-2 text-sm text-gray-700">활성 룸: `{roomCode}` (id: {roomId})</p> : null}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input className="min-w-[240px] flex-1 rounded border p-2" value={guestUrl} readOnly />
+                <button className={buttonClass('gray')} disabled={!guestUrl} onClick={copyGuestUrl}>
+                  링크 복사
+                </button>
+                <button className={buttonClass('red')} disabled={busy || !roomCode} onClick={resetRoom}>
+                  룸 초기화
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">자막 입력</h3>
+              <div className="grid gap-2 md:grid-cols-3">
+                <select
+                  className="rounded border p-2"
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                >
+                  {displayLanguages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="rounded border p-2"
+                  placeholder="화자 (speaker)"
+                  value={speakerInput}
+                  onChange={(e) => setSpeakerInput(e.target.value)}
+                />
+                <input
+                  className="rounded border p-2"
+                  placeholder="대사"
+                  value={lineInput}
+                  onChange={(e) => setLineInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') addCue();
+                  }}
+                />
+              </div>
+              <div className="mt-2">
+                <button className={buttonClass('green')} disabled={busy} onClick={addCue}>
+                  자막 추가
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">입력된 자막 리스트 (선택 언어 기준)</h3>
+              <div className="max-h-72 overflow-auto rounded border">
+                {cues.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">입력된 큐가 없습니다.</div>
+                ) : (
+                  <ul className="divide-y">
+                    {cues.map((cue, i) => (
+                      <li key={`editor-${cue.id}`} className="p-3">
+                        <div className="mb-1 text-xs text-gray-500">큐 #{i + 1}</div>
+                        <div className="text-sm">화자: {cue.speaker || '-'}</div>
+                        <div className="mb-2 whitespace-pre-wrap text-sm text-gray-800">
+                          {cue.texts[selectedLanguage] || '-'}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button className={buttonClass('gray')} onClick={() => editCue(i)}>
+                            수정
+                          </button>
+                          <button className={buttonClass('blue')} onClick={() => insertCueBelow(i)}>
+                            삽입
+                          </button>
+                          <button className={buttonClass('red')} onClick={() => deleteCue(i)}>
+                            삭제
+                          </button>
+                          <button
+                            className={buttonClass('green')}
+                            onClick={() => setCurrentIndex(i)}
+                          >
+                            현재 큐로 선택
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">송출 제어</h3>
+              <div className="mb-2 flex flex-wrap gap-2">
+                <button
+                  className={buttonClass('gray')}
+                  onClick={() => moveIndex(currentIndex - 1)}
+                  disabled={busy || currentIndex <= 0}
+                >
+                  이전
+                </button>
+                <button
+                  className={buttonClass('gray')}
+                  onClick={() => moveIndex(currentIndex + 1)}
+                  disabled={busy || cues.length === 0 || currentIndex >= cues.length - 1}
+                >
+                  다음
+                </button>
+                <button
+                  className={buttonClass('green')}
+                  onClick={publishCurrent}
+                  disabled={busy || !roomCode || !currentCue}
+                >
+                  현재 자막 송출
+                </button>
+              </div>
+              <p className="text-sm text-gray-700">현재 인덱스: {currentIndex >= 0 ? currentIndex + 1 : 0} / {cues.length}</p>
+              <div className="mt-2 rounded border bg-slate-50 p-3">
+                <div className="text-xs text-gray-500">송출 미리보기 (한국어)</div>
+                <div className="text-sm font-semibold">화자: {currentCue?.speaker || '-'}</div>
+                <div className="mt-1 whitespace-pre-wrap text-base">{currentCue?.texts.korean || '-'}</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-
-      <section className="rounded-xl border p-4">
-        <h2 className="mb-3 text-lg font-semibold">게스트 링크</h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <input className="min-w-[260px] flex-1 rounded border p-2" value={guestUrl} readOnly />
-          <button className="rounded border px-3 py-2" disabled={!guestUrl} onClick={copyGuestUrl}>
-            링크 복사
-          </button>
-        </div>
-      </section>
-
-      {message ? <p className="text-sm font-medium text-blue-700">{message}</p> : null}
+        </section>
+      </div>
     </main>
   );
 }
