@@ -338,7 +338,11 @@ export default function CaptionsAdminPage() {
         return;
       }
 
+      setCues([]);
       setCurrentIndex(-1);
+      setSpeakerInput('');
+      setLineInput('');
+      setSelectedLanguage('korean');
       setMessage('룸 초기화가 완료되었습니다.');
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
