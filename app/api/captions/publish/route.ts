@@ -64,24 +64,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data: latestMessage, error: latestError } = await (supabase as any)
-      .from('caption_messages')
-      .select('seq')
-      .eq('room_id', room.id)
-      .order('seq', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (latestError) {
-      console.error('Failed to load latest sequence:', latestError);
-      return NextResponse.json({ error: '시퀀스 조회 중 오류가 발생했습니다.' }, { status: 500 });
-    }
-
-    const lastSeq = latestMessage?.seq ?? 0;
-    const providedSeq = Number(body.seq);
-    const nextSeq = Number.isInteger(providedSeq) && providedSeq > 0
-      ? providedSeq
-      : Math.max(lastSeq + 1, currentIndex + 1);
+    let nextSeq: number | null = null;
 
     const { error: stateError } = await (supabase as any)
       .from('caption_state')
@@ -104,6 +87,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (appendMessages) {
+      const { data: latestMessage, error: latestError } = await (supabase as any)
+        .from('caption_messages')
+        .select('seq')
+        .eq('room_id', room.id)
+        .order('seq', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestError) {
+        console.error('Failed to load latest sequence:', latestError);
+        return NextResponse.json({ error: '시퀀스 조회 중 오류가 발생했습니다.' }, { status: 500 });
+      }
+
+      const lastSeq = latestMessage?.seq ?? 0;
+      const providedSeq = Number(body.seq);
+      nextSeq = Number.isInteger(providedSeq) && providedSeq > 0
+        ? providedSeq
+        : Math.max(lastSeq + 1, currentIndex + 1);
+
       const rows: Array<{ room_id: string; seq: number; lang: string; content: string; speaker: string }> = [];
       for (const [lang, content] of Object.entries(currentTexts)) {
         if (!content || !content.trim()) continue;

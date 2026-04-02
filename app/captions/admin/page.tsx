@@ -257,7 +257,7 @@ export default function CaptionsAdminPage() {
     setMessage('큐를 삭제했습니다.');
   }
 
-  async function publishCueAt(index: number) {
+  async function publishCueAt(index: number, appendMessages = true) {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
@@ -281,7 +281,7 @@ export default function CaptionsAdminPage() {
           currentSpeaker: cue.speaker,
           currentTexts: cue.texts,
           performanceTitle: title.trim(),
-          appendMessages: true,
+          appendMessages,
         }),
       });
       const data = await res.json();
@@ -290,7 +290,11 @@ export default function CaptionsAdminPage() {
         return;
       }
       setCurrentIndex(index);
-      setMessage(`송출 완료 (시퀀스: ${data.seq})`);
+      if (appendMessages) {
+        setMessage(`송출 완료 (시퀀스: ${data.seq ?? '-'})`);
+      } else {
+        setMessage(`큐 #${index + 1} 송출 완료`);
+      }
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -302,7 +306,7 @@ export default function CaptionsAdminPage() {
     if (cues.length === 0) return;
     const clamped = Math.max(0, Math.min(next, cues.length - 1));
     setCurrentIndex(clamped);
-    void publishCueAt(clamped);
+    void publishCueAt(clamped, false);
   }
 
   async function publishCurrent() {

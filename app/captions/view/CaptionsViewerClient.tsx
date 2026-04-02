@@ -44,6 +44,22 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     let mounted = true;
     const supabase = createClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    async function pullLatestState() {
+      try {
+        const res = await fetch(`/api/captions/rooms?roomCode=${encodeURIComponent(roomCode)}`, {
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!res.ok || !mounted) return;
+        if (data?.state) {
+          setState(data.state as CaptionState);
+        }
+      } catch {
+        // Polling is a fallback; ignore transient pull errors.
+      }
+    }
 
     async function initialize() {
       setStatus('loading');
@@ -59,6 +75,9 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         setRoom(data.room);
         setState(data.state || null);
         setStatus('connected');
+        pollTimer = setInterval(() => {
+          void pullLatestState();
+        }, 1200);
 
         channel = supabase
           .channel(`caption-state-${data.room.id}`)
@@ -93,6 +112,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
     return () => {
       mounted = false;
+      if (pollTimer) clearInterval(pollTimer);
       if (channel) {
         supabase.removeChannel(channel);
       }
