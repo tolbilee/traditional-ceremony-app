@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 type CaptionRoom = {
   id: string;
@@ -21,6 +22,8 @@ type CaptionState = {
 
 export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomCode: string }) {
   const roomCode = initialRoomCode.trim().toLowerCase();
+  const router = useRouter();
+  const [roomCodeInput, setRoomCodeInput] = useState(roomCode);
 
   const [room, setRoom] = useState<CaptionRoom | null>(null);
   const [state, setState] = useState<CaptionState | null>(null);
@@ -30,8 +33,8 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
   useEffect(() => {
     if (!roomCode) {
-      setError('roomCode 쿼리 파라미터가 필요합니다.');
-      setStatus('error');
+      setError('');
+      setStatus('idle');
       return;
     }
 
@@ -103,6 +106,37 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     if (!state) return '';
     return state.current_korean || state.current_english || '';
   }, [state]);
+
+  function enterRoom() {
+    const nextCode = roomCodeInput.trim().toLowerCase();
+    if (!nextCode) return;
+    router.push(`/captions/view?roomCode=${encodeURIComponent(nextCode)}`);
+  }
+
+  if (!roomCode) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-white">
+        <div className="w-full max-w-md rounded-xl border border-white/20 bg-white/5 p-6">
+          <h1 className="mb-3 text-xl font-bold">실시간 자막 접속</h1>
+          <p className="mb-4 text-sm text-white/80">룸 코드를 입력해 자막 화면에 연결하세요.</p>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/50"
+              placeholder="예: koreahouse"
+              value={roomCodeInput}
+              onChange={(e) => setRoomCodeInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') enterRoom();
+              }}
+            />
+            <button className="rounded bg-blue-600 px-4 py-2 font-semibold text-white" onClick={enterRoom}>
+              접속
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-black text-white">
