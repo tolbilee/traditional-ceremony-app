@@ -183,18 +183,13 @@ export default function CaptionsAdminPage() {
     setMessage('큐를 삭제했습니다.');
   }
 
-  function moveIndex(next: number) {
-    if (cues.length === 0) return;
-    const clamped = Math.max(0, Math.min(next, cues.length - 1));
-    setCurrentIndex(clamped);
-  }
-
-  async function publishCurrent() {
+  async function publishCueAt(index: number) {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
     }
-    if (!currentCue || currentIndex < 0) {
+    const cue = cues[index];
+    if (!cue || index < 0) {
       setMessage('송출할 큐가 없습니다.');
       return;
     }
@@ -207,10 +202,10 @@ export default function CaptionsAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roomCode,
-          currentIndex,
+          currentIndex: index,
           currentLanguage: OPERATOR_LANGUAGE_CODE,
-          currentSpeaker: currentCue.speaker,
-          currentTexts: currentCue.texts,
+          currentSpeaker: cue.speaker,
+          currentTexts: cue.texts,
           performanceTitle: title.trim(),
           appendMessages: true,
         }),
@@ -220,12 +215,28 @@ export default function CaptionsAdminPage() {
         setMessage(`오류: ${data?.error || '송출에 실패했습니다.'}`);
         return;
       }
+      setCurrentIndex(index);
       setMessage(`송출 완료 (시퀀스: ${data.seq})`);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
+  }
+
+  function moveIndex(next: number) {
+    if (cues.length === 0) return;
+    const clamped = Math.max(0, Math.min(next, cues.length - 1));
+    setCurrentIndex(clamped);
+    void publishCueAt(clamped);
+  }
+
+  async function publishCurrent() {
+    if (currentIndex < 0) {
+      setMessage('현재 선택된 큐가 없습니다.');
+      return;
+    }
+    await publishCueAt(currentIndex);
   }
 
   async function resetRoom() {
