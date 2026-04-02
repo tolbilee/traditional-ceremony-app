@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
 
     // 관리자 페이지와 API, 일부 정적 경로는 제외
     const isAdminPage = pathname.startsWith('/admin');
+    const isCaptionsAdminPage = pathname.startsWith('/captions/admin');
     const isAPIRoute = pathname.startsWith('/api');
     const isQRPage = pathname === '/qr';
     const isDevPage = pathname === '/dev';
@@ -24,7 +25,7 @@ export function middleware(request: NextRequest) {
       pathname.startsWith('/videos') ||
       /\.(ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/.test(pathname);
 
-    if (isAdminPage || isAPIRoute || isQRPage || isDevPage || isStaticAsset) {
+    if (isAdminPage || isCaptionsAdminPage || isAPIRoute || isQRPage || isDevPage || isStaticAsset) {
       return response;
     }
 

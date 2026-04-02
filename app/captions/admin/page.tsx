@@ -122,6 +122,44 @@ export default function CaptionsAdminPage() {
     setMessage('게스트 링크를 복사했습니다.');
   }
 
+  async function resetRoom() {
+    if (!roomCode) {
+      setMessage('먼저 룸을 생성하거나 연결해 주세요.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      '정말 초기화하시겠습니까?\n현재 룸의 실시간 상태와 히스토리가 모두 초기화됩니다.'
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/captions/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          clearHistory: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(`오류: ${data?.error || '초기화에 실패했습니다.'}`);
+        return;
+      }
+
+      setCurrentIndex(-1);
+      setCurrentLanguage('korean');
+      setMessage('룸 초기화가 완료되었습니다.');
+    } catch (error) {
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold">실시간 자막 운영자 페이지</h1>
@@ -187,6 +225,9 @@ export default function CaptionsAdminPage() {
           </button>
           <button className="rounded bg-emerald-600 px-4 py-2 font-semibold text-white" disabled={busy} onClick={publishCurrent}>
             현재 자막 송출
+          </button>
+          <button className="rounded bg-red-600 px-4 py-2 font-semibold text-white" disabled={busy || !roomCode} onClick={resetRoom}>
+            룸 초기화
           </button>
         </div>
         <p className="text-sm text-gray-700">
