@@ -5,6 +5,30 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { CAPTION_LANGUAGE_OPTIONS } from '../languageOptions';
 
+const VIEW_LANGUAGE_LABELS: Record<string, string> = {
+  arabic: 'العربية',
+  bulgarian: 'Български',
+  chinese: '简体中文',
+  chinese_traditional: '繁體中文',
+  dutch: 'Nederlands',
+  english: 'English',
+  filipino: 'Filipino',
+  french: 'Français',
+  german: 'Deutsch',
+  greek: 'Ελληνικά',
+  hindi: 'हिन्दी',
+  japanese: '日本語',
+  kazakh: 'Қазақ тілі',
+  korean: '한국어',
+  lao: 'ລາວ',
+  persian: 'فارسی',
+  romanian: 'Română',
+  russian: 'Русский',
+  spanish: 'Español',
+  thai: 'ไทย',
+  vietnamese: 'Tiếng Việt',
+};
+
 type CaptionRoom = {
   id: string;
   room_code: string;
@@ -125,6 +149,15 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     return map[language] || map.korean || state.current_korean || '';
   }, [state, language]);
 
+  const viewerLanguageOptions = useMemo(
+    () =>
+      CAPTION_LANGUAGE_OPTIONS.map((lang) => ({
+        ...lang,
+        viewLabel: VIEW_LANGUAGE_LABELS[lang.code] || lang.code,
+      })),
+    []
+  );
+
   function enterRoom() {
     const nextCode = roomCodeInput.trim().toLowerCase();
     if (!nextCode) return;
@@ -172,9 +205,9 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
         >
-          {CAPTION_LANGUAGE_OPTIONS.map((lang) => (
+          {viewerLanguageOptions.map((lang) => (
             <option key={lang.code} value={lang.code}>
-              {lang.label}
+              {lang.viewLabel}
             </option>
           ))}
         </select>
