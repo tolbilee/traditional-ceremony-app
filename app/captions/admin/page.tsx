@@ -64,10 +64,11 @@ type LeftCueListProps = {
   cues: Cue[];
   selectedIndex: number;
   liveIndex: number;
+  displayLanguage: string;
   onSelect: (index: number) => void;
 };
 
-const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, onSelect }: LeftCueListProps) {
+const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, displayLanguage, onSelect }: LeftCueListProps) {
   if (cues.length === 0) {
     return <div className="p-6 text-sm text-gray-500">아직 입력된 큐가 없습니다.</div>;
   }
@@ -93,7 +94,7 @@ const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, 
               </span>
             </div>
             <div className="text-sm font-semibold">화자: {cue.speaker || '-'}</div>
-            <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts.korean || '-'}</div>
+            <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts[displayLanguage] || '-'}</div>
           </li>
         );
       })}
@@ -145,6 +146,8 @@ export default function CaptionsAdminPage() {
   const [roomId, setRoomId] = useState('');
 
   const [selectedLanguage, setSelectedLanguage] = useState('korean');
+  const [editorLanguage, setEditorLanguage] = useState('korean');
+  const [leftDisplayLanguage, setLeftDisplayLanguage] = useState('korean');
   const [speakerInput, setSpeakerInput] = useState('');
   const [lineInput, setLineInput] = useState('');
   const [bulkInput, setBulkInput] = useState('');
@@ -321,6 +324,21 @@ export default function CaptionsAdminPage() {
       return;
     }
 
+    if (selectedLanguage !== OPERATOR_LANGUAGE_CODE) {
+      if (selectedIndex < 0 || !cues[selectedIndex]) {
+        setMessage('외국어 입력은 먼저 한국어 큐를 만든 뒤, 큐를 선택해서 입력해 주세요.');
+        return;
+      }
+      updateCueAt(selectedIndex, (prev) => ({
+        ...prev,
+        texts: { ...prev.texts, [selectedLanguage]: line },
+      }));
+      setSpeakerInput('');
+      setLineInput('');
+      setMessage(`큐 #${selectedIndex + 1}의 ${selectedLanguage} 대사를 저장했습니다.`);
+      return;
+    }
+
     const nextCue = createCue(speaker, selectedLanguage, line);
     setCues((prev) => [...prev, nextCue]);
     setSpeakerInput('');
@@ -347,22 +365,57 @@ export default function CaptionsAdminPage() {
       return;
     }
 
-    const next = lines.map((line) => {
+    const parsed = lines.map((line) => {
       const parts = line.split('\t');
       if (parts.length >= 2) {
-        const speaker = parts[0].trim();
-        const text = parts.slice(1).join(' ').trim();
-        return createCue(speaker, selectedLanguage, text);
+        return {
+          speaker: parts[0].trim(),
+          text: parts.slice(1).join(' ').trim(),
+        };
       }
-      return createCue('', selectedLanguage, line);
+      return {
+        speaker: '',
+        text: line,
+      };
     });
 
-    setCues((prev) => [...prev, ...next]);
-    if (selectedIndex < 0 && next.length > 0) {
-      setSelectedIndex(0);
+    if (selectedLanguage === OPERATOR_LANGUAGE_CODE) {
+      const next = parsed.map((item) => createCue(item.speaker, selectedLanguage, item.text));
+      setCues((prev) => [...prev, ...next]);
+      if (selectedIndex < 0 && next.length > 0) {
+        setSelectedIndex(0);
+      }
+      setBulkInput('');
+      setMessage(`${next.length}개 한국어 큐를 일괄 추가했습니다.`);
+      return;
     }
+
+    if (cues.length === 0) {
+      setMessage('먼저 한국어 대사를 입력해 큐를 만든 뒤 외국어를 일괄 입력해 주세요.');
+      return;
+    }
+
+    const applyCount = Math.min(parsed.length, cues.length);
+    setCues((prev) =>
+      prev.map((cue, i) => {
+        if (i >= applyCount) return cue;
+        return {
+          ...cue,
+          texts: {
+            ...cue.texts,
+            [selectedLanguage]: parsed[i].text,
+          },
+        };
+      })
+    );
+
+    const ignoredCount = Math.max(0, parsed.length - cues.length);
     setBulkInput('');
-    setMessage(`${next.length}개 큐를 일괄 추가했습니다.`);
+    if (ignoredCount > 0) {
+      setMessage(`${selectedLanguage} ${applyCount}개를 큐에 매핑 저장했고, 초과 ${ignoredCount}줄은 무시했습니다.`);
+    } else {
+      setMessage(`${selectedLanguage} ${applyCount}개를 큐에 매핑 저장했습니다.`);
+    }
   }
 
   function updateCueAt(index: number, updater: (cue: Cue) => Cue) {
@@ -377,12 +430,12 @@ export default function CaptionsAdminPage() {
       const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', cue.speaker ?? '');
       if (nextSpeaker === null) return;
 
-      const currentText = cue.texts[selectedLanguage] || '';
+      const currentText = cue.texts[editorLanguage] || '';
       const nextText = window.prompt('수정할 대사를 입력하세요.', currentText);
       if (nextText === null) return;
 
       updateCueAt(index, (prev) => {
-        const texts = { ...prev.texts, [selectedLanguage]: nextText.trim() };
+        const texts = { ...prev.texts, [editorLanguage]: nextText.trim() };
         if (!texts[OPERATOR_LANGUAGE_CODE]) {
           texts[OPERATOR_LANGUAGE_CODE] = nextText.trim();
         }
@@ -394,7 +447,7 @@ export default function CaptionsAdminPage() {
       });
       setMessage('큐를 수정했습니다.');
     },
-    [cues, selectedLanguage]
+    [cues, editorLanguage]
   );
 
   const insertCueBelow = useCallback((index: number) => {
@@ -405,7 +458,7 @@ export default function CaptionsAdminPage() {
       return;
     }
 
-    const newCue = createCue(speaker.trim(), selectedLanguage, line.trim());
+    const newCue = createCue(speaker.trim(), OPERATOR_LANGUAGE_CODE, line.trim());
     setCues((prev) => {
       const copy = [...prev];
       copy.splice(index + 1, 0, newCue);
@@ -415,7 +468,7 @@ export default function CaptionsAdminPage() {
     if (selectedIndex > index) setSelectedIndex((prev) => prev + 1);
     if (liveIndex > index) setLiveIndex((prev) => prev + 1);
     setMessage('큐를 중간에 삽입했습니다.');
-  }, [selectedLanguage, selectedIndex, liveIndex]);
+  }, [selectedIndex, liveIndex]);
 
   const deleteCue = useCallback((index: number) => {
     const ok = window.confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
@@ -561,9 +614,24 @@ export default function CaptionsAdminPage() {
 
       <div className="grid h-[calc(100vh-88px)] grid-cols-1 gap-4 lg:grid-cols-2">
         <section className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold">입력 완료 대사 (송출기준: 한국어)</h2>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">입력 완료 대사</h2>
+            <select className="rounded border p-2 text-sm" value={leftDisplayLanguage} onChange={(e) => setLeftDisplayLanguage(e.target.value)}>
+              {displayLanguages.map((lang) => (
+                <option key={`left-${lang.code}`} value={lang.code}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="min-h-0 flex-1 overflow-auto rounded border">
-            <LeftCueList cues={cues} selectedIndex={selectedIndex} liveIndex={liveIndex} onSelect={setSelectedIndex} />
+            <LeftCueList
+              cues={cues}
+              selectedIndex={selectedIndex}
+              liveIndex={liveIndex}
+              displayLanguage={leftDisplayLanguage}
+              onSelect={setSelectedIndex}
+            />
           </div>
         </section>
 
@@ -653,10 +721,19 @@ export default function CaptionsAdminPage() {
 
             <div className="rounded-lg border p-3">
               <h3 className="mb-2 font-semibold">입력된 자막 리스트 (선택 언어 기준)</h3>
+              <div className="mb-2">
+                <select className="rounded border p-2 text-sm" value={editorLanguage} onChange={(e) => setEditorLanguage(e.target.value)}>
+                  {displayLanguages.map((lang) => (
+                    <option key={`editor-${lang.code}`} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="max-h-72 overflow-auto rounded border">
                 <RightCueList
                   cues={cues}
-                  selectedLanguage={selectedLanguage}
+                  selectedLanguage={editorLanguage}
                   onEdit={editCue}
                   onInsert={insertCueBelow}
                   onDelete={deleteCue}
