@@ -177,6 +177,9 @@ export default function CaptionsAdminPage() {
   const [speakerInput, setSpeakerInput] = useState('');
   const [lineInput, setLineInput] = useState('');
   const [bulkInput, setBulkInput] = useState('');
+  const [prestartLanguage, setPrestartLanguage] = useState('korean');
+  const [prestartInput, setPrestartInput] = useState('');
+  const [prestartTexts, setPrestartTexts] = useState<Record<string, string>>({});
 
   const [cues, setCues] = useState<Cue[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -197,6 +200,10 @@ export default function CaptionsAdminPage() {
   }, [roomCode]);
 
   const displayLanguages = useMemo(() => CAPTION_LANGUAGE_OPTIONS, []);
+
+  useEffect(() => {
+    setPrestartInput(prestartTexts[prestartLanguage] || '');
+  }, [prestartLanguage, prestartTexts]);
 
   useEffect(() => {
     if (liveIndex < 0) return;
@@ -328,6 +335,17 @@ export default function CaptionsAdminPage() {
     }
   }, []);
 
+  async function loadPrestartTexts(targetRoomCode: string) {
+    try {
+      const res = await fetch(`/api/captions/prestart?roomCode=${encodeURIComponent(targetRoomCode)}`);
+      const data = await res.json();
+      if (!res.ok) return;
+      setPrestartTexts((data?.texts || {}) as Record<string, string>);
+    } catch {
+      // ignore
+    }
+  }
+
   async function ensureRoom() {
     setBusy(true);
     setMessage('');
@@ -363,6 +381,7 @@ export default function CaptionsAdminPage() {
         setMessage('기존 룸에 연결되었습니다. 저장된 자막을 불러오는 중...');
       }
       await loadRoomCues(data.room.room_code);
+      await loadPrestartTexts(data.room.room_code);
       setSyncEnabled(true);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
@@ -715,6 +734,41 @@ export default function CaptionsAdminPage() {
     setMessage('게스트 링크를 복사했습니다.');
   }
 
+  async function savePrestartText() {
+    if (!roomCode) {
+      setMessage('먼저 룸을 생성하거나 연결해 주세요.');
+      return;
+    }
+
+    const nextTexts = {
+      ...prestartTexts,
+      [prestartLanguage]: prestartInput.trim(),
+    };
+
+    setBusy(true);
+    try {
+      const res = await fetch('/api/captions/prestart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          texts: nextTexts,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(`오류: ${data?.error || '시작 전 문구 저장에 실패했습니다.'}`);
+        return;
+      }
+      setPrestartTexts(nextTexts);
+      setMessage(`${prestartLanguage} 시작 전 문구를 저장했습니다.`);
+    } catch (error) {
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="h-screen overflow-hidden bg-slate-100 p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -874,6 +928,33 @@ export default function CaptionsAdminPage() {
                     대량 자막 추가
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">시작 전 안내 문구 (언어별)</h3>
+              <p className="mb-2 text-xs text-gray-600">
+                송출 시작 전(`current_index = -1`)에 관객 화면에 표시됩니다.
+              </p>
+              <div className="grid gap-2 md:grid-cols-3">
+                <select className="rounded border p-2" value={prestartLanguage} onChange={(e) => setPrestartLanguage(e.target.value)}>
+                  {displayLanguages.map((lang) => (
+                    <option key={`prestart-${lang.code}`} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="rounded border p-2 md:col-span-2"
+                  placeholder="예: 지금은 전통혼례 시작 전입니다."
+                  value={prestartInput}
+                  onChange={(e) => setPrestartInput(e.target.value)}
+                />
+              </div>
+              <div className="mt-2">
+                <button className={buttonClass('blue')} disabled={busy || !roomCode} onClick={savePrestartText}>
+                  안내 문구 저장
+                </button>
               </div>
             </div>
 

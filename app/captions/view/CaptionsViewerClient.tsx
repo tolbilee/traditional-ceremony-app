@@ -61,6 +61,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
   const [room, setRoom] = useState<CaptionRoom | null>(null);
   const [state, setState] = useState<CaptionState | null>(null);
+  const [prestartTexts, setPrestartTexts] = useState<Record<string, string>>({});
   const [language, setLanguage] = useState<string>('korean');
   const [status, setStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -87,6 +88,9 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         if (data?.state) {
           setState(data.state as CaptionState);
         }
+        if (data?.prestartTexts && typeof data.prestartTexts === 'object') {
+          setPrestartTexts(data.prestartTexts as Record<string, string>);
+        }
       } catch {
         // Polling is a fallback; ignore transient pull errors.
       }
@@ -105,6 +109,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
         setRoom(data.room);
         setState(data.state || null);
+        setPrestartTexts((data?.prestartTexts || {}) as Record<string, string>);
         setStatus('connected');
         pollTimer = setInterval(() => {
           void pullLatestState();
@@ -152,9 +157,16 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
 
   const subtitle = useMemo(() => {
     if (!state) return '';
+    if (state.current_index < 0) {
+      return (
+        prestartTexts[language] ||
+        prestartTexts.korean ||
+        '지금은 전통혼례 시작 전입니다.'
+      );
+    }
     const map = (state.current_texts || {}) as Record<string, string>;
     return map[language] || map.korean || state.current_korean || '';
-  }, [state, language]);
+  }, [state, language, prestartTexts]);
 
   const speaker = useMemo(() => {
     const raw = (state?.current_speaker || '').trim();

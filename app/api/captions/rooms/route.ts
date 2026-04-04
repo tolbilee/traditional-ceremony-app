@@ -107,21 +107,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '룸을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    const { data: state, error: stateError } = await (supabase as any)
-      .from('caption_state')
-      .select('*')
-      .eq('room_id', room.id)
-      .maybeSingle();
+    const [{ data: state, error: stateError }, { data: prestartRows, error: prestartError }] = await Promise.all([
+      (supabase as any).from('caption_state').select('*').eq('room_id', room.id).maybeSingle(),
+      (supabase as any).from('caption_messages').select('lang,content').eq('room_id', room.id).eq('seq', 0),
+    ]);
 
     if (stateError) {
       console.error('Failed to fetch room state:', stateError);
       return NextResponse.json({ error: '룸 상태 조회 중 오류가 발생했습니다.' }, { status: 500 });
     }
+    if (prestartError) {
+      console.error('Failed to fetch prestart texts:', prestartError);
+      return NextResponse.json({ error: '시작 전 문구 조회 중 오류가 발생했습니다.' }, { status: 500 });
+    }
 
-    return NextResponse.json({ room, state });
+    const prestartTexts: Record<string, string> = {};
+    for (const row of prestartRows || []) {
+      if (!row?.lang) continue;
+      prestartTexts[String(row.lang)] = String(row.content || '');
+    }
+
+    return NextResponse.json({ room, state, prestartTexts });
   } catch (error) {
     console.error('GET /api/captions/rooms error:', error);
     return NextResponse.json({ error: '조회 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }
-
