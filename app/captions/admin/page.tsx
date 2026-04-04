@@ -155,7 +155,7 @@ const RightCueList = memo(function RightCueList({ cues, selectedLanguage, onEdit
 
 export default function CaptionsAdminPage() {
   const [title, setTitle] = useState('실시간 자막');
-  const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [roomCodeInput, setRoomCodeInput] = useState('koreahouse');
   const [roomCode, setRoomCode] = useState('');
   const [roomId, setRoomId] = useState('');
 
