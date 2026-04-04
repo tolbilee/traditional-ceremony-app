@@ -157,9 +157,25 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
   }, [state, language]);
 
   const speaker = useMemo(() => {
-    if (!state?.current_speaker) return '';
-    return state.current_speaker.trim();
-  }, [state]);
+    const raw = (state?.current_speaker || '').trim();
+    if (!raw) return '';
+
+    if (raw.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const byLang: Record<string, string> = {};
+        for (const [key, value] of Object.entries(parsed || {})) {
+          if (typeof value !== 'string') continue;
+          byLang[key.trim().toLowerCase()] = value.trim();
+        }
+        return byLang[language] || byLang.korean || Object.values(byLang)[0] || '';
+      } catch {
+        return raw;
+      }
+    }
+
+    return raw;
+  }, [state, language]);
 
   const viewerLanguageOptions = useMemo(
     () =>

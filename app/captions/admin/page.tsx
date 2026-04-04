@@ -16,6 +16,7 @@ type RoomResponse = {
 type Cue = {
   id: string;
   speaker: string;
+  speakers: Record<string, string>;
   texts: Record<string, string>;
 };
 
@@ -46,6 +47,9 @@ function createCue(speaker: string, langCode: string, lineText: string): Cue {
   return {
     id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
     speaker,
+    speakers: {
+      [OPERATOR_LANGUAGE_CODE]: speaker,
+    },
     texts: baseTexts,
   };
 }
@@ -204,6 +208,7 @@ export default function CaptionsAdminPage() {
             roomCode,
             cues: nextCues.map((cue) => ({
               speaker: cue.speaker || '',
+              speakers: cue.speakers || {},
               texts: cue.texts || {},
             })),
           }),
@@ -274,12 +279,16 @@ export default function CaptionsAdminPage() {
           grouped.set(seq, {
             id: `loaded-${seq}`,
             speaker: row.speaker || '',
+            speakers: {
+              [row.lang]: row.speaker || '',
+            },
             texts: {
               [row.lang]: row.content || '',
             },
           });
         } else {
           existing.texts[row.lang] = row.content || '';
+          existing.speakers[row.lang] = row.speaker || existing.speakers[row.lang] || '';
           if (!existing.speaker && row.speaker) existing.speaker = row.speaker;
         }
       }
@@ -369,6 +378,10 @@ export default function CaptionsAdminPage() {
       }
       updateCueAt(selectedIndex, (prev) => ({
         ...prev,
+        speakers: {
+          ...prev.speakers,
+          ...(speaker ? { [selectedLanguage]: speaker } : {}),
+        },
         texts: { ...prev.texts, [selectedLanguage]: line },
       }));
       setSpeakerInput('');
@@ -439,6 +452,10 @@ export default function CaptionsAdminPage() {
         if (i >= applyCount) return cue;
         return {
           ...cue,
+          speakers: {
+            ...cue.speakers,
+            ...(parsed[i].speaker ? { [selectedLanguage]: parsed[i].speaker } : {}),
+          },
           texts: {
             ...cue.texts,
             [selectedLanguage]: parsed[i].text,
@@ -465,7 +482,8 @@ export default function CaptionsAdminPage() {
       const cue = cues[index];
       if (!cue) return;
 
-      const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', cue.speaker ?? '');
+      const currentSpeakerByLang = cue.speakers?.[editorLanguage] ?? (editorLanguage === OPERATOR_LANGUAGE_CODE ? cue.speaker : '');
+      const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', currentSpeakerByLang ?? '');
       if (nextSpeaker === null) return;
 
       const currentText = cue.texts[editorLanguage] || '';
@@ -477,9 +495,14 @@ export default function CaptionsAdminPage() {
         if (!texts[OPERATOR_LANGUAGE_CODE]) {
           texts[OPERATOR_LANGUAGE_CODE] = nextText.trim();
         }
+        const nextSpeakers = {
+          ...(prev.speakers || {}),
+          [editorLanguage]: nextSpeaker.trim(),
+        };
         return {
           ...prev,
-          speaker: nextSpeaker.trim(),
+          speaker: editorLanguage === OPERATOR_LANGUAGE_CODE ? nextSpeaker.trim() : prev.speaker,
+          speakers: nextSpeakers,
           texts,
         };
       });
@@ -540,6 +563,10 @@ export default function CaptionsAdminPage() {
     setBusy(true);
     setMessage('');
     try {
+      const speakerMap = {
+        ...(cue.speakers || {}),
+        [OPERATOR_LANGUAGE_CODE]: cue.speaker || cue.speakers?.[OPERATOR_LANGUAGE_CODE] || '',
+      };
       const res = await fetch('/api/captions/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -547,7 +574,7 @@ export default function CaptionsAdminPage() {
           roomCode,
           currentIndex: index,
           currentLanguage: OPERATOR_LANGUAGE_CODE,
-          currentSpeaker: cue.speaker,
+          currentSpeaker: JSON.stringify(speakerMap),
           currentTexts: cue.texts,
           performanceTitle: title.trim(),
           appendMessages,

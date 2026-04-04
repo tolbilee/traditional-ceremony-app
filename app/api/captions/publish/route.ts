@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isCaptionLanguage, normalizeRoomCode, toOptionalText } from '../_utils';
 
 type CurrentTexts = Record<string, string>;
+type CurrentSpeakers = Record<string, string>;
 
 function sanitizeTexts(input: unknown): CurrentTexts {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
@@ -14,6 +15,35 @@ function sanitizeTexts(input: unknown): CurrentTexts {
   return out;
 }
 
+function parseSpeakers(raw: string): { defaultSpeaker: string; byLang: CurrentSpeakers; payload: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { defaultSpeaker: '', byLang: {}, payload: '' };
+  }
+
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+      const byLang: CurrentSpeakers = {};
+      for (const [key, value] of Object.entries(parsed || {})) {
+        const lang = key.trim().toLowerCase();
+        if (!lang || typeof value !== 'string') continue;
+        byLang[lang] = value.trim();
+      }
+      const defaultSpeaker = byLang.korean || Object.values(byLang)[0] || '';
+      return {
+        defaultSpeaker,
+        byLang,
+        payload: JSON.stringify(byLang),
+      };
+    } catch {
+      // fall through
+    }
+  }
+
+  return { defaultSpeaker: trimmed, byLang: {}, payload: trimmed };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -21,6 +51,7 @@ export async function POST(request: NextRequest) {
     const currentLanguage = toOptionalText(body.currentLanguage).trim().toLowerCase();
     const currentIndex = Number(body.currentIndex);
     const currentSpeaker = toOptionalText(body.currentSpeaker).trim();
+    const currentSpeakerParsed = parseSpeakers(currentSpeaker);
     const currentTexts = sanitizeTexts(body.currentTexts);
     const performanceTitle = toOptionalText(body.performanceTitle).trim();
     const appendMessages = body.appendMessages !== false;
@@ -73,7 +104,7 @@ export async function POST(request: NextRequest) {
           room_id: room.id,
           current_index: currentIndex,
           current_language: currentLanguage,
-          current_speaker: currentSpeaker,
+          current_speaker: currentSpeakerParsed.payload,
           current_korean: currentTexts.korean || '',
           current_english: currentTexts.english || '',
           current_texts: currentTexts,
@@ -114,7 +145,7 @@ export async function POST(request: NextRequest) {
           seq: nextSeq,
           lang,
           content,
-          speaker: currentSpeaker,
+          speaker: currentSpeakerParsed.byLang[lang] || currentSpeakerParsed.defaultSpeaker,
         });
       }
 
@@ -137,7 +168,7 @@ export async function POST(request: NextRequest) {
       seq: nextSeq,
       currentIndex,
       currentLanguage,
-      currentSpeaker,
+      currentSpeaker: currentSpeakerParsed.payload,
       appendMessages,
     });
   } catch (error) {

@@ -4,6 +4,7 @@ import { normalizeRoomCode, toOptionalText } from '../_utils';
 
 type ScriptCueInput = {
   speaker?: unknown;
+  speakers?: unknown;
   texts?: unknown;
 };
 
@@ -14,6 +15,17 @@ function sanitizeTexts(input: unknown): Record<string, string> {
     const lang = typeof key === 'string' ? key.trim().toLowerCase() : '';
     if (!lang) continue;
     out[lang] = typeof value === 'string' ? value : '';
+  }
+  return out;
+}
+
+function sanitizeSpeakers(input: unknown): Record<string, string> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    const lang = typeof key === 'string' ? key.trim().toLowerCase() : '';
+    if (!lang) continue;
+    out[lang] = typeof value === 'string' ? value.trim() : '';
   }
   return out;
 }
@@ -90,6 +102,7 @@ export async function PUT(request: NextRequest) {
       const cue = cues[i];
       const seq = i + 1;
       const speaker = toOptionalText(cue?.speaker).trim();
+      const speakers = sanitizeSpeakers(cue?.speakers);
       const texts = sanitizeTexts(cue?.texts);
       for (const [lang, contentRaw] of Object.entries(texts)) {
         const content = (contentRaw || '').trim();
@@ -99,7 +112,7 @@ export async function PUT(request: NextRequest) {
           seq,
           lang,
           content,
-          speaker,
+          speaker: speakers[lang] || speakers.korean || speaker,
         });
       }
     }
@@ -129,7 +142,12 @@ export async function PUT(request: NextRequest) {
     if (safeIndex !== currentIndex || cues.length === 0) {
       const currentCue = safeIndex >= 0 ? cues[safeIndex] : null;
       const currentTexts = currentCue ? sanitizeTexts(currentCue.texts) : {};
+      const currentSpeakers = currentCue ? sanitizeSpeakers(currentCue.speakers) : {};
       const currentSpeaker = currentCue ? toOptionalText(currentCue.speaker).trim() : '';
+      const currentSpeakerPayload = JSON.stringify({
+        ...currentSpeakers,
+        ...(currentSpeaker ? { korean: currentSpeaker } : {}),
+      });
 
       const { error: stateError } = await (supabase as any)
         .from('caption_state')
@@ -138,7 +156,7 @@ export async function PUT(request: NextRequest) {
             room_id: room.id,
             current_index: safeIndex,
             current_language: 'korean',
-            current_speaker: currentSpeaker,
+            current_speaker: currentSpeakerPayload,
             current_korean: currentTexts.korean || '',
             current_english: currentTexts.english || '',
             current_texts: currentTexts,
