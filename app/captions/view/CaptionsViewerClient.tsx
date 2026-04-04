@@ -29,6 +29,13 @@ const VIEW_LANGUAGE_LABELS: Record<string, string> = {
   vietnamese: 'Tiếng Việt',
 };
 
+const VIEW_SUBTITLE_FONT_FAMILY: Record<string, string> = {
+  chinese: '"Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Heiti SC", "SimHei", sans-serif',
+  chinese_traditional: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Source Han Sans TC", "Heiti TC", sans-serif',
+  japanese: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif',
+  korean: '"Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
+};
+
 type CaptionRoom = {
   id: string;
   room_code: string;
@@ -158,6 +165,11 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     []
   );
 
+  const subtitleFontFamily = useMemo(
+    () => VIEW_SUBTITLE_FONT_FAMILY[language] || VIEW_SUBTITLE_FONT_FAMILY.korean,
+    [language]
+  );
+
   function enterRoom() {
     const nextCode = roomCodeInput.trim().toLowerCase();
     if (!nextCode) return;
@@ -219,7 +231,10 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
             연결 오류: {error || '알 수 없는 오류'}
           </div>
         ) : (
-          <div className="max-w-5xl whitespace-pre-wrap text-center text-3xl font-semibold leading-relaxed md:text-5xl">
+          <div
+            className="max-w-5xl whitespace-pre-wrap text-center text-3xl font-semibold leading-relaxed md:text-5xl"
+            style={{ fontFamily: subtitleFontFamily }}
+          >
             {subtitle || '자막을 기다리는 중입니다...'}
           </div>
         )}
