@@ -156,6 +156,11 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     return map[language] || map.korean || state.current_korean || '';
   }, [state, language]);
 
+  const speaker = useMemo(() => {
+    if (!state?.current_speaker) return '';
+    return state.current_speaker.trim();
+  }, [state]);
+
   const viewerLanguageOptions = useMemo(
     () =>
       CAPTION_LANGUAGE_OPTIONS.map((lang) => ({
@@ -231,11 +236,16 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
             연결 오류: {error || '알 수 없는 오류'}
           </div>
         ) : (
-          <div
-            className="max-w-5xl whitespace-pre-wrap text-center text-3xl font-semibold leading-relaxed md:text-5xl"
-            style={{ fontFamily: subtitleFontFamily }}
-          >
-            {subtitle || '자막을 기다리는 중입니다...'}
+          <div className="max-w-5xl text-center">
+            <div className="mb-4 text-lg font-semibold text-yellow-200 md:text-2xl">
+              {speaker ? `화자: ${speaker}` : '화자: -'}
+            </div>
+            <div
+              className="whitespace-pre-wrap text-3xl font-semibold leading-relaxed md:text-5xl"
+              style={{ fontFamily: subtitleFontFamily }}
+            >
+              {subtitle || '자막을 기다리는 중입니다...'}
+            </div>
           </div>
         )}
       </section>

@@ -107,8 +107,8 @@ const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, 
                 {isLive ? <span className="rounded bg-amber-500 px-2 py-0.5 text-white">송출중</span> : null}
               </span>
             </div>
-            <div className="text-sm font-semibold">화자: {cue.speaker || '-'}</div>
-            <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts[displayLanguage] || '-'}</div>
+            <div className="text-base font-semibold">화자: {cue.speaker || '-'}</div>
+            <div className="mt-1 whitespace-pre-wrap text-xl leading-8 md:text-2xl">{cue.texts[displayLanguage] || '-'}</div>
           </li>
         );
       })}
