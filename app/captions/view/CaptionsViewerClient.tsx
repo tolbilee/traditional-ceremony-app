@@ -211,7 +211,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
       </header>
 
       <section className="flex items-center justify-center gap-2 px-4 py-3">
-        <label className="text-sm text-white/80">국가 선택</label>
+        <label className="text-sm text-white/80">Language</label>
         <select
           className="rounded border border-white/30 bg-black/40 px-3 py-1 text-sm text-white"
           value={language}

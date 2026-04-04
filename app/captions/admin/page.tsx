@@ -215,6 +215,30 @@ export default function CaptionsAdminPage() {
     return () => clearTimeout(timer);
   }, [cues, roomCode, syncEnabled, syncCuesToServer]);
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable;
+      if (isTyping || busy) return;
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        void moveSelection(selectedIndex - 1);
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        void moveSelection(selectedIndex + 1);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [busy, selectedIndex, cues.length, liveIndex]);
+
   const loadRoomCues = useCallback(async (targetRoomCode: string) => {
     try {
       const res = await fetch(`/api/captions/script?roomCode=${encodeURIComponent(targetRoomCode)}`);
@@ -670,6 +694,44 @@ export default function CaptionsAdminPage() {
             </div>
 
             <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">송출 제어</h3>
+              <p className="mb-2 text-xs text-gray-600">단축키: `←` 이전 / `→` 다음</p>
+              <div className="mb-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+                <button
+                  className="rounded-lg bg-slate-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => moveSelection(selectedIndex - 1)}
+                  disabled={busy || selectedIndex <= 0}
+                >
+                  ← 이전
+                </button>
+                <button
+                  className="rounded-lg bg-slate-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => moveSelection(selectedIndex + 1)}
+                  disabled={busy || cues.length === 0 || selectedIndex >= cues.length - 1}
+                >
+                  다음 →
+                </button>
+                <button
+                  className="rounded-lg bg-emerald-600 px-5 py-4 text-lg font-bold text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={publishSelectedCue}
+                  disabled={busy || !roomCode || !selectedCue}
+                >
+                  현재 자막 송출
+                </button>
+              </div>
+              <p className="text-sm text-gray-700">선택 인덱스: {selectedIndex >= 0 ? selectedIndex + 1 : 0} / {cues.length}</p>
+              <p className="text-sm text-gray-700">송출 인덱스: {liveIndex >= 0 ? liveIndex + 1 : 0} / {cues.length}</p>
+              <div className="mt-2 rounded border bg-slate-50 p-3">
+                <div className="text-xs text-gray-500">송출 미리보기 (한국어)</div>
+                <div className="text-sm font-semibold">화자: {selectedCue?.speaker || '-'}</div>
+                <div className="mt-1 whitespace-pre-wrap text-base">{selectedCue?.texts.korean || '-'}</div>
+                <div className="mt-2 text-xs text-gray-500">현재 실제 송출중</div>
+                <div className="text-sm font-semibold">화자: {liveCue?.speaker || '-'}</div>
+                <div className="mt-1 whitespace-pre-wrap text-base">{liveCue?.texts.korean || '-'}</div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
               <h3 className="mb-2 font-semibold">자막 입력</h3>
               <div className="grid gap-2 md:grid-cols-3">
                 <select className="rounded border p-2" value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
@@ -738,35 +800,6 @@ export default function CaptionsAdminPage() {
                   onInsert={insertCueBelow}
                   onDelete={deleteCue}
                 />
-              </div>
-            </div>
-
-            <div className="rounded-lg border p-3">
-              <h3 className="mb-2 font-semibold">송출 제어</h3>
-              <div className="mb-2 flex flex-wrap gap-2">
-                <button className={buttonClass('gray')} onClick={() => moveSelection(selectedIndex - 1)} disabled={busy || selectedIndex <= 0}>
-                  이전
-                </button>
-                <button
-                  className={buttonClass('gray')}
-                  onClick={() => moveSelection(selectedIndex + 1)}
-                  disabled={busy || cues.length === 0 || selectedIndex >= cues.length - 1}
-                >
-                  다음
-                </button>
-                <button className={buttonClass('green')} onClick={publishSelectedCue} disabled={busy || !roomCode || !selectedCue}>
-                  현재 자막 송출
-                </button>
-              </div>
-              <p className="text-sm text-gray-700">선택 인덱스: {selectedIndex >= 0 ? selectedIndex + 1 : 0} / {cues.length}</p>
-              <p className="text-sm text-gray-700">송출 인덱스: {liveIndex >= 0 ? liveIndex + 1 : 0} / {cues.length}</p>
-              <div className="mt-2 rounded border bg-slate-50 p-3">
-                <div className="text-xs text-gray-500">송출 미리보기 (한국어)</div>
-                <div className="text-sm font-semibold">화자: {selectedCue?.speaker || '-'}</div>
-                <div className="mt-1 whitespace-pre-wrap text-base">{selectedCue?.texts.korean || '-'}</div>
-                <div className="mt-2 text-xs text-gray-500">현재 실제 송출중</div>
-                <div className="text-sm font-semibold">화자: {liveCue?.speaker || '-'}</div>
-                <div className="mt-1 whitespace-pre-wrap text-base">{liveCue?.texts.korean || '-'}</div>
               </div>
             </div>
           </div>
