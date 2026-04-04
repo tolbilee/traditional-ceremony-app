@@ -649,6 +649,43 @@ export default function CaptionsAdminPage() {
     await publishCueAt(selectedIndex, false);
   }
 
+  async function clearLiveBroadcast() {
+    if (!roomCode) {
+      setMessage('먼저 룸을 생성하거나 연결해 주세요.');
+      return;
+    }
+
+    setBusy(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/captions/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          currentIndex: -1,
+          currentLanguage: OPERATOR_LANGUAGE_CODE,
+          currentSpeaker: '',
+          currentTexts: {},
+          performanceTitle: title.trim(),
+          appendMessages: false,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(`오류: ${data?.error || '송출 해제에 실패했습니다.'}`);
+        return;
+      }
+
+      setLiveIndex(-1);
+      setMessage('송출이 해제되었습니다. (시작 전 상태)');
+    } catch (error) {
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resetRoom() {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
@@ -867,6 +904,15 @@ export default function CaptionsAdminPage() {
                   disabled={busy || !roomCode || !selectedCue}
                 >
                   현재 자막 송출
+                </button>
+              </div>
+              <div className="mb-2">
+                <button
+                  className="rounded-lg bg-orange-500 px-5 py-3 text-base font-bold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={clearLiveBroadcast}
+                  disabled={busy || !roomCode}
+                >
+                  송출 해제 (시작 전 상태)
                 </button>
               </div>
               <p className="text-sm text-gray-700">선택 인덱스: {selectedIndex >= 0 ? selectedIndex + 1 : 0} / {cues.length}</p>
