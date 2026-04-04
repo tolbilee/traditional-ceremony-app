@@ -669,6 +669,46 @@ export default function CaptionsAdminPage() {
     }
   }
 
+  async function clearAllCaptions() {
+    if (!roomCode) {
+      setMessage('먼저 룸을 생성하거나 연결해 주세요.');
+      return;
+    }
+
+    const confirmed = window.confirm('현재 룸의 자막 큐를 모두 삭제할까요? 룸 코드는 유지됩니다.');
+    if (!confirmed) return;
+
+    setBusy(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/captions/script', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          cues: [],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(`오류: ${data?.error || '자막 전체 삭제에 실패했습니다.'}`);
+        return;
+      }
+
+      setCues([]);
+      setSelectedIndex(-1);
+      setLiveIndex(-1);
+      setSpeakerInput('');
+      setLineInput('');
+      setBulkInput('');
+      setMessage('자막 전체 삭제가 완료되었습니다.');
+    } catch (error) {
+      setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function copyGuestUrl() {
     if (!guestUrl) return;
     await navigator.clipboard.writeText(guestUrl);
@@ -739,6 +779,9 @@ export default function CaptionsAdminPage() {
                 <input className="min-w-[240px] flex-1 rounded border p-2" value={guestUrl} readOnly />
                 <button className={buttonClass('gray')} disabled={!guestUrl} onClick={copyGuestUrl}>
                   링크 복사
+                </button>
+                <button className={buttonClass('red')} disabled={busy || !roomCode} onClick={clearAllCaptions}>
+                  자막 전체 삭제
                 </button>
                 <button className={buttonClass('red')} disabled={busy || !roomCode} onClick={resetRoom}>
                   룸 초기화
