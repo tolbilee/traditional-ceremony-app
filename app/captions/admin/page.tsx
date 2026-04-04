@@ -155,6 +155,8 @@ export default function CaptionsAdminPage() {
 
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [syncError, setSyncError] = useState('');
+  const [syncEnabled, setSyncEnabled] = useState(false);
 
   const selectedCue = selectedIndex >= 0 ? cues[selectedIndex] : null;
   const liveCue = liveIndex >= 0 ? cues[liveIndex] : null;
@@ -174,9 +176,45 @@ export default function CaptionsAdminPage() {
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [liveIndex]);
 
+  const syncCuesToServer = useCallback(
+    async (nextCues: Cue[]) => {
+      if (!roomCode) return;
+      try {
+        const res = await fetch('/api/captions/script', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomCode,
+            cues: nextCues.map((cue) => ({
+              speaker: cue.speaker || '',
+              texts: cue.texts || {},
+            })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setSyncError(data?.error || '자막 저장 동기화에 실패했습니다.');
+          return;
+        }
+        setSyncError('');
+      } catch (error) {
+        setSyncError(error instanceof Error ? error.message : String(error));
+      }
+    },
+    [roomCode]
+  );
+
+  useEffect(() => {
+    if (!roomCode || !syncEnabled) return;
+    const timer = setTimeout(() => {
+      void syncCuesToServer(cues);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [cues, roomCode, syncEnabled, syncCuesToServer]);
+
   const loadRoomCues = useCallback(async (targetRoomCode: string) => {
     try {
-      const res = await fetch(`/api/captions/history?roomCode=${encodeURIComponent(targetRoomCode)}&limit=1000`);
+      const res = await fetch(`/api/captions/script?roomCode=${encodeURIComponent(targetRoomCode)}`);
       const data = await res.json();
       if (!res.ok) {
         setMessage(`오류: ${data?.error || '기존 자막을 불러오지 못했습니다.'}`);
@@ -235,6 +273,8 @@ export default function CaptionsAdminPage() {
   async function ensureRoom() {
     setBusy(true);
     setMessage('');
+    setSyncEnabled(false);
+    setSyncError('');
     try {
       const payload = {
         roomCode: normalizeRoomCode(roomCodeInput),
@@ -265,6 +305,7 @@ export default function CaptionsAdminPage() {
         setMessage('기존 룸에 연결되었습니다. 저장된 자막을 불러오는 중...');
       }
       await loadRoomCues(data.room.room_code);
+      setSyncEnabled(true);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -460,7 +501,7 @@ export default function CaptionsAdminPage() {
       setMessage('송출할 큐가 없습니다.');
       return;
     }
-    await publishCueAt(selectedIndex, true);
+    await publishCueAt(selectedIndex, false);
   }
 
   async function resetRoom() {
@@ -474,6 +515,7 @@ export default function CaptionsAdminPage() {
 
     setBusy(true);
     setMessage('');
+    setSyncEnabled(false);
     try {
       const res = await fetch('/api/captions/reset', {
         method: 'POST',
@@ -493,6 +535,7 @@ export default function CaptionsAdminPage() {
       setLineInput('');
       setSelectedLanguage('korean');
       setMessage('룸 초기화가 완료되었습니다.');
+      setSyncEnabled(true);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -510,7 +553,10 @@ export default function CaptionsAdminPage() {
     <main className="h-screen overflow-hidden bg-slate-100 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-2xl font-bold">실시간 자막 운영자 페이지</h1>
-        {message ? <p className="text-sm font-medium text-blue-700">{message}</p> : null}
+        <div className="text-right">
+          {message ? <p className="text-sm font-medium text-blue-700">{message}</p> : null}
+          {syncError ? <p className="text-xs font-medium text-red-600">동기화 오류: {syncError}</p> : null}
+        </div>
       </div>
 
       <div className="grid h-[calc(100vh-88px)] grid-cols-1 gap-4 lg:grid-cols-2">
