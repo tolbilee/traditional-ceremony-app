@@ -238,7 +238,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         ) : (
           <div className="max-w-5xl text-center">
             <div className="mb-4 text-lg font-semibold text-yellow-200 md:text-2xl">
-              {speaker ? `화자: ${speaker}` : '화자: -'}
+              {speaker || '-'}
             </div>
             <div
               className="whitespace-pre-wrap text-3xl font-semibold leading-relaxed md:text-5xl"
