@@ -54,6 +54,14 @@ function createCue(speaker: string, langCode: string, lineText: string): Cue {
   };
 }
 
+function getSpeakerForLanguage(cue: Cue, langCode: string): string {
+  const mapped = cue.speakers?.[langCode]?.trim();
+  if (mapped) return mapped;
+  const korean = cue.speakers?.[OPERATOR_LANGUAGE_CODE]?.trim();
+  if (korean) return korean;
+  return cue.speaker?.trim() || '';
+}
+
 function buttonClass(color: 'blue' | 'green' | 'red' | 'gray' = 'blue'): string {
   const palette = {
     blue: 'bg-blue-600 hover:bg-blue-700',
@@ -111,7 +119,7 @@ const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, 
                 {isLive ? <span className="rounded bg-amber-500 px-2 py-0.5 text-white">송출중</span> : null}
               </span>
             </div>
-            <div className="text-base font-semibold">화자: {cue.speaker || '-'}</div>
+            <div className="text-base font-semibold">화자: {getSpeakerForLanguage(cue, displayLanguage) || '-'}</div>
             <div className="mt-1 whitespace-pre-wrap text-xl leading-8 md:text-2xl">{cue.texts[displayLanguage] || '-'}</div>
           </li>
         );
@@ -138,7 +146,7 @@ const RightCueList = memo(function RightCueList({ cues, selectedLanguage, onEdit
       {cues.map((cue, i) => (
         <li key={`editor-${cue.id}`} className="p-3">
           <div className="mb-1 text-xs text-gray-500">큐 #{i + 1}</div>
-          <div className="text-sm">화자: {cue.speaker || '-'}</div>
+          <div className="text-sm">화자: {getSpeakerForLanguage(cue, selectedLanguage) || '-'}</div>
           <div className="mb-2 whitespace-pre-wrap text-sm text-gray-800">{cue.texts[selectedLanguage] || '-'}</div>
           <div className="flex flex-wrap gap-2">
             <button className={buttonClass('gray')} onClick={() => onEdit(i)}>
