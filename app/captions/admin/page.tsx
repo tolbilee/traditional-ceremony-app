@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { CAPTION_LANGUAGE_OPTIONS } from '../languageOptions';
 
 type RoomResponse = {
@@ -60,6 +60,84 @@ function buttonClass(color: 'blue' | 'green' | 'red' | 'gray' = 'blue'): string 
   return `rounded px-4 py-2 font-semibold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${palette[color]}`;
 }
 
+type LeftCueListProps = {
+  cues: Cue[];
+  selectedIndex: number;
+  liveIndex: number;
+  onSelect: (index: number) => void;
+};
+
+const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, onSelect }: LeftCueListProps) {
+  if (cues.length === 0) {
+    return <div className="p-6 text-sm text-gray-500">아직 입력된 큐가 없습니다.</div>;
+  }
+
+  return (
+    <ul className="divide-y">
+      {cues.map((cue, i) => {
+        const isSelected = selectedIndex === i;
+        const isLive = liveIndex === i;
+
+        return (
+          <li
+            key={cue.id}
+            id={`cue-left-${i}`}
+            onClick={() => onSelect(i)}
+            className={`cursor-pointer p-3 transition ${isLive ? 'bg-amber-100' : isSelected ? 'bg-blue-50' : 'bg-white'} hover:bg-slate-50`}
+          >
+            <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
+              <span>큐 #{i + 1}</span>
+              <span className="flex items-center gap-2">
+                {isSelected ? <span className="rounded bg-blue-600 px-2 py-0.5 text-white">선택됨</span> : null}
+                {isLive ? <span className="rounded bg-amber-500 px-2 py-0.5 text-white">송출중</span> : null}
+              </span>
+            </div>
+            <div className="text-sm font-semibold">화자: {cue.speaker || '-'}</div>
+            <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts.korean || '-'}</div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+});
+
+type RightCueListProps = {
+  cues: Cue[];
+  selectedLanguage: string;
+  onEdit: (index: number) => void;
+  onInsert: (index: number) => void;
+  onDelete: (index: number) => void;
+};
+
+const RightCueList = memo(function RightCueList({ cues, selectedLanguage, onEdit, onInsert, onDelete }: RightCueListProps) {
+  if (cues.length === 0) {
+    return <div className="p-4 text-sm text-gray-500">입력된 큐가 없습니다.</div>;
+  }
+
+  return (
+    <ul className="divide-y">
+      {cues.map((cue, i) => (
+        <li key={`editor-${cue.id}`} className="p-3">
+          <div className="mb-1 text-xs text-gray-500">큐 #{i + 1}</div>
+          <div className="text-sm">화자: {cue.speaker || '-'}</div>
+          <div className="mb-2 whitespace-pre-wrap text-sm text-gray-800">{cue.texts[selectedLanguage] || '-'}</div>
+          <div className="flex flex-wrap gap-2">
+            <button className={buttonClass('gray')} onClick={() => onEdit(i)}>
+              수정
+            </button>
+            <button className={buttonClass('blue')} onClick={() => onInsert(i)}>
+              삽입
+            </button>
+            <button className={buttonClass('red')} onClick={() => onDelete(i)}>
+              삭제
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+});
+
 export default function CaptionsAdminPage() {
   const [title, setTitle] = useState('실시간 자막');
   const [roomCodeInput, setRoomCodeInput] = useState('');
@@ -69,13 +147,17 @@ export default function CaptionsAdminPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('korean');
   const [speakerInput, setSpeakerInput] = useState('');
   const [lineInput, setLineInput] = useState('');
+  const [bulkInput, setBulkInput] = useState('');
 
   const [cues, setCues] = useState<Cue[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [liveIndex, setLiveIndex] = useState(-1);
+
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const currentCue = currentIndex >= 0 ? cues[currentIndex] : null;
+  const selectedCue = selectedIndex >= 0 ? cues[selectedIndex] : null;
+  const liveCue = liveIndex >= 0 ? cues[liveIndex] : null;
 
   const guestUrl = useMemo(() => {
     if (!roomCode) return '';
@@ -85,9 +167,16 @@ export default function CaptionsAdminPage() {
 
   const displayLanguages = useMemo(() => CAPTION_LANGUAGE_OPTIONS, []);
 
-  async function loadRoomCues(targetRoomCode: string) {
+  useEffect(() => {
+    if (liveIndex < 0) return;
+    const el = document.getElementById(`cue-left-${liveIndex}`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [liveIndex]);
+
+  const loadRoomCues = useCallback(async (targetRoomCode: string) => {
     try {
-      const res = await fetch(`/api/captions/history?roomCode=${encodeURIComponent(targetRoomCode)}&limit=500`);
+      const res = await fetch(`/api/captions/history?roomCode=${encodeURIComponent(targetRoomCode)}&limit=1000`);
       const data = await res.json();
       if (!res.ok) {
         setMessage(`오류: ${data?.error || '기존 자막을 불러오지 못했습니다.'}`);
@@ -123,12 +212,14 @@ export default function CaptionsAdminPage() {
       setCues(nextCues);
 
       const state = (data.state || null) as HistoryStateRow | null;
-      const nextIndex = typeof state?.current_index === 'number' ? state.current_index : -1;
+      const nextLiveIndex = typeof state?.current_index === 'number' ? state.current_index : -1;
       if (nextCues.length === 0) {
-        setCurrentIndex(-1);
+        setSelectedIndex(-1);
+        setLiveIndex(-1);
       } else {
-        const safeIndex = Math.max(0, Math.min(nextIndex, nextCues.length - 1));
-        setCurrentIndex(nextIndex >= 0 ? safeIndex : 0);
+        const safeLive = nextLiveIndex >= 0 ? Math.max(0, Math.min(nextLiveIndex, nextCues.length - 1)) : -1;
+        setLiveIndex(safeLive);
+        setSelectedIndex(safeLive >= 0 ? safeLive : 0);
       }
 
       if (nextCues.length > 0) {
@@ -139,7 +230,7 @@ export default function CaptionsAdminPage() {
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }
+  }, []);
 
   async function ensureRoom() {
     setBusy(true);
@@ -159,14 +250,17 @@ export default function CaptionsAdminPage() {
         setMessage(`오류: ${'error' in data ? data.error : '룸 생성에 실패했습니다.'}`);
         return;
       }
+
       setRoomCode(data.room.room_code);
       setRoomId(data.room.id);
       setTitle(data.room.title);
       setRoomCodeInput(data.room.room_code);
+
       if (data.created) {
         setMessage('룸이 생성되었습니다.');
         setCues([]);
-        setCurrentIndex(-1);
+        setSelectedIndex(-1);
+        setLiveIndex(-1);
       } else {
         setMessage('기존 룸에 연결되었습니다. 저장된 자막을 불러오는 중...');
       }
@@ -191,41 +285,78 @@ export default function CaptionsAdminPage() {
     setSpeakerInput('');
     setLineInput('');
 
-    if (currentIndex < 0) setCurrentIndex(0);
+    if (selectedIndex < 0) setSelectedIndex(0);
     setMessage('큐가 추가되었습니다.');
+  }
+
+  function addCuesFromBulkInput() {
+    const raw = bulkInput.trim();
+    if (!raw) {
+      setMessage('대량 입력 내용이 비어 있습니다.');
+      return;
+    }
+
+    const lines = raw
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) {
+      setMessage('유효한 줄이 없습니다.');
+      return;
+    }
+
+    const next = lines.map((line) => {
+      const parts = line.split('\t');
+      if (parts.length >= 2) {
+        const speaker = parts[0].trim();
+        const text = parts.slice(1).join(' ').trim();
+        return createCue(speaker, selectedLanguage, text);
+      }
+      return createCue('', selectedLanguage, line);
+    });
+
+    setCues((prev) => [...prev, ...next]);
+    if (selectedIndex < 0 && next.length > 0) {
+      setSelectedIndex(0);
+    }
+    setBulkInput('');
+    setMessage(`${next.length}개 큐를 일괄 추가했습니다.`);
   }
 
   function updateCueAt(index: number, updater: (cue: Cue) => Cue) {
     setCues((prev) => prev.map((cue, i) => (i === index ? updater(cue) : cue)));
   }
 
-  function editCue(index: number) {
-    const cue = cues[index];
-    if (!cue) return;
+  const editCue = useCallback(
+    (index: number) => {
+      const cue = cues[index];
+      if (!cue) return;
 
-    const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', cue.speaker ?? '');
-    if (nextSpeaker === null) return;
+      const nextSpeaker = window.prompt('수정할 화자를 입력하세요.', cue.speaker ?? '');
+      if (nextSpeaker === null) return;
 
-    const currentText = cue.texts[selectedLanguage] || '';
-    const nextText = window.prompt('수정할 대사를 입력하세요.', currentText);
-    if (nextText === null) return;
+      const currentText = cue.texts[selectedLanguage] || '';
+      const nextText = window.prompt('수정할 대사를 입력하세요.', currentText);
+      if (nextText === null) return;
 
-    updateCueAt(index, (prev) => {
-      const texts = { ...prev.texts, [selectedLanguage]: nextText.trim() };
-      // 송출기준 한국어가 비어 있으면 편집 텍스트를 기본값으로 채움
-      if (!texts[OPERATOR_LANGUAGE_CODE]) {
-        texts[OPERATOR_LANGUAGE_CODE] = nextText.trim();
-      }
-      return {
-        ...prev,
-        speaker: nextSpeaker.trim(),
-        texts,
-      };
-    });
-    setMessage('큐를 수정했습니다.');
-  }
+      updateCueAt(index, (prev) => {
+        const texts = { ...prev.texts, [selectedLanguage]: nextText.trim() };
+        if (!texts[OPERATOR_LANGUAGE_CODE]) {
+          texts[OPERATOR_LANGUAGE_CODE] = nextText.trim();
+        }
+        return {
+          ...prev,
+          speaker: nextSpeaker.trim(),
+          texts,
+        };
+      });
+      setMessage('큐를 수정했습니다.');
+    },
+    [cues, selectedLanguage]
+  );
 
-  function insertCueBelow(index: number) {
+  const insertCueBelow = useCallback((index: number) => {
     const speaker = window.prompt('삽입할 화자를 입력하세요.', '') ?? '';
     const line = window.prompt('삽입할 대사를 입력하세요.', '') ?? '';
     if (!line.trim()) {
@@ -240,35 +371,46 @@ export default function CaptionsAdminPage() {
       return copy;
     });
 
-    if (currentIndex > index) setCurrentIndex((prev) => prev + 1);
+    if (selectedIndex > index) setSelectedIndex((prev) => prev + 1);
+    if (liveIndex > index) setLiveIndex((prev) => prev + 1);
     setMessage('큐를 중간에 삽입했습니다.');
-  }
+  }, [selectedLanguage, selectedIndex, liveIndex]);
 
-  function deleteCue(index: number) {
+  const deleteCue = useCallback((index: number) => {
     const ok = window.confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
     if (!ok) return;
 
     setCues((prev) => prev.filter((_, i) => i !== index));
-    setCurrentIndex((prev) => {
+    setSelectedIndex((prev) => {
       if (prev === index) return Math.max(0, Math.min(index, cues.length - 2));
       if (prev > index) return prev - 1;
       return prev;
     });
+    setLiveIndex((prev) => {
+      if (prev === index) return -1;
+      if (prev > index) return prev - 1;
+      return prev;
+    });
     setMessage('큐를 삭제했습니다.');
+  }, [cues.length]);
+
+  function moveSelection(next: number) {
+    if (cues.length === 0) return;
+    const clamped = Math.max(0, Math.min(next, cues.length - 1));
+    setSelectedIndex(clamped);
   }
 
-  async function publishCueAt(index: number, appendMessages = true, useBusy = true) {
+  async function publishSelectedCue() {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
     }
-    const cue = cues[index];
-    if (!cue || index < 0) {
+    if (!selectedCue || selectedIndex < 0) {
       setMessage('송출할 큐가 없습니다.');
       return;
     }
 
-    if (useBusy) setBusy(true);
+    setBusy(true);
     setMessage('');
     try {
       const res = await fetch('/api/captions/publish', {
@@ -276,12 +418,12 @@ export default function CaptionsAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roomCode,
-          currentIndex: index,
+          currentIndex: selectedIndex,
           currentLanguage: OPERATOR_LANGUAGE_CODE,
-          currentSpeaker: cue.speaker,
-          currentTexts: cue.texts,
+          currentSpeaker: selectedCue.speaker,
+          currentTexts: selectedCue.texts,
           performanceTitle: title.trim(),
-          appendMessages,
+          appendMessages: true,
         }),
       });
       const data = await res.json();
@@ -289,32 +431,14 @@ export default function CaptionsAdminPage() {
         setMessage(`오류: ${data?.error || '송출에 실패했습니다.'}`);
         return;
       }
-      setCurrentIndex(index);
-      if (appendMessages) {
-        setMessage(`송출 완료 (시퀀스: ${data.seq ?? '-'})`);
-      } else {
-        setMessage(`큐 #${index + 1} 송출 완료`);
-      }
+
+      setLiveIndex(selectedIndex);
+      setMessage(`송출 완료 (시퀀스: ${data.seq ?? '-'})`);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
-      if (useBusy) setBusy(false);
+      setBusy(false);
     }
-  }
-
-  function moveIndex(next: number) {
-    if (cues.length === 0) return;
-    const clamped = Math.max(0, Math.min(next, cues.length - 1));
-    setCurrentIndex(clamped);
-    void publishCueAt(clamped, false, false);
-  }
-
-  async function publishCurrent() {
-    if (currentIndex < 0) {
-      setMessage('현재 선택된 큐가 없습니다.');
-      return;
-    }
-    await publishCueAt(currentIndex);
   }
 
   async function resetRoom() {
@@ -323,9 +447,7 @@ export default function CaptionsAdminPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      '정말 초기화하시겠습니까?\n현재 룸의 실시간 상태와 히스토리가 모두 초기화됩니다.'
-    );
+    const confirmed = window.confirm('정말 초기화하시겠습니까?\n현재 룸의 실시간 상태와 히스토리가 모두 초기화됩니다.');
     if (!confirmed) return;
 
     setBusy(true);
@@ -343,7 +465,8 @@ export default function CaptionsAdminPage() {
       }
 
       setCues([]);
-      setCurrentIndex(-1);
+      setSelectedIndex(-1);
+      setLiveIndex(-1);
       setSpeakerInput('');
       setLineInput('');
       setSelectedLanguage('korean');
@@ -372,22 +495,7 @@ export default function CaptionsAdminPage() {
         <section className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
           <h2 className="mb-3 text-lg font-semibold">입력 완료 대사 (송출기준: 한국어)</h2>
           <div className="min-h-0 flex-1 overflow-auto rounded border">
-            {cues.length === 0 ? (
-              <div className="p-6 text-sm text-gray-500">아직 입력된 큐가 없습니다.</div>
-            ) : (
-              <ul className="divide-y">
-                {cues.map((cue, i) => (
-                  <li
-                    key={cue.id}
-                    className={`p-3 ${currentIndex === i ? 'bg-amber-100' : 'bg-white'} transition`}
-                  >
-                    <div className="text-xs text-gray-500">큐 #{i + 1}</div>
-                    <div className="text-sm font-semibold">화자: {cue.speaker || '-'}</div>
-                    <div className="mt-1 whitespace-pre-wrap text-base">{cue.texts.korean || '-'}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <LeftCueList cues={cues} selectedIndex={selectedIndex} liveIndex={liveIndex} onSelect={setSelectedIndex} />
           </div>
         </section>
 
@@ -428,11 +536,7 @@ export default function CaptionsAdminPage() {
             <div className="rounded-lg border p-3">
               <h3 className="mb-2 font-semibold">자막 입력</h3>
               <div className="grid gap-2 md:grid-cols-3">
-                <select
-                  className="rounded border p-2"
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                >
+                <select className="rounded border p-2" value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
                   {displayLanguages.map((lang) => (
                     <option key={lang.code} value={lang.code}>
                       {lang.label}
@@ -460,76 +564,64 @@ export default function CaptionsAdminPage() {
                   자막 추가
                 </button>
               </div>
+              <div className="mt-3 rounded border bg-slate-50 p-3">
+                <p className="mb-2 text-sm font-semibold">대량 입력 (시트 붙여넣기)</p>
+                <p className="mb-2 text-xs text-gray-600">
+                  한 줄당 `화자[TAB]대사` 또는 `대사만` 입력하세요. 현재 선택 언어 기준으로 큐가 생성됩니다.
+                </p>
+                <textarea
+                  className="min-h-28 w-full rounded border p-2 text-sm"
+                  placeholder={'예시\n사회자\t좋은 아침입니다\n신랑\t감사합니다\n오늘 예식에 와주셔서 감사합니다'}
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                />
+                <div className="mt-2">
+                  <button className={buttonClass('blue')} disabled={busy} onClick={addCuesFromBulkInput}>
+                    대량 자막 추가
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-lg border p-3">
               <h3 className="mb-2 font-semibold">입력된 자막 리스트 (선택 언어 기준)</h3>
               <div className="max-h-72 overflow-auto rounded border">
-                {cues.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500">입력된 큐가 없습니다.</div>
-                ) : (
-                  <ul className="divide-y">
-                    {cues.map((cue, i) => (
-                      <li key={`editor-${cue.id}`} className="p-3">
-                        <div className="mb-1 text-xs text-gray-500">큐 #{i + 1}</div>
-                        <div className="text-sm">화자: {cue.speaker || '-'}</div>
-                        <div className="mb-2 whitespace-pre-wrap text-sm text-gray-800">
-                          {cue.texts[selectedLanguage] || '-'}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button className={buttonClass('gray')} onClick={() => editCue(i)}>
-                            수정
-                          </button>
-                          <button className={buttonClass('blue')} onClick={() => insertCueBelow(i)}>
-                            삽입
-                          </button>
-                          <button className={buttonClass('red')} onClick={() => deleteCue(i)}>
-                            삭제
-                          </button>
-                          <button
-                            className={buttonClass('green')}
-                            onClick={() => setCurrentIndex(i)}
-                          >
-                            현재 큐로 선택
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <RightCueList
+                  cues={cues}
+                  selectedLanguage={selectedLanguage}
+                  onEdit={editCue}
+                  onInsert={insertCueBelow}
+                  onDelete={deleteCue}
+                />
               </div>
             </div>
 
             <div className="rounded-lg border p-3">
               <h3 className="mb-2 font-semibold">송출 제어</h3>
               <div className="mb-2 flex flex-wrap gap-2">
-                <button
-                  className={buttonClass('gray')}
-                  onClick={() => moveIndex(currentIndex - 1)}
-                  disabled={busy || currentIndex <= 0}
-                >
+                <button className={buttonClass('gray')} onClick={() => moveSelection(selectedIndex - 1)} disabled={busy || selectedIndex <= 0}>
                   이전
                 </button>
                 <button
                   className={buttonClass('gray')}
-                  onClick={() => moveIndex(currentIndex + 1)}
-                  disabled={busy || cues.length === 0 || currentIndex >= cues.length - 1}
+                  onClick={() => moveSelection(selectedIndex + 1)}
+                  disabled={busy || cues.length === 0 || selectedIndex >= cues.length - 1}
                 >
                   다음
                 </button>
-                <button
-                  className={buttonClass('green')}
-                  onClick={publishCurrent}
-                  disabled={busy || !roomCode || !currentCue}
-                >
+                <button className={buttonClass('green')} onClick={publishSelectedCue} disabled={busy || !roomCode || !selectedCue}>
                   현재 자막 송출
                 </button>
               </div>
-              <p className="text-sm text-gray-700">현재 인덱스: {currentIndex >= 0 ? currentIndex + 1 : 0} / {cues.length}</p>
+              <p className="text-sm text-gray-700">선택 인덱스: {selectedIndex >= 0 ? selectedIndex + 1 : 0} / {cues.length}</p>
+              <p className="text-sm text-gray-700">송출 인덱스: {liveIndex >= 0 ? liveIndex + 1 : 0} / {cues.length}</p>
               <div className="mt-2 rounded border bg-slate-50 p-3">
                 <div className="text-xs text-gray-500">송출 미리보기 (한국어)</div>
-                <div className="text-sm font-semibold">화자: {currentCue?.speaker || '-'}</div>
-                <div className="mt-1 whitespace-pre-wrap text-base">{currentCue?.texts.korean || '-'}</div>
+                <div className="text-sm font-semibold">화자: {selectedCue?.speaker || '-'}</div>
+                <div className="mt-1 whitespace-pre-wrap text-base">{selectedCue?.texts.korean || '-'}</div>
+                <div className="mt-2 text-xs text-gray-500">현재 실제 송출중</div>
+                <div className="text-sm font-semibold">화자: {liveCue?.speaker || '-'}</div>
+                <div className="mt-1 whitespace-pre-wrap text-base">{liveCue?.texts.korean || '-'}</div>
               </div>
             </div>
           </div>
