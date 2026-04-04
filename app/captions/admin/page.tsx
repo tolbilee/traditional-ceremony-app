@@ -65,10 +65,12 @@ type LeftCueListProps = {
   selectedIndex: number;
   liveIndex: number;
   displayLanguage: string;
+  busy: boolean;
   onSelect: (index: number) => void;
+  onPublish: (index: number) => void;
 };
 
-const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, displayLanguage, onSelect }: LeftCueListProps) {
+const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, displayLanguage, busy, onSelect, onPublish }: LeftCueListProps) {
   if (cues.length === 0) {
     return <div className="p-6 text-sm text-gray-500">아직 입력된 큐가 없습니다.</div>;
   }
@@ -89,7 +91,19 @@ const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, 
             <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
               <span>큐 #{i + 1}</span>
               <span className="flex items-center gap-2">
-                {isSelected ? <span className="rounded bg-blue-600 px-2 py-0.5 text-white">선택됨</span> : null}
+                {isSelected && !isLive ? (
+                  <button
+                    type="button"
+                    className="rounded bg-blue-600 px-2 py-0.5 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={busy}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPublish(i);
+                    }}
+                  >
+                    선택됨
+                  </button>
+                ) : null}
                 {isLive ? <span className="rounded bg-amber-500 px-2 py-0.5 text-white">송출중</span> : null}
               </span>
             </div>
@@ -654,7 +668,11 @@ export default function CaptionsAdminPage() {
               selectedIndex={selectedIndex}
               liveIndex={liveIndex}
               displayLanguage={leftDisplayLanguage}
+              busy={busy}
               onSelect={setSelectedIndex}
+              onPublish={(index) => {
+                void publishCueAt(index, false);
+              }}
             />
           </div>
         </section>
