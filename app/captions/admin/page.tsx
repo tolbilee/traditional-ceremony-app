@@ -394,18 +394,13 @@ export default function CaptionsAdminPage() {
     setMessage('큐를 삭제했습니다.');
   }, [cues.length]);
 
-  function moveSelection(next: number) {
-    if (cues.length === 0) return;
-    const clamped = Math.max(0, Math.min(next, cues.length - 1));
-    setSelectedIndex(clamped);
-  }
-
-  async function publishSelectedCue() {
+  async function publishCueAt(index: number, appendMessages: boolean) {
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
     }
-    if (!selectedCue || selectedIndex < 0) {
+    const cue = cues[index];
+    if (!cue || index < 0) {
       setMessage('송출할 큐가 없습니다.');
       return;
     }
@@ -418,12 +413,12 @@ export default function CaptionsAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roomCode,
-          currentIndex: selectedIndex,
+          currentIndex: index,
           currentLanguage: OPERATOR_LANGUAGE_CODE,
-          currentSpeaker: selectedCue.speaker,
-          currentTexts: selectedCue.texts,
+          currentSpeaker: cue.speaker,
+          currentTexts: cue.texts,
           performanceTitle: title.trim(),
-          appendMessages: true,
+          appendMessages,
         }),
       });
       const data = await res.json();
@@ -432,13 +427,40 @@ export default function CaptionsAdminPage() {
         return;
       }
 
-      setLiveIndex(selectedIndex);
-      setMessage(`송출 완료 (시퀀스: ${data.seq ?? '-'})`);
+      setSelectedIndex(index);
+      setLiveIndex(index);
+      if (appendMessages) {
+        setMessage(`송출 완료 (시퀀스: ${data.seq ?? '-'})`);
+      } else {
+        setMessage(`큐 #${index + 1} 송출 완료`);
+      }
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
+  }
+
+  async function moveSelection(next: number) {
+    if (cues.length === 0) return;
+    const clamped = Math.max(0, Math.min(next, cues.length - 1));
+
+    // 아직 최초 송출 전이면 선택만 이동
+    if (liveIndex < 0) {
+      setSelectedIndex(clamped);
+      return;
+    }
+
+    // 최초 송출 이후에는 이전/다음이 실제 송출 큐를 즉시 갱신
+    await publishCueAt(clamped, false);
+  }
+
+  async function publishSelectedCue() {
+    if (!selectedCue || selectedIndex < 0) {
+      setMessage('송출할 큐가 없습니다.');
+      return;
+    }
+    await publishCueAt(selectedIndex, true);
   }
 
   async function resetRoom() {
