@@ -8,6 +8,23 @@ type ScriptCueInput = {
   texts?: unknown;
 };
 
+function parseReadonlyRoomCodes(): Set<string> {
+  const raw = process.env.CAPTIONS_SCRIPT_READONLY_ROOMS || '';
+  return new Set(
+    raw
+      .split(',')
+      .map((value) => normalizeRoomCode(value))
+      .filter(Boolean)
+  );
+}
+
+function isScriptWriteLocked(roomCode: string): boolean {
+  const isGlobalReadonly = (process.env.CAPTIONS_SCRIPT_READONLY || '').toLowerCase() === 'true';
+  if (isGlobalReadonly) return true;
+  const roomLocks = parseReadonlyRoomCodes();
+  return roomLocks.has(roomCode);
+}
+
 function sanitizeTexts(input: unknown): Record<string, string> {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
   const out: Record<string, string> = {};
@@ -96,6 +113,17 @@ export async function PUT(request: NextRequest) {
     const { room, error: roomErr } = await getActiveRoom(supabase as any, roomCode);
     if (roomErr) {
       return NextResponse.json({ error: roomErr }, { status: 404 });
+    }
+
+    if (isScriptWriteLocked(roomCode)) {
+      return NextResponse.json(
+        {
+          error: '자막 편집 보호 모드가 활성화되어 있어 스크립트 저장이 차단되었습니다.',
+          code: 'SCRIPT_WRITE_LOCKED',
+          roomCode,
+        },
+        { status: 423 }
+      );
     }
 
     const { data: existingSeqRows, error: existingSeqError } = await (supabase as any)
