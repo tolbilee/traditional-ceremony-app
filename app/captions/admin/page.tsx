@@ -314,13 +314,13 @@ export default function CaptionsAdminPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [busy, selectedIndex, cues.length, liveIndex]);
 
-  const loadRoomCues = useCallback(async (targetRoomCode: string) => {
+  const loadRoomCues = useCallback(async (targetRoomCode: string): Promise<boolean> => {
     try {
       const res = await fetch(`/api/captions/script?roomCode=${encodeURIComponent(targetRoomCode)}`);
       const data = await res.json();
       if (!res.ok) {
         setMessage(`오류: ${data?.error || '기존 자막을 불러오지 못했습니다.'}`);
-        return;
+        return false;
       }
 
       const rows = (data.messages || []) as HistoryMessageRow[];
@@ -371,8 +371,10 @@ export default function CaptionsAdminPage() {
       } else {
         setMessage('기존 자막이 없습니다. 새로 입력해 주세요.');
       }
+      return true;
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
     }
   }, []);
 
@@ -413,16 +415,23 @@ export default function CaptionsAdminPage() {
       setTitle(data.room.title);
       setRoomCodeInput(data.room.room_code);
 
+      // Prevent stale local state from syncing before room load is completed.
+      setCues([]);
+      setSelectedIndex(-1);
+      setLiveIndex(-1);
+
       if (data.created) {
         setMessage('룸이 생성되었습니다.');
-        setCues([]);
-        setSelectedIndex(-1);
-        setLiveIndex(-1);
       } else {
         setMessage('기존 룸에 연결되었습니다. 저장된 자막을 불러오는 중...');
       }
-      await loadRoomCues(data.room.room_code);
+      const loaded = await loadRoomCues(data.room.room_code);
       await loadPrestartTexts(data.room.room_code);
+      if (!loaded) {
+        setSyncEnabled(false);
+        setSyncError('룸 데이터를 불러오지 못해 자동 동기화를 중지했습니다. 새로고침 후 다시 연결해 주세요.');
+        return;
+      }
       setSyncEnabled(true);
     } catch (error) {
       setMessage(`오류: ${error instanceof Error ? error.message : String(error)}`);
