@@ -86,6 +86,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const roomCode = normalizeRoomCode(body.roomCode);
     const cues = Array.isArray(body.cues) ? (body.cues as ScriptCueInput[]) : [];
+    const allowMajorShrink = body.allowMajorShrink === true;
 
     if (!roomCode) {
       return NextResponse.json({ error: 'roomCode가 필요합니다.' }, { status: 400 });
@@ -95,6 +96,34 @@ export async function PUT(request: NextRequest) {
     const { room, error: roomErr } = await getActiveRoom(supabase as any, roomCode);
     if (roomErr) {
       return NextResponse.json({ error: roomErr }, { status: 404 });
+    }
+
+    const { data: existingSeqRows, error: existingSeqError } = await (supabase as any)
+      .from('caption_messages')
+      .select('seq')
+      .eq('room_id', room.id)
+      .gt('seq', 0);
+
+    if (existingSeqError) {
+      console.error('Failed to read existing script size:', existingSeqError);
+      return NextResponse.json({ error: '기존 자막 개수 조회 중 오류가 발생했습니다.' }, { status: 500 });
+    }
+
+    const existingCueCount = new Set<number>((existingSeqRows || []).map((r: any) => Number(r.seq)).filter((v: number) => Number.isFinite(v) && v > 0)).size;
+    const incomingCueCount = cues.length;
+
+    // Safety valve:
+    // Block suspicious large shrink (e.g. 64 -> 49) unless explicitly allowed.
+    const shrinkDelta = existingCueCount - incomingCueCount;
+    if (shrinkDelta >= 5 && !allowMajorShrink) {
+      return NextResponse.json(
+        {
+          error: `안전 차단: 자막 개수가 크게 줄어드는 저장 요청(${existingCueCount} -> ${incomingCueCount})이 감지되었습니다. 새로고침 후 다시 시도하거나 의도된 전체 정리 작업에서만 허용하세요.`,
+          existingCueCount,
+          incomingCueCount,
+        },
+        { status: 409 }
+      );
     }
 
     const rows: Array<{ room_id: string; seq: number; lang: string; content: string; speaker: string }> = [];

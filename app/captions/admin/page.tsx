@@ -131,12 +131,13 @@ const LeftCueList = memo(function LeftCueList({ cues, selectedIndex, liveIndex, 
 type RightCueListProps = {
   cues: Cue[];
   selectedLanguage: string;
+  editDisabled: boolean;
   onEdit: (index: number) => void;
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
 };
 
-const RightCueList = memo(function RightCueList({ cues, selectedLanguage, onEdit, onInsert, onDelete }: RightCueListProps) {
+const RightCueList = memo(function RightCueList({ cues, selectedLanguage, editDisabled, onEdit, onInsert, onDelete }: RightCueListProps) {
   if (cues.length === 0) {
     return <div className="p-4 text-sm text-gray-500">입력된 큐가 없습니다.</div>;
   }
@@ -149,13 +150,13 @@ const RightCueList = memo(function RightCueList({ cues, selectedLanguage, onEdit
           <div className="text-sm">화자: {getSpeakerForLanguage(cue, selectedLanguage) || '-'}</div>
           <div className="mb-2 whitespace-pre-wrap text-sm text-gray-800">{cue.texts[selectedLanguage] || '-'}</div>
           <div className="flex flex-wrap gap-2">
-            <button className={buttonClass('gray')} onClick={() => onEdit(i)}>
+            <button className={buttonClass('gray')} onClick={() => onEdit(i)} disabled={editDisabled}>
               수정
             </button>
-            <button className={buttonClass('blue')} onClick={() => onInsert(i)}>
+            <button className={buttonClass('blue')} onClick={() => onInsert(i)} disabled={editDisabled}>
               삽입
             </button>
-            <button className={buttonClass('red')} onClick={() => onDelete(i)}>
+            <button className={buttonClass('red')} onClick={() => onDelete(i)} disabled={editDisabled}>
               삭제
             </button>
           </div>
@@ -189,6 +190,10 @@ export default function CaptionsAdminPage() {
   const [busy, setBusy] = useState(false);
   const [syncError, setSyncError] = useState('');
   const [syncEnabled, setSyncEnabled] = useState(false);
+  const [editLockPasscode, setEditLockPasscode] = useState('');
+  const [editUnlockInput, setEditUnlockInput] = useState('');
+  const [editLocked, setEditLocked] = useState(false);
+  const [editUnlocked, setEditUnlocked] = useState(false);
 
   const selectedCue = selectedIndex >= 0 ? cues[selectedIndex] : null;
   const liveCue = liveIndex >= 0 ? cues[liveIndex] : null;
@@ -200,6 +205,42 @@ export default function CaptionsAdminPage() {
   }, [roomCode]);
 
   const displayLanguages = useMemo(() => CAPTION_LANGUAGE_OPTIONS, []);
+  const isEditActionBlocked = editLocked && !editUnlocked;
+
+  function ensureEditAllowed(): boolean {
+    if (!isEditActionBlocked) return true;
+    setMessage('편집 잠금 상태입니다. 비밀번호로 잠금 해제 후 수정해 주세요.');
+    return false;
+  }
+
+  function applyEditLock() {
+    if (!editLockPasscode.trim()) {
+      setMessage('편집 잠금 비밀번호를 먼저 입력해 주세요.');
+      return;
+    }
+    setEditLocked(true);
+    setEditUnlocked(false);
+    setEditUnlockInput('');
+    setMessage('편집 잠금이 적용되었습니다.');
+  }
+
+  function unlockEditLock() {
+    if (!editLocked) {
+      setMessage('편집 잠금이 적용되어 있지 않습니다.');
+      return;
+    }
+    if (!editLockPasscode.trim()) {
+      setMessage('저장된 비밀번호가 없습니다. 비밀번호를 먼저 설정해 주세요.');
+      return;
+    }
+    if (editUnlockInput !== editLockPasscode) {
+      setMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    setEditUnlocked(true);
+    setEditUnlockInput('');
+    setMessage('편집 잠금이 해제되었습니다.');
+  }
 
   useEffect(() => {
     setPrestartInput(prestartTexts[prestartLanguage] || '');
@@ -391,6 +432,8 @@ export default function CaptionsAdminPage() {
   }
 
   function addCue() {
+    if (!ensureEditAllowed()) return;
+
     const speaker = speakerInput.trim();
     const line = lineInput.trim();
     if (!line) {
@@ -427,6 +470,8 @@ export default function CaptionsAdminPage() {
   }
 
   function addCuesFromBulkInput() {
+    if (!ensureEditAllowed()) return;
+
     const raw = bulkInput.trim();
     if (!raw) {
       setMessage('대량 입력 내용이 비어 있습니다.');
@@ -506,6 +551,8 @@ export default function CaptionsAdminPage() {
 
   const editCue = useCallback(
     (index: number) => {
+      if (!ensureEditAllowed()) return;
+
       const cue = cues[index];
       if (!cue) return;
 
@@ -535,10 +582,12 @@ export default function CaptionsAdminPage() {
       });
       setMessage('큐를 수정했습니다.');
     },
-    [cues, editorLanguage]
+    [cues, editorLanguage, isEditActionBlocked]
   );
 
   const insertCueBelow = useCallback((index: number) => {
+    if (!ensureEditAllowed()) return;
+
     const speaker = window.prompt('삽입할 화자를 입력하세요.', '') ?? '';
     const line = window.prompt('삽입할 대사를 입력하세요.', '') ?? '';
     if (!line.trim()) {
@@ -556,9 +605,11 @@ export default function CaptionsAdminPage() {
     if (selectedIndex > index) setSelectedIndex((prev) => prev + 1);
     if (liveIndex > index) setLiveIndex((prev) => prev + 1);
     setMessage('큐를 중간에 삽입했습니다.');
-  }, [selectedIndex, liveIndex]);
+  }, [selectedIndex, liveIndex, isEditActionBlocked]);
 
   const deleteCue = useCallback((index: number) => {
+    if (!ensureEditAllowed()) return;
+
     const ok = window.confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
     if (!ok) return;
 
@@ -574,7 +625,7 @@ export default function CaptionsAdminPage() {
       return prev;
     });
     setMessage('큐를 삭제했습니다.');
-  }, [cues.length]);
+  }, [cues.length, isEditActionBlocked]);
 
   async function publishCueAt(index: number, appendMessages: boolean) {
     if (!roomCode) {
@@ -687,6 +738,8 @@ export default function CaptionsAdminPage() {
   }
 
   async function resetRoom() {
+    if (!ensureEditAllowed()) return;
+
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
@@ -726,6 +779,8 @@ export default function CaptionsAdminPage() {
   }
 
   async function clearAllCaptions() {
+    if (!ensureEditAllowed()) return;
+
     if (!roomCode) {
       setMessage('먼저 룸을 생성하거나 연결해 주세요.');
       return;
@@ -743,6 +798,7 @@ export default function CaptionsAdminPage() {
         body: JSON.stringify({
           roomCode,
           cues: [],
+          allowMajorShrink: true,
         }),
       });
       const data = await res.json();
@@ -878,6 +934,40 @@ export default function CaptionsAdminPage() {
                   룸 초기화
                 </button>
               </div>
+
+              <div className="mt-3 rounded border bg-slate-50 p-3">
+                <p className="mb-2 text-sm font-semibold">편집 잠금 (비밀번호)</p>
+                <div className="grid gap-2 md:grid-cols-3">
+                  <input
+                    className="rounded border p-2"
+                    placeholder="잠금 비밀번호 설정"
+                    type="password"
+                    value={editLockPasscode}
+                    onChange={(e) => setEditLockPasscode(e.target.value)}
+                  />
+                  <button className={buttonClass('gray')} disabled={busy} onClick={applyEditLock}>
+                    잠금 적용
+                  </button>
+                  <div className="flex items-center text-sm font-medium">
+                    상태: {editLocked ? (editUnlocked ? '잠금 적용됨 (현재 해제)' : '잠금 적용됨') : '잠금 안함'}
+                  </div>
+                </div>
+                {editLocked ? (
+                  <div className="mt-2 grid gap-2 md:grid-cols-3">
+                    <input
+                      className="rounded border p-2"
+                      placeholder="잠금 해제 비밀번호"
+                      type="password"
+                      value={editUnlockInput}
+                      onChange={(e) => setEditUnlockInput(e.target.value)}
+                    />
+                    <button className={buttonClass('blue')} disabled={busy} onClick={unlockEditLock}>
+                      잠금 해제
+                    </button>
+                    <div className="text-xs text-gray-600">잠금 해제 전에는 수정/삽입/삭제/추가가 차단됩니다.</div>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             <div className="rounded-lg border p-3">
@@ -954,7 +1044,7 @@ export default function CaptionsAdminPage() {
                 />
               </div>
               <div className="mt-2">
-                <button className={buttonClass('green')} disabled={busy} onClick={addCue}>
+                <button className={buttonClass('green')} disabled={busy || isEditActionBlocked} onClick={addCue}>
                   자막 추가
                 </button>
               </div>
@@ -970,7 +1060,7 @@ export default function CaptionsAdminPage() {
                   onChange={(e) => setBulkInput(e.target.value)}
                 />
                 <div className="mt-2">
-                  <button className={buttonClass('blue')} disabled={busy} onClick={addCuesFromBulkInput}>
+                  <button className={buttonClass('blue')} disabled={busy || isEditActionBlocked} onClick={addCuesFromBulkInput}>
                     대량 자막 추가
                   </button>
                 </div>
@@ -1019,6 +1109,7 @@ export default function CaptionsAdminPage() {
                 <RightCueList
                   cues={cues}
                   selectedLanguage={editorLanguage}
+                  editDisabled={isEditActionBlocked || busy}
                   onEdit={editCue}
                   onInsert={insertCueBelow}
                   onDelete={deleteCue}
