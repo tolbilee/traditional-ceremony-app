@@ -271,6 +271,11 @@ export default function CaptionsAdminPage() {
         });
         const data = await res.json();
         if (!res.ok) {
+          if (data?.code === 'SCRIPT_WRITE_LOCKED') {
+            setSyncEnabled(false);
+            setSyncError('편집 보호 모드가 적용되어 자동 동기화를 중지했습니다. (송출은 계속 가능)');
+            return;
+          }
           setSyncError(data?.error || '자막 저장 동기화에 실패했습니다.');
           return;
         }

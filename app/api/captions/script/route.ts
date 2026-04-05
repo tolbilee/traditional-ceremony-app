@@ -25,6 +25,70 @@ function isScriptWriteLocked(roomCode: string): boolean {
   return roomLocks.has(roomCode);
 }
 
+const PAGE_SIZE = 1000;
+
+async function fetchAllCaptionMessages(supabase: any, roomId: string) {
+  const allRows: any[] = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await (supabase as any)
+      .from('caption_messages')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('seq', { ascending: true })
+      .order('lang', { ascending: true })
+      .range(from, to);
+
+    if (error) return { data: null, error };
+    const rows = data || [];
+    allRows.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return { data: allRows, error: null };
+}
+
+async function fetchAllSeqRows(supabase: any, roomId: string) {
+  const allRows: Array<{ seq: number }> = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await (supabase as any)
+      .from('caption_messages')
+      .select('seq')
+      .eq('room_id', roomId)
+      .gt('seq', 0)
+      .order('seq', { ascending: true })
+      .range(from, to);
+
+    if (error) return { data: null, error };
+    const rows = (data || []) as Array<{ seq: number }>;
+    allRows.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return { data: allRows, error: null };
+}
+
+async function isDbGuardLocked(supabase: any, roomId: string) {
+  const { data, error } = await (supabase as any).from('caption_script_guard').select('locked').eq('room_id', roomId).maybeSingle();
+  if (error) {
+    const message = String(error?.message || '');
+    const code = String(error?.code || '');
+    if (code === '42P01' || message.includes('caption_script_guard') || message.includes('relation')) {
+      return false;
+    }
+    console.error('Failed to read caption_script_guard lock:', error);
+    return false;
+  }
+  return Boolean(data?.locked);
+}
+
 function sanitizeTexts(input: unknown): Record<string, string> {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
   const out: Record<string, string> = {};
@@ -74,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     const [{ data: state, error: stateError }, { data: messages, error: messagesError }] = await Promise.all([
       (supabase as any).from('caption_state').select('*').eq('room_id', room.id).maybeSingle(),
-      (supabase as any).from('caption_messages').select('*').eq('room_id', room.id).order('seq', { ascending: true }),
+      fetchAllCaptionMessages(supabase as any, room.id),
     ]);
 
     if (stateError) {
@@ -86,11 +150,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '자막 스크립트 조회 중 오류가 발생했습니다.' }, { status: 500 });
     }
 
+    const dbGuardLocked = await isDbGuardLocked(supabase as any, room.id);
     return NextResponse.json({
       room,
       state: state || null,
       messages: messages || [],
       count: (messages || []).length,
+      scriptWriteLocked: isScriptWriteLocked(roomCode) || dbGuardLocked,
     });
   } catch (error) {
     console.error('GET /api/captions/script error:', error);
@@ -115,7 +181,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: roomErr }, { status: 404 });
     }
 
-    if (isScriptWriteLocked(roomCode)) {
+    const dbGuardLocked = await isDbGuardLocked(supabase as any, room.id);
+    if (isScriptWriteLocked(roomCode) || dbGuardLocked) {
       return NextResponse.json(
         {
           error: '자막 편집 보호 모드가 활성화되어 있어 스크립트 저장이 차단되었습니다.',
@@ -126,11 +193,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { data: existingSeqRows, error: existingSeqError } = await (supabase as any)
-      .from('caption_messages')
-      .select('seq')
-      .eq('room_id', room.id)
-      .gt('seq', 0);
+    const { data: existingSeqRows, error: existingSeqError } = await fetchAllSeqRows(supabase as any, room.id);
 
     if (existingSeqError) {
       console.error('Failed to read existing script size:', existingSeqError);
