@@ -62,6 +62,10 @@ function getSpeakerForLanguage(cue: Cue, langCode: string): string {
   return cue.speaker?.trim() || '';
 }
 
+function getOperatorSpeaker(cue: Cue): string {
+  return getSpeakerForLanguage(cue, OPERATOR_LANGUAGE_CODE);
+}
+
 function buttonClass(color: 'blue' | 'green' | 'red' | 'gray' = 'blue'): string {
   const palette = {
     blue: 'bg-blue-600 hover:bg-blue-700',
@@ -339,7 +343,7 @@ export default function CaptionsAdminPage() {
         if (!existing) {
           grouped.set(seq, {
             id: `loaded-${seq}`,
-            speaker: row.speaker || '',
+            speaker: row.lang === OPERATOR_LANGUAGE_CODE ? row.speaker || '' : '',
             speakers: {
               [row.lang]: row.speaker || '',
             },
@@ -350,7 +354,11 @@ export default function CaptionsAdminPage() {
         } else {
           existing.texts[row.lang] = row.content || '';
           existing.speakers[row.lang] = row.speaker || existing.speakers[row.lang] || '';
-          if (!existing.speaker && row.speaker) existing.speaker = row.speaker;
+          if (row.lang === OPERATOR_LANGUAGE_CODE && row.speaker) {
+            existing.speaker = row.speaker;
+          } else if (!existing.speaker && row.speaker) {
+            existing.speaker = row.speaker;
+          }
         }
       }
 
@@ -657,7 +665,7 @@ export default function CaptionsAdminPage() {
     try {
       const speakerMap = {
         ...(cue.speakers || {}),
-        [OPERATOR_LANGUAGE_CODE]: cue.speaker || cue.speakers?.[OPERATOR_LANGUAGE_CODE] || '',
+        [OPERATOR_LANGUAGE_CODE]: getOperatorSpeaker(cue),
       };
       const res = await fetch('/api/captions/publish', {
         method: 'POST',
@@ -1023,10 +1031,10 @@ export default function CaptionsAdminPage() {
               <p className="text-sm text-gray-700">송출 인덱스: {liveIndex >= 0 ? liveIndex + 1 : 0} / {cues.length}</p>
               <div className="mt-2 rounded border bg-slate-50 p-3">
                 <div className="text-xs text-gray-500">송출 미리보기 (한국어)</div>
-                <div className="text-sm font-semibold">화자: {selectedCue?.speaker || '-'}</div>
+                <div className="text-sm font-semibold">화자: {selectedCue ? getOperatorSpeaker(selectedCue) || '-' : '-'}</div>
                 <div className="mt-1 whitespace-pre-wrap text-base">{selectedCue?.texts.korean || '-'}</div>
                 <div className="mt-2 text-xs text-gray-500">현재 실제 송출중</div>
-                <div className="text-sm font-semibold">화자: {liveCue?.speaker || '-'}</div>
+                <div className="text-sm font-semibold">화자: {liveCue ? getOperatorSpeaker(liveCue) || '-' : '-'}</div>
                 <div className="mt-1 whitespace-pre-wrap text-base">{liveCue?.texts.korean || '-'}</div>
               </div>
             </div>
