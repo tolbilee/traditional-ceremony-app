@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const requestedRoomCode = normalizeRoomCode(body.roomCode);
-    const title = toOptionalText(body.title).trim() || '실시간 자막';
+    const title = toOptionalText(body.title).trim() || 'Live Captions';
     const roomCode = requestedRoomCode || generateRoomCode(8);
 
     const supabase = createAdminClient();
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     if (findError) {
       console.error('Failed to query caption room:', findError);
-      return NextResponse.json({ error: '룸 조회 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to query room.' }, { status: 500 });
     }
 
     if (existing) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Failed to create caption room:', insertError);
-      return NextResponse.json({ error: '룸 생성 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create room.' }, { status: 500 });
     }
 
     const { error: stateError } = await (supabase as any)
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (stateError) {
       console.error('Failed to initialize caption state:', stateError);
-      return NextResponse.json({ error: '룸 상태 초기화 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to initialize room state.' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('POST /api/captions/rooms error:', error);
-    return NextResponse.json({ error: '요청 처리 중 오류가 발생했습니다.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process request.' }, { status: 500 });
   }
 }
 
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
   try {
     const roomCode = normalizeRoomCode(request.nextUrl.searchParams.get('roomCode') || '');
     if (!roomCode) {
-      return NextResponse.json({ error: 'roomCode가 필요합니다.' }, { status: 400 });
+      return NextResponse.json({ error: 'roomCode is required.' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -100,11 +100,11 @@ export async function GET(request: NextRequest) {
 
     if (roomError) {
       console.error('Failed to fetch room:', roomError);
-      return NextResponse.json({ error: '룸 조회 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch room.' }, { status: 500 });
     }
 
     if (!room) {
-      return NextResponse.json({ error: '룸을 찾을 수 없습니다.' }, { status: 404 });
+      return NextResponse.json({ error: 'Room not found.' }, { status: 404 });
     }
 
     const [{ data: state, error: stateError }, { data: prestartRows, error: prestartError }] = await Promise.all([
@@ -114,11 +114,11 @@ export async function GET(request: NextRequest) {
 
     if (stateError) {
       console.error('Failed to fetch room state:', stateError);
-      return NextResponse.json({ error: '룸 상태 조회 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch room state.' }, { status: 500 });
     }
     if (prestartError) {
       console.error('Failed to fetch prestart texts:', prestartError);
-      return NextResponse.json({ error: '시작 전 문구 조회 중 오류가 발생했습니다.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch prestart texts.' }, { status: 500 });
     }
 
     const prestartTexts: Record<string, string> = {};
@@ -130,6 +130,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ room, state, prestartTexts });
   } catch (error) {
     console.error('GET /api/captions/rooms error:', error);
-    return NextResponse.json({ error: '조회 중 오류가 발생했습니다.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process request.' }, { status: 500 });
   }
 }

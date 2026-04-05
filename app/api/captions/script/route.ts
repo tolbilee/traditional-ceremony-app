@@ -120,7 +120,8 @@ export async function PUT(request: NextRequest) {
     const { error: deleteError } = await (supabase as any)
       .from('caption_messages')
       .delete()
-      .eq('room_id', room.id);
+      .eq('room_id', room.id)
+      .gt('seq', 0);
 
     if (deleteError) {
       console.error('Failed to clear caption script before upsert:', deleteError);

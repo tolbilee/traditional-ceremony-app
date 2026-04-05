@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       const { error: deleteError } = await (supabase as any)
         .from('caption_messages')
         .delete()
-        .eq('room_id', room.id);
+        .eq('room_id', room.id)
+        .gt('seq', 0);
 
       if (deleteError) {
         console.error('Failed to delete caption history:', deleteError);
