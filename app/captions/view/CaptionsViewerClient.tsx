@@ -91,6 +91,8 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
   const footerClassName = isYayeonTheme
     ? 'relative z-10 px-4 pb-4 text-center text-xs text-white/70'
     : 'px-4 pb-4 text-center text-xs text-white/60';
+  const returnButtonClassName =
+    'rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition hover:bg-white/25';
   useEffect(() => {
     if (!roomCode) {
       setError('');
@@ -234,6 +236,20 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
     router.push(`/captions/view?roomCode=${encodeURIComponent(nextCode)}`);
   }
 
+  function leaveYayeonCaption() {
+    if (typeof window === 'undefined') return;
+
+    const referrer = document.referrer;
+    if (referrer && !referrer.includes('/captions/view')) {
+      window.location.href = referrer;
+      return;
+    }
+
+    if (window.history.length > 1) {
+      router.back();
+    }
+  }
+
   if (!roomCode) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-white">
@@ -271,8 +287,15 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
       ) : null}
       <header className={headerClassName}>
         <div className="text-sm text-white/80">{room?.title || '실시간 자막'}</div>
-        <div className="text-xs text-white/70">
-          {status === 'connected' ? '실시간 연결됨' : status === 'loading' ? '연결 중' : '오류'}
+        <div className="flex items-center gap-2">
+          {isYayeonTheme ? (
+            <button className={returnButtonClassName} type="button" onClick={leaveYayeonCaption}>
+              야연으로 돌아가기
+            </button>
+          ) : null}
+          <div className="text-xs text-white/70">
+            {status === 'connected' ? '실시간 연결됨' : status === 'loading' ? '연결 중' : '오류'}
+          </div>
         </div>
       </header>
 
