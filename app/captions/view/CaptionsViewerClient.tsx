@@ -66,6 +66,31 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
   const [status, setStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
   const [error, setError] = useState('');
 
+  const isYayeonTheme = roomCode === 'yayeon';
+  const viewerShellClassName = isYayeonTheme
+    ? 'relative flex min-h-screen flex-col overflow-hidden bg-[#102047] text-white'
+    : 'flex min-h-screen flex-col bg-black text-white';
+  const headerClassName = isYayeonTheme
+    ? 'relative z-10 flex items-center justify-between border-b border-white/20 bg-white/10 px-4 py-3 backdrop-blur-md'
+    : 'flex items-center justify-between border-b border-white/20 px-4 py-3';
+  const languageSectionClassName = isYayeonTheme
+    ? 'relative z-10 flex items-center justify-center gap-2 px-4 py-3'
+    : 'flex items-center justify-center gap-2 px-4 py-3';
+  const captionSectionClassName = isYayeonTheme
+    ? 'relative z-10 flex flex-1 items-center justify-center px-6 pb-10'
+    : 'flex flex-1 items-center justify-center px-6 pb-10';
+  const captionPanelClassName = isYayeonTheme
+    ? 'max-w-5xl rounded-3xl border border-white/20 bg-white/10 px-6 py-8 text-center shadow-2xl backdrop-blur-md md:px-10'
+    : 'max-w-5xl text-center';
+  const speakerClassName = isYayeonTheme
+    ? 'mb-4 text-lg font-semibold text-[#f2d58f] md:text-2xl'
+    : 'mb-4 text-lg font-semibold text-yellow-200 md:text-2xl';
+  const subtitleClassName = isYayeonTheme
+    ? 'whitespace-pre-wrap text-3xl font-semibold leading-relaxed text-white drop-shadow md:text-5xl'
+    : 'whitespace-pre-wrap text-3xl font-semibold leading-relaxed md:text-5xl';
+  const footerClassName = isYayeonTheme
+    ? 'relative z-10 px-4 pb-4 text-center text-xs text-white/70'
+    : 'px-4 pb-4 text-center text-xs text-white/60';
   useEffect(() => {
     if (!roomCode) {
       setError('');
@@ -235,15 +260,23 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-black text-white">
-      <header className="flex items-center justify-between border-b border-white/20 px-4 py-3">
+    <main className={viewerShellClassName}>
+      {isYayeonTheme ? (
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[url('/images/yayeon-bg.jpg')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#102047]/55 via-[#5c4f93]/35 to-[#7db9e3]/25" />
+          <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-[#ce93b3]/30 blur-3xl" />
+          <div className="absolute -right-20 bottom-16 h-80 w-80 rounded-full bg-[#7db9e3]/30 blur-3xl" />
+        </div>
+      ) : null}
+      <header className={headerClassName}>
         <div className="text-sm text-white/80">{room?.title || '실시간 자막'}</div>
         <div className="text-xs text-white/70">
           {status === 'connected' ? '실시간 연결됨' : status === 'loading' ? '연결 중' : '오류'}
         </div>
       </header>
 
-      <section className="flex items-center justify-center gap-2 px-4 py-3">
+      <section className={languageSectionClassName}>
         <label className="text-sm text-white/80">Language</label>
         <select
           className="rounded border border-white/30 bg-black/40 px-3 py-1 text-sm text-white"
@@ -258,18 +291,18 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         </select>
       </section>
 
-      <section className="flex flex-1 items-center justify-center px-6 pb-10">
+      <section className={captionSectionClassName}>
         {status === 'error' ? (
           <div className="max-w-xl rounded-lg border border-red-400/40 bg-red-900/20 p-4 text-sm text-red-100">
             연결 오류: {error || '알 수 없는 오류'}
           </div>
         ) : (
-          <div className="max-w-5xl text-center">
-            <div className="mb-4 text-lg font-semibold text-yellow-200 md:text-2xl">
+          <div className={captionPanelClassName}>
+            <div className={speakerClassName}>
               {speaker || '-'}
             </div>
             <div
-              className="whitespace-pre-wrap text-3xl font-semibold leading-relaxed md:text-5xl"
+              className={subtitleClassName}
               style={{ fontFamily: subtitleFontFamily }}
             >
               {subtitle || '자막을 기다리는 중입니다...'}
@@ -278,7 +311,7 @@ export default function CaptionsViewerClient({ initialRoomCode }: { initialRoomC
         )}
       </section>
 
-      <footer className="px-4 pb-4 text-center text-xs text-white/60">
+      <footer className={footerClassName}>
         {roomCode ? `룸 코드: ${roomCode}` : '룸 코드가 없습니다.'}
       </footer>
     </main>
